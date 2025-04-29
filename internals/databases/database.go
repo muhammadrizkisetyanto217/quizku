@@ -9,9 +9,8 @@ import (
 )
 
 var DB *gorm.DB
-
 func ConnectDB() {
-	dsn := "postgres://postgres.dogoemwxjhrhprneysmp:Wedangjahe217312!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require"
+	dsn := "postgresql://postgres.iqtqixqqsubcjbqdmgsw:Wedangjahe217@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
