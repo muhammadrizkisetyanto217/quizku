@@ -1,0 +1,332 @@
+package service
+
+import (
+	"strings"
+	"time"
+
+	googleAuthIDTokenVerifier "github.com/futurenda/google-auth-id-token-verifier"
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+
+	"quizku/internals/configs"
+	authHelper "quizku/internals/features/users/auth/helpers"
+	authModel "quizku/internals/features/users/auth/models"
+	authRepo "quizku/internals/features/users/auth/repository"
+	userModel "quizku/internals/features/users/user/models"
+	helpers "quizku/internals/helpers"
+
+	"github.com/google/uuid"
+)
+
+// ========================== REGISTER ==========================
+func Register(db *gorm.DB, c *fiber.Ctx) error {
+	var input userModel.UserModel
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	if err := authHelper.ValidateRegisterInput(input.UserName, input.Email, input.Password); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	if err := input.Validate(); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	passwordHash, err := authHelper.HashPassword(input.Password)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Password hashing failed")
+	}
+	input.Password = passwordHash
+
+	if err := authRepo.CreateUser(db, &input); err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return helpers.Error(c, fiber.StatusBadRequest, "Email already registered")
+		}
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to create user")
+	}
+
+	return helpers.SuccessWithCode(c, fiber.StatusCreated, "Registration successful", nil)
+}
+
+// ========================== LOGIN ==========================
+func Login(db *gorm.DB, c *fiber.Ctx) error {
+	var input struct {
+		Identifier string `json:"identifier"`
+		Password   string `json:"password"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, "Invalid input format")
+	}
+
+	if err := authHelper.ValidateLoginInput(input.Identifier, input.Password); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	user, err := authRepo.FindUserByEmailOrUsername(db, input.Identifier)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Invalid credentials")
+	}
+
+	if err := authHelper.CheckPasswordHash(user.Password, input.Password); err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Invalid credentials")
+	}
+
+	return issueTokens(c, db, *user)
+}
+
+// ========================== LOGIN GOOGLE ==========================
+func LoginGoogle(db *gorm.DB, c *fiber.Ctx) error {
+	var input struct {
+		IDToken string `json:"id_token"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	v := googleAuthIDTokenVerifier.Verifier{}
+	if err := v.VerifyIDToken(input.IDToken, []string{configs.GoogleClientID}); err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Invalid Google ID Token")
+	}
+
+	claimSet, err := googleAuthIDTokenVerifier.Decode(input.IDToken)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to decode ID Token")
+	}
+
+	email, name, googleID := claimSet.Email, claimSet.Name, claimSet.Sub
+
+	user, err := authRepo.FindUserByGoogleID(db, googleID)
+	if err != nil {
+		newUser := userModel.UserModel{
+			UserName:         name,
+			Email:            email,
+			Password:         generateDummyPassword(),
+			GoogleID:         &googleID,
+			Role:             "user",
+			SecurityQuestion: "Created by Google",
+			SecurityAnswer:   "google_auth",
+			CreatedAt:        time.Now(),
+			UpdatedAt:        time.Now(),
+		}
+		if err := authRepo.CreateUser(db, &newUser); err != nil {
+			return helpers.Error(c, fiber.StatusInternalServerError, "Failed to create Google user")
+		}
+		user = &newUser
+	}
+
+	return issueTokens(c, db, *user)
+}
+
+// ========================== LOGOUT ==========================
+func Logout(db *gorm.DB, c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Unauthorized - No token provided")
+	}
+
+	tokenParts := strings.Split(authHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Unauthorized - Invalid token format")
+	}
+
+	tokenString := tokenParts[1]
+
+	if err := authRepo.BlacklistToken(db, tokenString, 4*24*time.Hour); err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to blacklist token")
+	}
+
+	refreshToken := c.Cookies("refresh_token")
+	if refreshToken != "" {
+		_ = authRepo.DeleteRefreshToken(db, refreshToken)
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Strict",
+		Expires:  time.Now().Add(-time.Hour),
+	})
+
+	return helpers.Success(c, "Logout successful", nil)
+}
+
+// ========================== REFRESH TOKEN ==========================
+func RefreshToken(db *gorm.DB, c *fiber.Ctx) error {
+	refreshToken := c.Cookies("refresh_token")
+	if refreshToken == "" {
+		return helpers.Error(c, fiber.StatusUnauthorized, "No refresh token provided")
+	}
+
+	rt, err := authRepo.FindRefreshToken(db, refreshToken)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Invalid or expired refresh token")
+	}
+
+	user, err := authRepo.FindUserByID(db, rt.UserID)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "User not found")
+	}
+
+	return issueTokens(c, db, *user)
+}
+
+// ========================== RESET PASSWORD ==========================
+func ResetPassword(db *gorm.DB, c *fiber.Ctx) error {
+	var input struct {
+		Email       string `json:"email"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, "Invalid request format")
+	}
+
+	// 🔹 Validasi format email dan password
+	if err := authHelper.ValidateResetPassword(input.Email, input.NewPassword); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// 🔹 Cari user dari repository
+	user, err := authRepo.FindUserByEmail(db, input.Email)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusNotFound, "User not found")
+	}
+
+	// 🔹 Hash password baru
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to hash password")
+	}
+
+	// 🔹 Update password lewat repository
+	if err := authRepo.UpdateUserPassword(db, user.ID, string(hashedPassword)); err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to update password")
+	}
+
+	return helpers.Success(c, "Password reset successfully", nil)
+}
+
+// ========================== CHANGE PASSWORD ==========================
+func ChangePassword(db *gorm.DB, c *fiber.Ctx) error {
+	var input struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, "Invalid input format")
+	}
+
+	userIDStr := c.Locals("user_id").(string)
+	userID, _ := uuid.Parse(userIDStr)
+
+	user, err := authRepo.FindUserByID(db, userID)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "User not found")
+	}
+
+	if err := authHelper.CheckPasswordHash(user.Password, input.CurrentPassword); err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "Current password incorrect")
+	}
+
+	newHash, err := authHelper.HashPassword(input.NewPassword)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to hash new password")
+	}
+
+	if err := authRepo.UpdateUserPassword(db, userID, newHash); err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to update password")
+	}
+
+	return helpers.Success(c, "Password changed successfully", nil)
+}
+
+// ========================== PRIVATE HELPERS ==========================
+func issueTokens(c *fiber.Ctx, db *gorm.DB, user userModel.UserModel) error {
+	accessToken, _, err := generateToken(user, configs.JWTSecret, 15*time.Minute)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to generate access token")
+	}
+
+	refreshToken, refreshExp, err := generateToken(user, configs.JWTRefreshSecret, 7*24*time.Hour)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to generate refresh token")
+	}
+
+	rt := authModel.RefreshToken{
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: refreshExp,
+	}
+	if err := authRepo.CreateRefreshToken(db, &rt); err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to save refresh token")
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Strict",
+		Expires:  refreshExp,
+	})
+
+	return helpers.Success(c, "Login successful", fiber.Map{
+		"access_token": accessToken,
+		"user": fiber.Map{
+			"id":        user.ID,
+			"user_name": user.UserName,
+			"email":     user.Email,
+			"role":      user.Role,
+		},
+	})
+}
+
+func generateToken(user userModel.UserModel, secret string, duration time.Duration) (string, time.Time, error) {
+	exp := time.Now().Add(duration)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":        user.ID.String(),
+		"user_name": user.UserName,
+		"role":      user.Role,
+		"exp":       exp.Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(secret))
+	return tokenString, exp, err
+}
+
+func generateDummyPassword() string {
+	hash, _ := authHelper.HashPassword("RandomDummyPassword123!")
+	return hash
+}
+
+func CheckSecurityAnswer(db *gorm.DB, c *fiber.Ctx) error {
+	var input struct {
+		Email  string `json:"email"`
+		Answer string `json:"security_answer"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, "Invalid request format")
+	}
+
+	if err := authHelper.ValidateSecurityAnswerInput(input.Email, input.Answer); err != nil {
+		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	user, err := authRepo.FindUserByEmail(db, input.Email)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusNotFound, "User not found")
+	}
+
+	if strings.TrimSpace(input.Answer) != strings.TrimSpace(user.SecurityAnswer) {
+		return helpers.Error(c, fiber.StatusBadRequest, "Incorrect security answer")
+	}
+
+	return helpers.Success(c, "Security answer correct", fiber.Map{
+		"email": user.Email,
+	})
+}
