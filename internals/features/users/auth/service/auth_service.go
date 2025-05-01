@@ -27,7 +27,7 @@ func Register(db *gorm.DB, c *fiber.Ctx) error {
 		return helpers.Error(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	if err := authHelper.ValidateRegisterInput(input.UserName, input.Email, input.Password); err != nil {
+	if err := authHelper.ValidateRegisterInput(input.UserName, input.Email, input.Password, input.SecurityAnswer); err != nil {
 		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 

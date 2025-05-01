@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS units_news;
+DROP TABLE IF EXISTS units;

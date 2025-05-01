@@ -1,41 +1,33 @@
 package routes
 
 import (
-	"log"
 	"os"
-	database "quizku/internals/databases"
-	authRoute "quizku/internals/features/users/auth/route"
-	userRoute "quizku/internals/features/users/user/route"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+	databases "quizku/internals/databases"
 )
 
-var startTime time.Time
-
-// Register routes
-func SetupRoutes(app *fiber.App, db *gorm.DB) {
+func BaseRoutes(app *fiber.App, db *gorm.DB) {
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Fiber & Supabase PostgreSQL connected successfully Sekarang 🚀")
+		return c.SendString("Fiber & Supabase PostgreSQL connected successfully 🚀")
 	})
 
 	app.Get("/panic-test", func(c *fiber.Ctx) error {
-		panic("Simulasi panic error!") // sengaja panic
+		panic("Simulasi panic error!") // testing panic handler
 	})
 
-	// ✨ Advanced Health Check
 	app.Get("/health", func(c *fiber.Ctx) error {
-		sqlDB, err := database.DB.DB()
+		sqlDB, err := databases.DB.DB()
 		dbStatus := "Connected"
 		serverStatus := "OK"
 		httpStatus := fiber.StatusOK
 
-		// 🚨 Kalau error DB, ubah status server
 		if err != nil || sqlDB.Ping() != nil {
 			dbStatus = "Database connection error"
 			serverStatus = "DOWN"
-			httpStatus = fiber.StatusServiceUnavailable // 503
+			httpStatus = fiber.StatusServiceUnavailable
 		}
 
 		uptime := time.Since(startTime).Seconds()
@@ -48,11 +40,4 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 			"environment":    os.Getenv("RAILWAY_ENVIRONMENT"),
 		})
 	})
-
-	log.Println("[INFO] Setting up AuthRoutes...")
-	authRoute.AuthRoutes(app, db)
-
-	log.Println("[INFO] Setting up UserRoutes...")
-	userRoute.UserRoutes(app, db)
-
 }

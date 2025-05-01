@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS quizzes;
+DROP TABLE IF EXISTS section_quizzes;

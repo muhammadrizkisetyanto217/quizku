@@ -1,8 +1,9 @@
 package constants
 
 const (
-	RoleUser    = "user"
-	RoleTeacher = "teacher"
-	RoleStaff   = "staff"
-	RoleOwner   = "owner"
+	RoleUser       = "user"
+	RoleTeacher    = "teacher"
+	RoleAccountant = "accountant"
+	RoleOwner      = "owner"
+	RoleAdmin      = "admin"
 )
