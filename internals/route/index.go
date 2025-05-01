@@ -23,4 +23,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 
 	log.Println("[INFO] Setting up LessonRoutes...")
 	LessonRoutes(app, db)
+
+	log.Println("[INFO] Setting up QuizzesRoute...")
+	QuizzesRoute(app, db)
 }

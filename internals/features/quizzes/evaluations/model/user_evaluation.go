@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	// "quiz-fiber/internals/features/quizzes/evaluation/service"
+	// "quizku/internals/features/quizzes/evaluation/service"
 
 	"github.com/google/uuid"
 	// "gorm.io/gorm"

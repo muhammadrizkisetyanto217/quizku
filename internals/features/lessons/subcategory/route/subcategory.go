@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CategoryRoutes(app *fiber.App, db *gorm.DB) {
+func SubategoryRoutes(app *fiber.App, db *gorm.DB) {
 	api := app.Group("/api", authMiddleware.AuthMiddleware(db))
 
 	// 🎯 Subcategory Routes

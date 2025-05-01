@@ -10,7 +10,7 @@ import (
 )
 
 // Register category-related routes
-func CategoryRoutes(app *fiber.App, db *gorm.DB) {
+func DifficultyRoutes(app *fiber.App, db *gorm.DB) {
 
 	// 🔥 Group API: dilindungi Auth + Global RateLimiter
 	api := app.Group("/api",

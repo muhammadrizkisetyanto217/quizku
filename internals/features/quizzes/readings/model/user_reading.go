@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	// "gorm.io/gorm"
-	// "quiz-fiber/internals/features/quizzes/reading/service"
+	// "quizku/internals/features/quizzes/reading/service"
 )
 
 type UserReading struct {

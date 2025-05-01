@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	
 	categoryModel "quizku/internals/features/lessons/categories/model"
 	subcategoryModel "quizku/internals/features/lessons/subcategory/model"
 	themesModel "quizku/internals/features/lessons/themes_or_levels/model"
@@ -11,7 +12,6 @@ import (
 	sectionQuizzesModel "quizku/internals/features/quizzes/quizzes/model"
 
 	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lib/pq"

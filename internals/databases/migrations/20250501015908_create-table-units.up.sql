@@ -35,3 +35,24 @@ CREATE TABLE IF NOT EXISTS units_news (
 CREATE INDEX IF NOT EXISTS idx_units_news_unit_id ON units_news(unit_id);
 CREATE INDEX IF NOT EXISTS idx_units_news_is_public ON units_news(is_public);
 CREATE INDEX IF NOT EXISTS idx_units_news_unit_public ON units_news(unit_id, is_public);
+
+
+CREATE TABLE IF NOT EXISTS user_unit (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    unit_id INTEGER NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+    attempt_reading INTEGER DEFAULT 0 NOT NULL,
+    attempt_evaluation JSONB NOT NULL DEFAULT '{}'::jsonb,
+    complete_section_quizzes JSONB NOT NULL DEFAULT '{}'::jsonb,
+    total_section_quizzes INTEGER[] NOT NULL DEFAULT '{}',
+    grade_quiz INTEGER NOT NULL DEFAULT 0 CHECK (grade_quiz BETWEEN 0 AND 100),
+    grade_exam INTEGER NOT NULL DEFAULT 0 CHECK (grade_exam BETWEEN 0 AND 100),
+    grade_result INTEGER NOT NULL DEFAULT 0 CHECK (grade_result BETWEEN 0 AND 100),
+    is_passed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_unit_user_id_unit_id ON user_unit (user_id, unit_id);
+CREATE INDEX IF NOT EXISTS idx_user_unit_user_id ON user_unit (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_unit_unit_id ON user_unit (unit_id);

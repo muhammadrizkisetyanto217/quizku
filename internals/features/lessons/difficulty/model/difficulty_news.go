@@ -20,4 +20,3 @@ type DifficultyNews struct {
 func (DifficultyNews) TableName() string {
 	return "difficulties_news"
 }
-

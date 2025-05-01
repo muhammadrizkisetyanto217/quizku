@@ -2,9 +2,10 @@ package controller
 
 import (
 	"log"
-	categoryModel "quizku/internals/features/lessons/categories/model"
-	"quizku/internals/features/lessons/subcategory/model"
 
+	categoryModel "quizku/internals/features/lessons/categories/model"
+
+	"quizku/internals/features/lessons/subcategory/model"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )

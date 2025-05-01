@@ -7,5 +7,7 @@ import (
 )
 
 func AuthRoutes(app *fiber.App, db *gorm.DB) {
+
 	authRoute.AuthRoutes(app, db)
+
 }

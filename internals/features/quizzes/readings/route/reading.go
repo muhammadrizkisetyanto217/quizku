@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ReadingRoutes(app *fiber.App, db *gorm.DB) {
+func ReadingsRoute(app *fiber.App, db *gorm.DB) {
 	api := app.Group("/api", authMiddleware.AuthMiddleware(db))
 
 	// 📖 Reading Routes

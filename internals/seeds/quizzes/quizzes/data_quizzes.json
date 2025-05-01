@@ -1,0 +1,18 @@
+[
+    {
+        "name_quizzes": "Doa dan Bacaan Wudhu Bacaan utama Part 3",
+        "status": "active",
+        "materials_quizzes": "Pemahaman dasar wudhu, niat dan urutan langkahnya.",
+        "icon_url": "https://example.com/icons/section1-1.png",
+        "section_quizzes_id": 1,
+        "created_by": "848174ec-a819-4e03-878b-542d12063422"
+    },
+    {
+        "name_quizzes": "Doa dan Bacaan Wudhu Bacaan sampingan Part 4",
+        "status": "active",
+        "materials_quizzes": "Doa-doa sebelum dan sesudah berwudhu.",
+        "icon_url": "https://example.com/icons/section1-2.png",
+        "section_quizzes_id": 1,
+        "created_by": "848174ec-a819-4e03-878b-542d12063422"
+    }
+]

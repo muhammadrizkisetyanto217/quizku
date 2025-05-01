@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ThemeOrLevelRoutes(app *fiber.App, db *gorm.DB) {
+func ThemesOrLevelsRoutes(app *fiber.App, db *gorm.DB) {
 	api := app.Group("/api", authMiddleware.AuthMiddleware(db))
 
 	// 🎯 Themes or Levels Routes

@@ -15,3 +15,20 @@ CREATE TABLE IF NOT EXISTS evaluations (
 CREATE INDEX IF NOT EXISTS idx_evaluations_status ON evaluations(status);
 CREATE INDEX IF NOT EXISTS idx_evaluations_unit_id ON evaluations(unit_id);
 CREATE INDEX IF NOT EXISTS idx_evaluations_created_by ON evaluations(created_by);
+
+
+CREATE TABLE IF NOT EXISTS user_evaluations (
+    id SERIAL PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    evaluation_id INTEGER NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
+    unit_id INTEGER NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+    attempt INTEGER DEFAULT 1 NOT NULL,
+    percentage_grade INTEGER DEFAULT 0 NOT NULL,
+    time_duration INTEGER DEFAULT 0 NOT NULL,
+    point INTEGER DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_eval_user_eval ON user_evaluations (user_id, evaluation_id);
+CREATE INDEX IF NOT EXISTS idx_eval_user_unit ON user_evaluations (user_id, unit_id);

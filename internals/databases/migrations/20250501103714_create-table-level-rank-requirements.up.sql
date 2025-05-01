@@ -1,0 +1,19 @@
+CREATE TABLE IF NOT EXISTS level_requirements (
+    id SERIAL PRIMARY KEY,
+    level INT UNIQUE NOT NULL,
+    name VARCHAR(100),
+    min_points INT NOT NULL,
+    max_points INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS rank_requirements (
+    id SERIAL PRIMARY KEY,
+    rank INTEGER UNIQUE NOT NULL,
+    name VARCHAR(100),
+    min_level INTEGER NOT NULL,
+    max_level INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

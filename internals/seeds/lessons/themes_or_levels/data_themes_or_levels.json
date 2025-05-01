@@ -1,0 +1,38 @@
+[
+    {
+        "name": "Fiqh Wudhu 22",
+        "status": "active",
+        "description_short": "Pembahasan tentang wudhu",
+        "description_long": "Materi ini mencakup tata cara berwudhu, syarat sah, pembatal, dan hal-hal terkait lainnya dalam fiqh wudhu.",
+        "total_unit": [],
+        "image_url": "https://example.com/images/fiqh-wudhu.jpg",
+        "subcategories_id": 1
+    },
+    {
+        "name": "Fiqh Pengantar Sholat 22",
+        "status": "active",
+        "description_short": "Pengantar fiqh sholat",
+        "description_long": "Materi ini membahas pengertian sholat, hukum-hukumnya, dan urgensinya dalam Islam sebelum masuk ke praktik teknis.",
+        "total_unit": [],
+        "image_url": "https://example.com/images/fiqh-pengantar-sholat.jpg",
+        "subcategories_id": 1
+    },
+    {
+        "name": "Fiqh Sholat Wajib 22",
+        "status": "active",
+        "description_short": "Materi sholat wajib",
+        "description_long": "Pembahasan lengkap mengenai sholat lima waktu, syarat sah, rukun, bacaan, hingga kesalahan umum yang perlu dihindari.",
+        "total_unit": [],
+        "image_url": "https://example.com/images/fiqh-sholat-wajib.jpg",
+        "subcategories_id": 1
+    },
+    {
+        "name": "Fiqh Sholat Sunna 2h",
+        "status": "active",
+        "description_short": "Materi sholat sunnah",
+        "description_long": "Pembahasan tentang berbagai sholat sunnah seperti dhuha, tahajjud, rawatib, witir, dan keutamaannya.",
+        "total_unit": [],
+        "image_url": "https://example.com/images/fiqh-sholat-sunnah.jpg",
+        "subcategories_id": 1
+    }
+]

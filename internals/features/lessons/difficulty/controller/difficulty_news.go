@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"quizku/internals/features/lessons/difficulty/model"
-
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"

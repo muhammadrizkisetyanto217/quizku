@@ -1,0 +1,18 @@
+[
+    {
+        "name_exams": "Ujian Pertama unit ke-17",
+        "status": "active",
+        "total_question": [],
+        "icon_url": "https://example.com/icons/exam.png",
+        "unit_id": 17,
+        "created_by": "848174ec-a819-4e03-878b-542d12063422"
+    },
+    {
+        "name_exams": "Ujian Pertama unit ke-18",
+        "status": "active",
+        "total_question": [],
+        "icon_url": "https://example.com/icons/exam.png",
+        "unit_id": 18,
+        "created_by": "848174ec-a819-4e03-878b-542d12063422"
+    }
+]

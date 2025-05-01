@@ -18,6 +18,7 @@ type UserSectionQuizzesModel struct {
 	TotalQuiz        pq.Int64Array  `gorm:"type:integer[];not null;default:'{}'" json:"total_quiz"`
 	GradeResult      int            `gorm:"default:0" json:"grade_result"`
 	CreatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 func (UserSectionQuizzesModel) TableName() string {

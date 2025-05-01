@@ -15,6 +15,7 @@ type UserQuizzesModel struct {
 	TimeDuration    int       `gorm:"default:0;not null" json:"time_duration"`
 	Point           int       `gorm:"default:0;not null" json:"point"`
 	CreatedAt       time.Time `gorm:"default:current_timestamp" json:"created_at"`
+	UpdatedAt       time.Time `gorm:"default:current_timestamp" json:"updated_at"`
 }
 
 // TableName memastikan GORM menggunakan tabel "user_quizzes"

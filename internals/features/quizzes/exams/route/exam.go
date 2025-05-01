@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ExamRoute(app *fiber.App, db *gorm.DB) {
+func ExamsRoute(app *fiber.App, db *gorm.DB) {
 	api := app.Group("/api", authMiddleware.AuthMiddleware(db))
 
 	// 📝 Exam Routes

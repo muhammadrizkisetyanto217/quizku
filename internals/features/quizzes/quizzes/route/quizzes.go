@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SectionQuizzesRoutes(app *fiber.App, db *gorm.DB) {
+func QuizzesRoutes(app *fiber.App, db *gorm.DB) {
 	api := app.Group("/api", authMiddleware.AuthMiddleware(db))
 
 	// 🔥 Section Quizzes Routes

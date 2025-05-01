@@ -3,9 +3,7 @@ package model
 import (
 	"log"
 	"time"
-
 	themesOrLevelsModel "quizku/internals/features/lessons/themes_or_levels/model"
-
 	"github.com/lib/pq"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"

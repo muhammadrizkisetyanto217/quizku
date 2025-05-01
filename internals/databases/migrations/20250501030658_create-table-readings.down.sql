@@ -1,1 +1,2 @@
+DROP TABLE IF EXISTS user_readings;
 DROP TABLE IF EXISTS readings;
