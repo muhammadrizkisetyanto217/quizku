@@ -94,18 +94,6 @@ func (cc *CategoryController) CreateCategory(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input format"})
 	}
 
-	// Handle update_news jika ada
-	if c.Body() != nil {
-		var raw map[string]interface{}
-		if err := json.Unmarshal(c.Body(), &raw); err == nil {
-			if un, ok := raw["update_news"]; ok {
-				jsonData, err := json.Marshal(un)
-				if err == nil {
-					singleCategory.UpdateNews = datatypes.JSON(jsonData)
-				}
-			}
-		}
-	}
 
 	if err := cc.DB.Create(&singleCategory).Error; err != nil {
 		log.Printf("[ERROR] Failed to create single category: %v\n", err)

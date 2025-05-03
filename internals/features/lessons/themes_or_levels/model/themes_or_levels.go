@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +16,6 @@ type ThemesOrLevelsModel struct {
 	DescriptionLong  string         `gorm:"type:varchar(2000)" json:"description_long"`
 	TotalUnit        pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_unit"` 
 	ImageURL         string         `gorm:"type:varchar(100)" json:"image_url"`
-	UpdateNews       datatypes.JSON `gorm:"type:jsonb" json:"update_news"`
 	CreatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt        *time.Time     `json:"updated_at,omitempty"`
 	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`

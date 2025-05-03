@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"quizku/internals/features/lessons/difficulty/model"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -16,6 +17,23 @@ type DifficultyNewsController struct {
 
 func NewDifficultyNewsController(db *gorm.DB) *DifficultyNewsController {
 	return &DifficultyNewsController{DB: db}
+}
+
+// GET all news
+func (dc *DifficultyNewsController) GetAllNews(c *fiber.Ctx) error {
+	var newsList []model.DifficultyNews
+
+	if err := dc.DB.Order("created_at desc").Find(&newsList).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": "Gagal mengambil semua berita",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Semua news berhasil diambil",
+		"data":    newsList,
+	})
 }
 
 // GET all news by difficulty

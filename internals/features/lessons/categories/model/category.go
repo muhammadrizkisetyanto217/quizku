@@ -7,7 +7,6 @@ import (
 	subcategoriesModel "quizku/internals/features/lessons/subcategory/model"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +18,6 @@ type CategoryModel struct {
 	DescriptionLong    string                                `json:"description_long" gorm:"size:2000"`
 	TotalSubcategories pq.Int64Array                         `json:"total_subcategories" gorm:"type:integer[];default:'{}'"`
 	ImageURL           string                                `json:"image_url" gorm:"size:100"`
-	UpdateNews         datatypes.JSON                        `json:"update_news"`
 	DifficultyID       uint                                  `json:"difficulty_id"`
 	CreatedAt          time.Time                             `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt          time.Time                             `json:"updated_at" gorm:"autoUpdateTime"`

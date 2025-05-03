@@ -1,0 +1,20 @@
+[
+    {
+        "title": "Pengantar Aqidah",
+        "description": "Berita awal mengenai pentingnya pemahaman Aqidah Islam.",
+        "is_public": true,
+        "category_id": 1
+    },
+    {
+        "title": "Fiqh Ibadah Populer",
+        "description": "Penjelasan fiqh dalam ibadah harian yang harus diketahui.",
+        "is_public": true,
+        "category_id": 2
+    },
+    {
+        "title": "Sejarah Islam Awal",
+        "description": "Bahasan ringan seputar sejarah Islam masa awal.",
+        "is_public": false,
+        "category_id": 3
+    }
+]

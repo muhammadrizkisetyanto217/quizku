@@ -70,7 +70,7 @@ func RefreshToken(db *gorm.DB, c *fiber.Ctx) error {
 
 // ========================== ISSUE TOKEN ==========================
 func issueTokens(c *fiber.Ctx, db *gorm.DB, user userModel.UserModel) error {
-	accessTokenDuration := 15 * time.Minute
+	accessTokenDuration := 60 * time.Minute
 	refreshTokenDuration := 7 * 24 * time.Hour
 
 	// 🔐 Generate access token

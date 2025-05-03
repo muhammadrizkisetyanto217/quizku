@@ -88,11 +88,13 @@ func LoginGoogle(db *gorm.DB, c *fiber.Ctx) error {
 		return helpers.Error(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
+	// 🔍 Verifikasi token Google
 	v := googleAuthIDTokenVerifier.Verifier{}
 	if err := v.VerifyIDToken(input.IDToken, []string{configs.GoogleClientID}); err != nil {
 		return helpers.Error(c, fiber.StatusUnauthorized, "Invalid Google ID Token")
 	}
 
+	// ✅ Decode informasi dari token
 	claimSet, err := googleAuthIDTokenVerifier.Decode(input.IDToken)
 	if err != nil {
 		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to decode ID Token")
@@ -100,12 +102,14 @@ func LoginGoogle(db *gorm.DB, c *fiber.Ctx) error {
 
 	email, name, googleID := claimSet.Email, claimSet.Name, claimSet.Sub
 
+	// 🔍 Cek apakah user sudah terdaftar dengan google_id
 	user, err := authRepo.FindUserByGoogleID(db, googleID)
 	if err != nil {
+		// ❌ User belum ada → buat baru
 		newUser := userModel.UserModel{
 			UserName:         name,
 			Email:            email,
-			Password:         generateDummyPassword(),
+			Password:         generateDummyPassword(), // dummy password
 			GoogleID:         &googleID,
 			Role:             "user",
 			SecurityQuestion: "Created by Google",
@@ -113,12 +117,22 @@ func LoginGoogle(db *gorm.DB, c *fiber.Ctx) error {
 			CreatedAt:        time.Now(),
 			UpdatedAt:        time.Now(),
 		}
+
 		if err := authRepo.CreateUser(db, &newUser); err != nil {
+			if strings.Contains(err.Error(), "duplicate key") {
+				return helpers.Error(c, fiber.StatusBadRequest, "Email already registered")
+			}
 			return helpers.Error(c, fiber.StatusInternalServerError, "Failed to create Google user")
 		}
+
+		// ✅ Buat user_progress dan user_profile
+		_ = progressUserService.CreateInitialUserProgress(db, newUser.ID)
+		userProfileService.CreateInitialUserProfile(db, newUser.ID)
+
 		user = &newUser
 	}
 
+	// 🎟️ Buat access + refresh token
 	return issueTokens(c, db, *user)
 }
 

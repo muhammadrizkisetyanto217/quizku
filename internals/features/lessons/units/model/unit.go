@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -19,8 +18,6 @@ type UnitModel struct {
 	DescriptionShort    string         `gorm:"type:varchar(200);not null" json:"description_short"`
 	DescriptionOverview string         `gorm:"type:text;not null" json:"description_overview"`
 	ImageURL            string         `gorm:"type:varchar(100)" json:"image_url"`
-	UpdateNews          datatypes.JSON `gorm:"type:jsonb" json:"update_news"`
-
 	TotalSectionQuizzes pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_section_quizzes"`
 	CreatedAt           time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt           time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`

@@ -1,11 +1,11 @@
 package seeds
 
 import (
-	categories "quizku/internals/seeds/lessons/categories"
-	difficulties "quizku/internals/seeds/lessons/difficulties"
-	subcategories "quizku/internals/seeds/lessons/subcategories"
-	themes_or_levels "quizku/internals/seeds/lessons/themes_or_levels"
-	units "quizku/internals/seeds/lessons/units"
+	categories "quizku/internals/seeds/lessons/categories/categories"
+	difficulties "quizku/internals/seeds/lessons/difficulties/difficulties"
+	subcategories "quizku/internals/seeds/lessons/subcategories/subcategories"
+	themes_or_levels "quizku/internals/seeds/lessons/themes_or_levels/themes_or_levels"
+	units "quizku/internals/seeds/lessons/units/units"
 
 	evaluations "quizku/internals/seeds/quizzes/evaluations"
 	exams "quizku/internals/seeds/quizzes/exams"

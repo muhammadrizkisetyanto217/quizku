@@ -1,0 +1,20 @@
+[
+    {
+        "title": "Apa itu Bab Tauhid?",
+        "description": "Bab ini membahas pengesaan Allah dan dalil-dalilnya.",
+        "is_public": true,
+        "subcategories_id": 1
+    },
+    {
+        "title": "Fiqh Wudhu",
+        "description": "Penjelasan tentang tata cara dan syarat sah wudhu.",
+        "is_public": true,
+        "subcategories_id": 2
+    },
+    {
+        "title": "Sejarah Nabi",
+        "description": "Rangkuman sejarah para nabi sejak awal hingga akhir.",
+        "is_public": false,
+        "subcategories_id": 3
+    }
+]

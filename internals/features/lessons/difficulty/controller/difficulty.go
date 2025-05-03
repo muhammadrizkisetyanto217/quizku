@@ -98,19 +98,6 @@ func (dc *DifficultyController) CreateDifficulty(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Name is required"})
 	}
 
-	// Handle update_news jika ada
-	if c.Body() != nil {
-		var raw map[string]interface{}
-		if err := json.Unmarshal(c.Body(), &raw); err == nil {
-			if un, ok := raw["update_news"]; ok {
-				jsonData, err := json.Marshal(un)
-				if err == nil {
-					single.UpdateNews = datatypes.JSON(jsonData)
-				}
-			}
-		}
-	}
-
 	if err := dc.DB.Create(&single).Error; err != nil {
 		log.Printf("[ERROR] Failed to insert single difficulty: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create difficulty"})

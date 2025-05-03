@@ -7,7 +7,6 @@ import (
 	categoryModel "quizku/internals/features/lessons/categories/model"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +47,6 @@ func SeedCategoriesFromJSON(db *gorm.DB, filePath string) {
 			DifficultyID:       c.DifficultyID,
 			TotalSubcategories: pq.Int64Array{},
 			ImageURL:           "",
-			UpdateNews:         datatypes.JSON([]byte(`null`)),
 		}
 
 		if err := db.Create(&newCategory).Error; err != nil {

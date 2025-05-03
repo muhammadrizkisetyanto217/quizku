@@ -1,0 +1,20 @@
+[
+    {
+        "title": "Fiqh Wudhu",
+        "description": "Materi penting tentang tata cara dan hukum wudhu.",
+        "is_public": true,
+        "themes_or_levels_id": 1
+    },
+    {
+        "title": "Sholat Fardhu",
+        "description": "Pengantar materi tentang sholat wajib dan rukunnya.",
+        "is_public": true,
+        "themes_or_levels_id": 2
+    },
+    {
+        "title": "Puasa Ramadhan",
+        "description": "Hukum, syarat dan hikmah berpuasa Ramadhan.",
+        "is_public": false,
+        "themes_or_levels_id": 3
+    }
+]

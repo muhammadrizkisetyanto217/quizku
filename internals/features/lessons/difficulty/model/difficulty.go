@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +15,6 @@ type DifficultyModel struct {
 	DescriptionLong  string         `gorm:"size:3000" json:"description_long"`
 	TotalCategories  pq.Int64Array  `json:"total_categories" gorm:"type:integer[];default:'{}'"`
 	ImageURL         string         `gorm:"size:100" json:"image_url"`
-	UpdateNews       datatypes.JSON `json:"update_news"` // pakai JSONB di PostgreSQL
 	CreatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt        time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `json:"deleted_at" gorm:"index"`
