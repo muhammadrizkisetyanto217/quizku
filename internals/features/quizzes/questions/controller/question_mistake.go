@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -84,13 +85,20 @@ func (ctrl *QuestionMistakeController) Delete(c *fiber.Ctx) error {
 
 	if err := ctrl.DB.First(&mistake, id).Error; err != nil {
 		log.Println("[ERROR] Question mistake not found:", err)
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Question mistake not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Question mistake not found",
+		})
 	}
 
 	if err := ctrl.DB.Delete(&mistake).Error; err != nil {
 		log.Println("[ERROR] Failed to delete question mistake:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete question mistake"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete question mistake",
+		})
 	}
 
-	return c.JSON(fiber.Map{"message": "Question mistake deleted successfully"})
+	log.Printf("[SUCCESS] Question mistake with ID %v deleted\n", mistake.ID)
+	return c.JSON(fiber.Map{
+		"message": fmt.Sprintf("Question mistake with ID %v deleted successfully", mistake.ID),
+	})
 }

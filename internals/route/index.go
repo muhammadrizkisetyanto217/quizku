@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+	routeDetails "quizku/internals/route/details"
 )
 
 var startTime time.Time
@@ -16,14 +17,14 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	BaseRoutes(app, db)
 
 	log.Println("[INFO] Setting up AuthRoutes...")
-	AuthRoutes(app, db)
+	routeDetails.AuthRoutes(app, db)
 
 	log.Println("[INFO] Setting up UserRoutes...")
-	UserRoutes(app, db)
+	routeDetails.UserRoutes(app, db)
 
 	log.Println("[INFO] Setting up LessonRoutes...")
-	LessonRoutes(app, db)
+	routeDetails.LessonRoutes(app, db)
 
 	log.Println("[INFO] Setting up QuizzesRoute...")
-	QuizzesRoute(app, db)
+	routeDetails.QuizzesRoute(app, db)
 } 

@@ -16,7 +16,7 @@ func UnitAdminRoutes(api fiber.Router, db *gorm.DB) {
 	unitRoutes := api.Group("/units",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorTeacher("mengelola unit"),
-			constants.TeacherAndAbove,
+			constants.OwnerAndAbove,
 		),
 	)
 	unitRoutes.Post("/", unitCtrl.CreateUnit)
@@ -26,7 +26,7 @@ func UnitAdminRoutes(api fiber.Router, db *gorm.DB) {
 	unitNewsRoutes := api.Group("/units-news",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorTeacher("mengelola berita unit"),
-			constants.TeacherAndAbove,
+			constants.OwnerAndAbove,
 		),
 	)
 	unitNewsRoutes.Post("/", unitNewsCtrl.Create)

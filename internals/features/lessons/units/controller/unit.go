@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"quizku/internals/features/lessons/units/model"
 
@@ -188,11 +189,13 @@ func (uc *UnitController) DeleteUnit(c *fiber.Ctx) error {
 
 	if err := uc.DB.Delete(&model.UnitModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete unit:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete unit"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete unit",
+		})
 	}
 
 	log.Printf("[SUCCESS] Unit with ID %s deleted successfully\n", id)
 	return c.JSON(fiber.Map{
-		"message": "Unit deleted successfully",
+		"message": fmt.Sprintf("Unit with ID %s deleted successfully", id),
 	})
 }

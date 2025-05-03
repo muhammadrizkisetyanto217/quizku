@@ -1,9 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 
-	"quizku/internals/databases"
+	database "quizku/internals/databases"
 	"quizku/internals/features/utils/tooltips/model"
 
 	"github.com/gofiber/fiber/v2"
@@ -123,7 +124,6 @@ func (tc *TooltipsController) CreateTooltip(c *fiber.Ctx) error {
 	})
 }
 
-
 // GetAllTooltips menangani permintaan untuk mendapatkan semua data tooltips
 func (tc *TooltipsController) GetAllTooltips(c *fiber.Ctx) error {
 	log.Println("Fetching all tooltips")
@@ -137,4 +137,63 @@ func (tc *TooltipsController) GetAllTooltips(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(tooltips)
+}
+
+func (tc *TooltipsController) UpdateTooltip(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var existing model.Tooltip
+	if err := tc.DB.First(&existing, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Tooltip not found",
+		})
+	}
+
+	var updated model.Tooltip
+	if err := c.BodyParser(&updated); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
+		})
+	}
+
+	// Update fields
+	existing.Keyword = updated.Keyword
+	existing.DescriptionShort = updated.DescriptionShort
+	existing.DescriptionLong = updated.DescriptionLong
+
+	if err := tc.DB.Save(&existing).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update tooltip",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": fmt.Sprintf("Tooltip with ID %v updated successfully", existing.ID),
+		"data":    existing,
+	})
+}
+
+func (tc *TooltipsController) DeleteTooltip(c *fiber.Ctx) error {
+	id := c.Params("id")
+	log.Printf("[INFO] Deleting tooltip with ID: %s\n", id)
+
+	var tooltip model.Tooltip
+	if err := tc.DB.First(&tooltip, id).Error; err != nil {
+		log.Printf("[ERROR] Tooltip not found: %v\n", err)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Tooltip not found",
+		})
+	}
+
+	if err := tc.DB.Delete(&tooltip).Error; err != nil {
+		log.Printf("[ERROR] Failed to delete tooltip: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete tooltip",
+		})
+	}
+
+	log.Printf("[SUCCESS] Tooltip with ID %s deleted\n", id)
+	return c.JSON(fiber.Map{
+		"message": fmt.Sprintf("Tooltip with ID %s deleted successfully", id),
+	})
 }

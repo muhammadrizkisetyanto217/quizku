@@ -16,7 +16,7 @@ func CategoryAdminRoutes(api fiber.Router, db *gorm.DB) {
 	categoryRoutes := api.Group("/categories",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorTeacher("mengelola kategori"),
-			constants.TeacherAndAbove,
+			constants.OwnerAndAbove,
 		),
 	)
 	categoryRoutes.Post("/", categoryCtrl.CreateCategory)
@@ -26,7 +26,7 @@ func CategoryAdminRoutes(api fiber.Router, db *gorm.DB) {
 	categoryNewsRoutes := api.Group("/categories-news",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorTeacher("mengelola berita kategori"),
-			constants.TeacherAndAbove,
+			constants.OwnerAndAbove,
 		),
 	)
 	categoryNewsRoutes.Post("/", categoryNewsCtrl.Create)

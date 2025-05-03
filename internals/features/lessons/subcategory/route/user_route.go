@@ -1,6 +1,5 @@
 package route
 
-
 import (
 	subcategoryController "quizku/internals/features/lessons/subcategory/controller"
 
@@ -20,8 +19,9 @@ func SubcategoryUserRoutes(api fiber.Router, db *gorm.DB) {
 	subcategoryRoutes.Get("/with-category-themes/:difficulty_id", subcategoryCtrl.GetCategoryWithSubcategoryAndThemes)
 
 	subcategoryNewsRoutes := api.Group("/subcategories-news")
-	subcategoryNewsRoutes.Get("/:subcategory_id", subcategoryNewsCtrl.GetAll)
-	subcategoryNewsRoutes.Get("/:id", subcategoryNewsCtrl.GetByID)
+	subcategoryNewsRoutes.Get("/", subcategoryNewsCtrl.GetAll)
+	subcategoryNewsRoutes.Get("/:subcategory_id", subcategoryNewsCtrl.GetBySubcategoryID)
+	subcategoryNewsRoutes.Get("/detail/:id", subcategoryNewsCtrl.GetByID)
 
 	userSubcategoryRoutes := api.Group("/user-subcategory")
 	userSubcategoryRoutes.Post("/", userSubcategoryCtrl.Create)

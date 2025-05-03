@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"quizku/internals/features/lessons/units/model"
@@ -30,6 +31,34 @@ func (uc *UnitNewsController) GetAll(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{
 		"message": "Unit news list retrieved successfully",
+		"data":    news,
+	})
+}
+
+// GET all news by unit_id
+func (uc *UnitNewsController) GetByUnitID(c *fiber.Ctx) error {
+	unitID := c.Params("unit_id")
+
+	var news []model.UnitNewsModel
+	if err := uc.DB.
+		Where("unit_id = ?", unitID).
+		Where("deleted_at IS NULL").
+		Find(&news).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": err.Error(),
+		})
+	}
+
+	if len(news) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error":   true,
+			"message": "No news found for this unit_id",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "News for the selected unit retrieved successfully",
 		"data":    news,
 	})
 }
@@ -134,7 +163,7 @@ func (uc *UnitNewsController) Delete(c *fiber.Ctx) error {
 	updateUnitNewsJSON(uc.DB, news.UnitID)
 
 	return c.JSON(fiber.Map{
-		"message": "Unit news deleted successfully",
+		"message": fmt.Sprintf("Unit news with ID %v deleted successfully", news.ID),
 	})
 }
 

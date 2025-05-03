@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 
 	categoryModel "quizku/internals/features/lessons/categories/model"
 
 	"quizku/internals/features/lessons/subcategory/model"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -178,12 +180,14 @@ func (sc *SubcategoryController) DeleteSubcategory(c *fiber.Ctx) error {
 
 	if err := sc.DB.Delete(&model.SubcategoryModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Error deleting subcategory:", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete subcategory"})
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to delete subcategory",
+		})
 	}
 
 	log.Printf("[SUCCESS] Subcategory with ID %s deleted\n", id)
 	return c.JSON(fiber.Map{
-		"message": "Subcategory deleted successfully",
+		"message": fmt.Sprintf("Subcategory with ID %s deleted successfully", id),
 	})
 }
 

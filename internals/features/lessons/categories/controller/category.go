@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"quizku/internals/features/lessons/categories/model"
@@ -94,7 +95,6 @@ func (cc *CategoryController) CreateCategory(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input format"})
 	}
 
-
 	if err := cc.DB.Create(&singleCategory).Error; err != nil {
 		log.Printf("[ERROR] Failed to create single category: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create category"})
@@ -143,15 +143,20 @@ func (cc *CategoryController) UpdateCategory(c *fiber.Ctx) error {
 }
 
 // Delete category
+// Delete category
 func (cc *CategoryController) DeleteCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting category with ID: %s\n", id)
 
 	if err := cc.DB.Delete(&model.CategoryModel{}, id).Error; err != nil {
 		log.Printf("[ERROR] Failed to delete category: %v\n", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete category"})
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to delete category",
+		})
 	}
+
 	log.Printf("[SUCCESS] Category with ID %s deleted successfully\n", id)
 	return c.JSON(fiber.Map{
-		"message": "Category deleted successfully"})
+		"message": fmt.Sprintf("Category with ID %s deleted successfully", id),
+	})
 }

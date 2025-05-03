@@ -130,8 +130,6 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 	// Update fields
 	user.UserName = input.UserName
 	user.Email = input.Email
-	user.DonationName = input.DonationName
-	user.OriginalName = input.OriginalName
 
 	if err := uc.DB.Save(&user).Error; err != nil {
 		log.Println("[ERROR] Failed to update user:", err)
@@ -143,8 +141,6 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 		"id":            user.ID,
 		"user_name":     user.UserName,
 		"email":         user.Email,
-		"donation_name": user.DonationName,
-		"original_name": user.OriginalName,
 		"updated_at":    user.UpdatedAt,
 	})
 }

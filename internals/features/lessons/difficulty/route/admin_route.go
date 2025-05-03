@@ -1,9 +1,9 @@
 package route
 
 import (
+	"quizku/internals/constants"
 	difficultyController "quizku/internals/features/lessons/difficulty/controller"
 	authMiddleware "quizku/internals/middlewares/auth"
-	"quizku/internals/constants"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -17,7 +17,7 @@ func DifficultyAdminRoutes(api fiber.Router, db *gorm.DB) {
 	protectedDifficultyRoutes := api.Group("/difficulties",
 		authMiddleware.OnlyRoles(
 			constants.RoleErrorTeacher("mengelola difficulties"),
-			constants.TeacherAndAbove...,
+			constants.AdminOnly...,
 		),
 	)
 	protectedDifficultyRoutes.Post("/", difficultyCtrl.CreateDifficulty)
@@ -27,7 +27,7 @@ func DifficultyAdminRoutes(api fiber.Router, db *gorm.DB) {
 	protectedDifficultyNewsRoutes := api.Group("/difficulties-news",
 		authMiddleware.OnlyRoles(
 			constants.RoleErrorTeacher("mengelola difficulty news"),
-			constants.TeacherAndAbove...,
+			constants.OwnerAndAbove...,
 		),
 	)
 	protectedDifficultyNewsRoutes.Post("/", difficultyNewsCtrl.CreateNews)

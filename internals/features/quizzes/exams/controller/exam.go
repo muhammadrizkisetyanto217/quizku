@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 
 	examModel "quizku/internals/features/quizzes/exams/model"
@@ -81,7 +82,6 @@ func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-
 	if err := ec.DB.Create(&exam).Error; err != nil {
 		log.Println("[ERROR] Failed to create exam:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create exam"})
@@ -91,7 +91,7 @@ func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{
 		"message": "Exam created successfully",
 		"data":    exam,
-	}) 
+	})
 }
 
 // PUT update exam
@@ -137,11 +137,13 @@ func (ec *ExamController) DeleteExam(c *fiber.Ctx) error {
 
 	if err := ec.DB.Delete(&examModel.ExamModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete exam:", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete exam"})
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to delete exam",
+		})
 	}
 
 	log.Printf("[SUCCESS] Exam with ID %s deleted\n", id)
 	return c.JSON(fiber.Map{
-		"message": "Exam deleted successfully",
+		"message": fmt.Sprintf("Exam with ID %s deleted successfully", id),
 	})
 }

@@ -7,6 +7,7 @@ const (
 	ErrOnlyTeachersCanAccess = "❌ Hanya teacher, admin, atau owner yang boleh mengakses fitur %s."
 	ErrOnlyAdminsCanAccess   = "❌ Hanya admin yang boleh mengakses fitur %s."
 	ErrOnlyNonUserCanAccess  = "❌ Hanya role selain 'user' yang boleh mengakses fitur %s."
+	ErrOnlyOwnersCanAccess   = "❌ Hanya owner yang boleh mengakses fitur %s."
 )
 
 // Fungsi helper untuk menghasilkan pesan error dinamis
@@ -20,6 +21,10 @@ func RoleErrorAdmin(feature string) string {
 
 func RoleErrorNonUser(feature string) string {
 	return fmt.Sprintf(ErrOnlyNonUserCanAccess, feature)
+}
+
+func RoleErrorOwner(feature string) string {
+	return fmt.Sprintf(ErrOnlyOwnersCanAccess, feature)
 }
 
 // ==========================
@@ -47,7 +52,16 @@ var (
 		RoleOwner,
 	}
 
+	OwnerAndAbove = []string{
+		RoleOwner,
+		RoleAdmin,
+	}
+
 	AdminOnly = []string{
 		RoleAdmin,
+	}
+
+	OwnerOnly = []string{
+		RoleOwner,
 	}
 )

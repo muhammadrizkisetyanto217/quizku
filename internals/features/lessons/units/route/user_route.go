@@ -18,7 +18,8 @@ func UnitUserRoutes(api fiber.Router, db *gorm.DB) {
 
 	unitNewsRoutes := api.Group("/units-news")
 	unitNewsRoutes.Get("/", unitNewsCtrl.GetAll)
-	unitNewsRoutes.Get("/:id", unitNewsCtrl.GetByID)
+	unitNewsRoutes.Get("/:unit_id", unitNewsCtrl.GetByUnitID)
+	unitNewsRoutes.Get("/detail/:id", unitNewsCtrl.GetByID)
 
 	userUnitRoutes := api.Group("/user-units")
 	userUnitRoutes.Get("/:user_id", userUnitCtrl.GetByUserID)

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -31,6 +32,34 @@ func (tc *ThemesOrLevelsNewsController) GetAll(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{
 		"message": "Themes/Levels news list retrieved successfully",
+		"data":    news,
+	})
+}
+
+// GET by ThemesOrLevelsID
+func (tc *ThemesOrLevelsNewsController) GetByThemesOrLevelsID(c *fiber.Ctx) error {
+	id := c.Params("themes_or_levels_id") // themes_or_levels_id dari URL
+	var news []model.ThemesOrLevelsNewsModel
+
+	if err := tc.DB.
+		Where("themes_or_levels_id = ?", id).
+		Where("deleted_at IS NULL").
+		Find(&news).Error; err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": err.Error(),
+		})
+	}
+
+	if len(news) == 0 {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error":   true,
+			"message": "No news found for this themes_or_levels_id",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "News for the selected themes/levels retrieved successfully",
 		"data":    news,
 	})
 }
@@ -114,6 +143,7 @@ func (tc *ThemesOrLevelsNewsController) Update(c *fiber.Ctx) error {
 }
 
 // DELETE
+// DELETE
 func (tc *ThemesOrLevelsNewsController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.ThemesOrLevelsNewsModel
@@ -135,7 +165,7 @@ func (tc *ThemesOrLevelsNewsController) Delete(c *fiber.Ctx) error {
 	updateThemesOrLevelsNewsJSON(tc.DB, news.ThemesOrLevelsID)
 
 	return c.JSON(fiber.Map{
-		"message": "Themes/Levels news deleted successfully",
+		"message": fmt.Sprintf("Themes/Levels news with ID %v deleted successfully", news.ID),
 	})
 }
 

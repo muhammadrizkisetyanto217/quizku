@@ -18,6 +18,6 @@ func DifficultyUserRoutes(api fiber.Router, db *gorm.DB) {
 
 	difficultyNewsRoutes := api.Group("/difficulties-news")
 	difficultyNewsRoutes.Get("/", difficultyNewsCtrl.GetAllNews)
-	difficultyNewsRoutes.Get("/:difficulty_id", difficultyNewsCtrl.GetNewsByDifficulty)
+	difficultyNewsRoutes.Get("/:difficulty_id", difficultyNewsCtrl.GetNewsByDifficultyId)
 	difficultyNewsRoutes.Get("/detail/:id", difficultyNewsCtrl.GetNewsByID)
 }

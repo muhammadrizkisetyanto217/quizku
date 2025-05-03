@@ -1,8 +1,9 @@
 package controller
 
 import (
-	evaluationModel "quizku/internals/features/quizzes/evaluations/model"
+	"fmt"
 	"log"
+	evaluationModel "quizku/internals/features/quizzes/evaluations/model"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -129,11 +130,13 @@ func (ec *EvaluationController) DeleteEvaluation(c *fiber.Ctx) error {
 
 	if err := ec.DB.Delete(&evaluationModel.EvaluationModel{}, id).Error; err != nil {
 		log.Printf("[ERROR] Failed to delete evaluation: %v\n", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete evaluation"})
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to delete evaluation",
+		})
 	}
 
 	log.Printf("[SUCCESS] Evaluation with ID %s deleted\n", id)
 	return c.JSON(fiber.Map{
-		"message": "Evaluation deleted successfully",
+		"message": fmt.Sprintf("Evaluation with ID %s deleted successfully", id),
 	})
 }

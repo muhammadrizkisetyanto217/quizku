@@ -1,12 +1,11 @@
 package controller
 
 import (
-	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"quizku/internals/features/lessons/subcategory/model"
+
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +28,24 @@ func (sc *SubcategoryNewsController) GetAll(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{
 		"message": "Subcategory news list retrieved successfully",
+		"data":    news,
+	})
+}
+
+func (sc *SubcategoryNewsController) GetBySubcategoryID(c *fiber.Ctx) error {
+	subcategoryID := c.Params("subcategory_id")
+	var news []model.SubcategoryNewsModel
+
+	if err := sc.DB.Where("subcategory_id = ?", subcategoryID).Find(&news).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": "Failed to retrieve news by subcategory",
+			"detail":  err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Subcategory news by subcategory retrieved successfully",
 		"data":    news,
 	})
 }
@@ -69,8 +86,6 @@ func (sc *SubcategoryNewsController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	updateSubcategoryNewsJSON(sc.DB, int(news.SubCategoriesID))
-
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Subcategory news created successfully",
 		"data":    news,
@@ -103,14 +118,13 @@ func (sc *SubcategoryNewsController) Update(c *fiber.Ctx) error {
 		})
 	}
 
-	updateSubcategoryNewsJSON(sc.DB, int(news.SubCategoriesID))
-
 	return c.JSON(fiber.Map{
 		"message": "Subcategory news updated successfully",
 		"data":    news,
 	})
 }
 
+// DELETE
 // DELETE
 func (sc *SubcategoryNewsController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
@@ -130,30 +144,7 @@ func (sc *SubcategoryNewsController) Delete(c *fiber.Ctx) error {
 		})
 	}
 
-	updateSubcategoryNewsJSON(sc.DB, int(news.SubCategoriesID))
-
 	return c.JSON(fiber.Map{
-		"message": "Subcategory news deleted successfully",
+		"message": fmt.Sprintf("Subcategory news with ID %v deleted successfully", news.ID),
 	})
-}
-
-// Helper untuk update kolom update_news di tabel subcategories
-func updateSubcategoryNewsJSON(db *gorm.DB, subCategoryID int) {
-	var newsList []model.SubcategoryNewsModel
-	if err := db.Where("subcategory_id = ?", subCategoryID).Order("created_at desc").Find(&newsList).Error; err != nil {
-		log.Println("[ERROR] Failed to fetch subcategory news for update:", err)
-		return
-	}
-
-	newsData, err := json.Marshal(newsList)
-	if err != nil {
-		log.Println("[ERROR] Failed to marshal subcategory news:", err)
-		return
-	}
-
-	res := db.Table("subcategories").
-		Where("id = ?", subCategoryID).
-		Update("update_news", datatypes.JSON(newsData))
-
-	log.Println("[DEBUG] Rows affected (subcategory):", res.RowsAffected)
 }

@@ -1,13 +1,12 @@
 package controller
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"quizku/internals/features/lessons/difficulty/model"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +36,7 @@ func (dc *DifficultyNewsController) GetAllNews(c *fiber.Ctx) error {
 }
 
 // GET all news by difficulty
-func (dc *DifficultyNewsController) GetNewsByDifficulty(c *fiber.Ctx) error {
+func (dc *DifficultyNewsController) GetNewsByDifficultyId(c *fiber.Ctx) error {
 	difficultyID := c.Params("difficulty_id")
 	log.Println("[DEBUG] Difficulty ID:", difficultyID)
 
@@ -93,8 +92,6 @@ func (dc *DifficultyNewsController) CreateNews(c *fiber.Ctx) error {
 		})
 	}
 
-	updateNewsJSON(dc.DB, news.DifficultyID)
-
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "News created successfully",
 		"data":    news,
@@ -127,8 +124,6 @@ func (dc *DifficultyNewsController) UpdateNews(c *fiber.Ctx) error {
 		})
 	}
 
-	updateNewsJSON(dc.DB, news.DifficultyID)
-
 	return c.JSON(fiber.Map{
 		"message": "News updated successfully",
 		"data":    news,
@@ -154,28 +149,7 @@ func (dc *DifficultyNewsController) DeleteNews(c *fiber.Ctx) error {
 		})
 	}
 
-	updateNewsJSON(dc.DB, news.DifficultyID)
-
 	return c.JSON(fiber.Map{
-		"message": "News deleted successfully",
+		"message": fmt.Sprintf("News with ID %v deleted successfully", news.ID),
 	})
-}
-
-// Helper untuk update kolom update_news di difficulties
-func updateNewsJSON(db *gorm.DB, difficultyID uint) {
-	var newsList []model.DifficultyNews
-	if err := db.Where("difficulty_id = ?", difficultyID).Order("created_at desc").Find(&newsList).Error; err != nil {
-		log.Println("[ERROR] Failed to fetch news for update:", err)
-		return
-	}
-
-	newsData, err := json.Marshal(newsList)
-	if err != nil {
-		log.Println("[ERROR] Failed to marshal news:", err)
-		return
-	}
-
-	db.Model(&model.DifficultyModel{}).
-		Where("id = ?", difficultyID).
-		Update("update_news", datatypes.JSON(newsData))
 }

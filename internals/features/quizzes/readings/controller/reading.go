@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	readingModel "quizku/internals/features/quizzes/readings/model"
 	tooltipModel "quizku/internals/features/utils/tooltips/model"
 
@@ -97,11 +98,18 @@ func (rc *ReadingController) UpdateReading(c *fiber.Ctx) error {
 func (rc *ReadingController) DeleteReading(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("Deleting reading with ID:", id)
+
 	if err := rc.DB.Delete(&readingModel.ReadingModel{}, id).Error; err != nil {
 		log.Println("Error deleting reading:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete reading"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete reading",
+		})
 	}
-	return c.JSON(fiber.Map{"message": "Reading deleted successfully"})
+
+	log.Printf("[SUCCESS] Reading with ID %s deleted successfully\n", id)
+	return c.JSON(fiber.Map{
+		"message": fmt.Sprintf("Reading with ID %s deleted successfully", id),
+	})
 }
 
 // Get a single reading by ID with Tooltips
@@ -177,7 +185,6 @@ func (rc *ReadingController) MarkKeywords(text string, tooltips []tooltipModel.T
 	log.Printf("[DEBUG] Modified text: %s\n", text)
 	return text
 }
-
 
 // **📌 Get Reading by ID dengan Tooltips yang Ditandai dan Update ke Database**
 func (rc *ReadingController) ConvertReadingWithTooltipsId(c *fiber.Ctx) error {

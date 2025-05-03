@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"quizku/internals/features/lessons/themes_or_levels/model"
 
@@ -187,11 +188,13 @@ func (tc *ThemeOrLevelController) DeleteThemeOrLevel(c *fiber.Ctx) error {
 
 	if err := tc.DB.Delete(&model.ThemesOrLevelsModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete theme or level:", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete theme or level"})
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to delete theme or level",
+		})
 	}
 
 	log.Printf("[SUCCESS] Theme or level with ID %s deleted successfully\n", id)
 	return c.JSON(fiber.Map{
-		"message": "Theme or level deleted successfully",
+		"message": fmt.Sprintf("Theme or level with ID %s deleted successfully", id),
 	})
 }

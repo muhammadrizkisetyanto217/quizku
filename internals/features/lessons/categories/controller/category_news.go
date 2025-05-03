@@ -1,13 +1,11 @@
 package controller
 
 import (
-	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"quizku/internals/features/lessons/categories/model"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +28,25 @@ func (cc *CategoryNewsController) GetAll(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Category news list retrieved successfully",
+		"message": "All category news retrieved successfully",
+		"data":    categories,
+	})
+}
+
+// GET by category_id
+func (cc *CategoryNewsController) GetByCategoryID(c *fiber.Ctx) error {
+	categoryID := c.Params("category_id")
+
+	var categories []model.CategoryNewsModel
+	if err := cc.DB.Where("category_id = ?", categoryID).Find(&categories).Error; err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Category news filtered by category_id retrieved successfully",
 		"data":    categories,
 	})
 }
@@ -71,8 +87,6 @@ func (cc *CategoryNewsController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	updateCategoryNewsJSON(cc.DB, category.CategoryID)
-
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "Category news created successfully",
 		"data":    category,
@@ -105,14 +119,13 @@ func (cc *CategoryNewsController) Update(c *fiber.Ctx) error {
 		})
 	}
 
-	updateCategoryNewsJSON(cc.DB, category.CategoryID)
-
 	return c.JSON(fiber.Map{
 		"message": "Category news updated successfully",
 		"data":    category,
 	})
 }
 
+// DELETE
 // DELETE
 func (cc *CategoryNewsController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
@@ -132,30 +145,7 @@ func (cc *CategoryNewsController) Delete(c *fiber.Ctx) error {
 		})
 	}
 
-	updateCategoryNewsJSON(cc.DB, category.CategoryID)
-
 	return c.JSON(fiber.Map{
-		"message": "Category news deleted successfully",
+		"message": fmt.Sprintf("Category news with ID %v deleted successfully", category.ID),
 	})
-}
-
-// Helper untuk update kolom update_news di tabel categories
-func updateCategoryNewsJSON(db *gorm.DB, categoryID int) {
-	var newsList []model.CategoryNewsModel
-	if err := db.Where("category_id = ?", categoryID).Order("created_at desc").Find(&newsList).Error; err != nil {
-		log.Println("[ERROR] Failed to fetch category news for update:", err)
-		return
-	}
-
-	newsData, err := json.Marshal(newsList)
-	if err != nil {
-		log.Println("[ERROR] Failed to marshal category news:", err)
-		return
-	}
-
-	res := db.Table("categories").
-		Where("id = ?", categoryID).
-		Update("update_news", datatypes.JSON(newsData))
-
-	log.Println("[DEBUG] Rows affected:", res.RowsAffected)
 }

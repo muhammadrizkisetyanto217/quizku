@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 
 	"quizku/internals/features/quizzes/quizzes/model"
@@ -136,10 +137,18 @@ func (sqc *SectionQuizController) UpdateSectionQuiz(c *fiber.Ctx) error {
 func (sqc *SectionQuizController) DeleteSectionQuiz(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting section quiz with ID: %s\n", id)
+
 	if err := sqc.DB.Delete(&model.SectionQuizzesModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete section quiz:", err)
-		return c.Status(500).JSON(fiber.Map{"status": false, "message": "Failed to delete section quiz"})
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to delete section quiz",
+		})
 	}
+
 	log.Printf("[SUCCESS] Section quiz with ID %s deleted\n", id)
-	return c.JSON(fiber.Map{"status": true, "message": "Section quiz deleted successfully"})
+	return c.JSON(fiber.Map{
+		"status":  true,
+		"message": fmt.Sprintf("Section quiz with ID %s deleted successfully", id),
+	})
 }

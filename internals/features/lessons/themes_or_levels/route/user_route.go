@@ -18,7 +18,8 @@ func ThemesOrLevelsUserRoutes(api fiber.Router, db *gorm.DB) {
 
 	themesNewsRoutes := api.Group("/themes-or-levels-news")
 	themesNewsRoutes.Get("/", themesNewsCtrl.GetAll)
-	themesNewsRoutes.Get("/:id", themesNewsCtrl.GetByID)
+	themesNewsRoutes.Get("/:themes_or_levels_id", themesNewsCtrl.GetByThemesOrLevelsID)
+	themesNewsRoutes.Get("/detail/:id", themesNewsCtrl.GetByID)
 
 	userThemesRoutes := api.Group("/user-themes-or-levels")
 	userThemesRoutes.Get("/:user_id", userThemesCtrl.GetByUserID) // idealnya cek token vs ID

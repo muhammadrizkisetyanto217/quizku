@@ -15,7 +15,7 @@ func TooltipRoute(app *fiber.App, db *gorm.DB) {
 	tooltipRoutes := api.Group("/tooltip",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorNonUser("tooltip"),
-			constants.NonUserRoles,
+			constants.OwnerAndAbove,
 		),
 	)
 
@@ -24,4 +24,7 @@ func TooltipRoute(app *fiber.App, db *gorm.DB) {
 	tooltipRoutes.Get("/", tooltipCtrl.GetAllTooltips)
 	tooltipRoutes.Post("/get-tooltips-id", tooltipCtrl.GetTooltipsID)
 	tooltipRoutes.Post("/create-tooltips", tooltipCtrl.CreateTooltip)
+	tooltipRoutes.Put("/:id", tooltipCtrl.UpdateTooltip)
+	tooltipRoutes.Delete("/:id", tooltipCtrl.DeleteTooltip)
+
 }

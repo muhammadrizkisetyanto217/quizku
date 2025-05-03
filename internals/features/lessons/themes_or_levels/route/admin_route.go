@@ -16,7 +16,7 @@ func ThemesOrLevelsAdminRoutes(api fiber.Router, db *gorm.DB) {
 	themeOrLevelRoutes := api.Group("/themes-or-levels",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorTeacher("mengelola tema atau level"),
-			constants.TeacherAndAbove,
+			constants.OwnerAndAbove,
 		),
 	)
 	themeOrLevelRoutes.Post("/", themeOrLevelCtrl.CreateThemeOrLevel)
@@ -26,7 +26,7 @@ func ThemesOrLevelsAdminRoutes(api fiber.Router, db *gorm.DB) {
 	themesNewsRoutes := api.Group("/themes-or-levels-news",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorTeacher("mengelola berita tema atau level"),
-			constants.TeacherAndAbove,
+			constants.OwnerAndAbove,
 		),
 	)
 	themesNewsRoutes.Post("/", themesNewsCtrl.Create)

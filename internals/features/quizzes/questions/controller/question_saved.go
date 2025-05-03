@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 
-	questionSavedModel "quizku/internals/features/quizzes/questions/model"
 	questionModel "quizku/internals/features/quizzes/questions/model"
+	questionSavedModel "quizku/internals/features/quizzes/questions/model"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -120,7 +121,13 @@ func (ctrl *QuestionSavedController) Delete(c *fiber.Ctx) error {
 
 	if err := ctrl.DB.Delete(&questionSavedModel.QuestionSavedModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete",
+		})
 	}
-	return c.JSON(fiber.Map{"message": "Deleted successfully"})
+
+	log.Printf("[SUCCESS] question_saved with ID %s deleted successfully\n", id)
+	return c.JSON(fiber.Map{
+		"message": fmt.Sprintf("question_saved with ID %s deleted successfully", id),
+	})
 }

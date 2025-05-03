@@ -16,6 +16,7 @@ func CategoryUserRoutes(api fiber.Router, db *gorm.DB) {
 	categoryRoutes.Get("/difficulty/:difficulty_id", categoryCtrl.GetCategoriesByDifficulty)
 
 	categoryNewsRoutes := api.Group("/categories-news")
-	categoryNewsRoutes.Get("/:category_id", categoryNewsCtrl.GetAll)
-	categoryNewsRoutes.Get("/:id", categoryNewsCtrl.GetByID)
+	categoryNewsRoutes.Get("/", categoryNewsCtrl.GetAll)
+	categoryNewsRoutes.Get("/:category_id", categoryNewsCtrl.GetByCategoryID)
+	categoryNewsRoutes.Get("/detail/:id", categoryNewsCtrl.GetByID)
 }

@@ -22,8 +22,6 @@ type UserModel struct {
 	Role             string    `gorm:"type:varchar(20);not null;default:'user'" json:"role" validate:"required,oneof=owner user teacher treasurer admin"`
 	SecurityQuestion string    `gorm:"not null" json:"security_question"`
 	SecurityAnswer   string    `gorm:"size:255;not null" json:"security_answer"`
-	DonationName     *string   `gorm:"size:100" json:"donation_name,omitempty"` // ✅ Ditambahkan
-	OriginalName     *string   `gorm:"size:100" json:"original_name,omitempty"` // ✅ Ditambahkan
 	CreatedAt        time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt        time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }

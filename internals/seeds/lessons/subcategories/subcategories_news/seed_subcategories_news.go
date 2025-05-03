@@ -41,7 +41,7 @@ func SeedSubcategoriesNewsFromJSON(db *gorm.DB, filePath string) {
 			Title:           news.Title,
 			Description:     news.Description,
 			IsPublic:        news.IsPublic,
-			SubCategoriesID: news.SubcategoriesID,
+			SubcategoryID: news.SubcategoriesID,
 		}
 
 		if err := db.Create(&newsEntry).Error; err != nil {

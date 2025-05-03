@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	questionModel "quizku/internals/features/quizzes/questions/model"
 	tooltipModel "quizku/internals/features/utils/tooltips/model"
@@ -257,7 +258,7 @@ func (qqc *QuizzesQuestionController) DeleteQuestion(c *fiber.Ctx) error {
 	log.Printf("[SUCCESS] Quiz question with ID %s deleted\n", id)
 	return c.JSON(fiber.Map{
 		"status":  true,
-		"message": "Quiz question deleted successfully",
+		"message": fmt.Sprintf("Quiz question with ID %s deleted successfully", id),
 	})
 }
 
