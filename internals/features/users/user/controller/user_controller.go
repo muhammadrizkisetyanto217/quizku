@@ -41,15 +41,10 @@ func (uc *UserController) GetUsers(c *fiber.Ctx) error {
 }
 
 // GET profile user by ID (dari JWT)
-func (uc *UserController) GetProfile(c *fiber.Ctx) error {
-	userIDStr, ok := c.Locals("user_id").(string)
+func (uc *UserController) GetUser(c *fiber.Ctx) error {
+	userID, ok := c.Locals("user_id").(uuid.UUID)
 	if !ok {
 		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized")
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return helper.Error(c, fiber.StatusBadRequest, "Invalid user ID")
 	}
 
 	var user models.UserModel
@@ -57,9 +52,7 @@ func (uc *UserController) GetProfile(c *fiber.Ctx) error {
 		return helper.Error(c, fiber.StatusNotFound, "User not found")
 	}
 
-	// Kosongkan password semua user
-	user.Password = ""
-
+	user.Password = "" // Hilangkan password
 	return helper.Success(c, "User profile fetched successfully", user)
 }
 
@@ -102,7 +95,7 @@ type UpdateUserInput struct {
 	OriginalName *string `json:"original_name"`
 }
 
-func (uc *UserController) UpdateProfile(c *fiber.Ctx) error {
+func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 	userIDRaw := c.Locals("user_id")
 	if userIDRaw == nil {
 		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized")
@@ -160,7 +153,7 @@ func (uc *UserController) UpdateProfile(c *fiber.Ctx) error {
 func (uc *UserController) DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	if err := uc.DB.Delete(&models.UserModel{}, id).Error; err != nil {
+	if err := uc.DB.Delete(&models.UserModel{}, "id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete user:", err)
 		return helper.Error(c, fiber.StatusInternalServerError, "Failed to delete user")
 	}

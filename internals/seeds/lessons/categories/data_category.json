@@ -7,7 +7,7 @@
         "difficulty_id": 1
     },
     {
-        "name": "Fiqh Syafi'i",
+        "name": "Fiqh",
         "description_short": "Hukum-hukum ibadah dalam Islam",
         "description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
         "status": "active",
@@ -22,13 +22,6 @@
     },
     {
         "name": "Hadist",
-        "description_short": "Hukum-hukum ibadah dalam Islam",
-        "description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
-        "status": "active",
-        "difficulty_id": 1
-    },
-    {
-        "name": "Fiqh Sholat Jilid 60",
         "description_short": "Hukum-hukum ibadah dalam Islam",
         "description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
         "status": "active",

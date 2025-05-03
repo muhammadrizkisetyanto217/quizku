@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	
+
 	categoryModel "quizku/internals/features/lessons/categories/model"
 	subcategoryModel "quizku/internals/features/lessons/subcategory/model"
 	themesModel "quizku/internals/features/lessons/themes_or_levels/model"
@@ -12,6 +12,7 @@ import (
 	sectionQuizzesModel "quizku/internals/features/quizzes/quizzes/model"
 
 	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -206,14 +207,24 @@ func (ctrl *UserSubcategoryController) GetByUserId(c *fiber.Ctx) error {
 }
 
 func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) error {
-	userIDStr := c.Params("user_id")
-	difficultyID := c.Params("difficulty_id")
+	// 🔐 Ambil user_id dari token yang diset middleware AuthMiddleware
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized - user_id not found in token"})
+	}
+
+	userIDStr, ok := userIDVal.(string)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized - invalid user_id format"})
+	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "user_id tidak valid"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized - invalid user_id UUID"})
 	}
 
+	// 🎯 Ambil difficulty_id dari path
+	difficultyID := c.Params("difficulty_id")
 	if difficultyID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "difficulty_id wajib diisi"})
 	}

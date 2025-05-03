@@ -20,7 +20,7 @@ type UsersProfileModel struct {
 	DonationName string         `gorm:"size:50" json:"donation_name"`
 	FullName     string         `gorm:"size:50" json:"full_name"`
 	DateOfBirth  *time.Time     `json:"date_of_birth" time_format:"2006-01-02"`
-	Gender       Gender         `gorm:"size:10" json:"gender"`
+	Gender       *Gender         `gorm:"size:10" json:"gender,omitempty"`
 	PhoneNumber  string         `gorm:"size:20" json:"phone_number"`
 	Bio          string         `gorm:"size:300" json:"bio"`
 	Location     string         `gorm:"size:50" json:"location"`

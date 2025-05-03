@@ -49,19 +49,33 @@ func (ctrl *UserUnitController) GetByUserID(c *fiber.Ctx) error {
 }
 
 func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevelsAndUserID(c *fiber.Ctx) error {
-	userIDParam := c.Params("user_id")
-	themesIDParam := c.Params("themes_or_levels_id")
-
-	userID, err := uuid.Parse(userIDParam)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "user_id tidak valid",
+	// 🔐 Ambil user_id dari token JWT
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized - user_id tidak ditemukan dalam token",
 		})
 	}
 
+	userIDStr, ok := userIDVal.(string)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized - format user_id tidak valid",
+		})
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized - user_id bukan UUID valid",
+		})
+	}
+
+	// 🎯 Ambil themes_or_levels_id dari path
+	themesIDParam := c.Params("themes_or_levels_id")
 	themesID, err := strconv.Atoi(themesIDParam)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "themes_or_levels_id tidak valid",
 		})
 	}

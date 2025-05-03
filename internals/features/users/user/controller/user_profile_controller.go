@@ -2,7 +2,6 @@ package controller
 
 import (
 	"log"
-	"strconv"
 
 	"quizku/internals/features/users/user/models"
 	helper "quizku/internals/helpers"
@@ -33,11 +32,11 @@ func (upc *UsersProfileController) GetProfiles(c *fiber.Ctx) error {
 }
 
 func (upc *UsersProfileController) GetProfile(c *fiber.Ctx) error {
-	id := c.Params("id")
-	log.Println("[INFO] Fetching user profile with ID:", id)
+	userID := c.Locals("user_id")
+	log.Println("[INFO] Fetching user profile with user_id:", userID)
 
 	var profile models.UsersProfileModel
-	if err := upc.DB.First(&profile, id).Error; err != nil {
+	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		log.Println("[ERROR] User profile not found:", err)
 		return helper.Error(c, fiber.StatusNotFound, "User profile not found")
 	}
@@ -48,16 +47,21 @@ func (upc *UsersProfileController) GetProfile(c *fiber.Ctx) error {
 func (upc *UsersProfileController) CreateProfile(c *fiber.Ctx) error {
 	log.Println("[INFO] Creating or updating user profile")
 
+	// Ambil user_id dari JWT
+	userID := c.Locals("user_id")
+	if userID == nil {
+		log.Println("[ERROR] user_id not found in context")
+		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized: no user_id")
+	}
+
 	var input models.UsersProfileModel
 	if err := c.BodyParser(&input); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return helper.Error(c, fiber.StatusBadRequest, "Invalid request format")
 	}
 
-	if input.UserID == uuid.Nil {
-		log.Println("[ERROR] Missing user_id")
-		return helper.Error(c, fiber.StatusBadRequest, "user_id is required")
-	}
+	// Set user_id dari token ke model
+	input.UserID = userID.(uuid.UUID)
 
 	var existingProfile models.UsersProfileModel
 	result := upc.DB.Where("user_id = ?", input.UserID).First(&existingProfile)
@@ -81,27 +85,22 @@ func (upc *UsersProfileController) CreateProfile(c *fiber.Ctx) error {
 }
 
 func (upc *UsersProfileController) UpdateProfile(c *fiber.Ctx) error {
-	id := c.Params("id")
-	log.Println("[INFO] Updating user profile with ID:", id)
-
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		log.Println("[ERROR] Invalid ID format:", err)
-		return helper.Error(c, fiber.StatusBadRequest, "Invalid ID format")
-	}
+	userID := c.Locals("user_id")
+	log.Println("[INFO] Updating user profile with user_id:", userID)
 
 	var profile models.UsersProfileModel
-	if err := upc.DB.First(&profile, idInt).Error; err != nil {
+	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		log.Println("[ERROR] User profile not found:", err)
 		return helper.Error(c, fiber.StatusNotFound, "User profile not found")
 	}
 
+	// Ambil data baru dari body
 	if err := c.BodyParser(&profile); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return helper.Error(c, fiber.StatusBadRequest, "Invalid request format")
 	}
 
-	profile.ID = uint(idInt) // Pastikan ID tetap konsisten
+	profile.UserID = userID.(uuid.UUID) // Pastikan user_id tetap konsisten
 
 	if err := upc.DB.Save(&profile).Error; err != nil {
 		log.Println("[ERROR] Failed to update user profile:", err)
@@ -112,10 +111,16 @@ func (upc *UsersProfileController) UpdateProfile(c *fiber.Ctx) error {
 }
 
 func (upc *UsersProfileController) DeleteProfile(c *fiber.Ctx) error {
-	id := c.Params("id")
-	log.Println("[INFO] Deleting user profile with ID:", id)
+	userID := c.Locals("user_id")
+	log.Println("[INFO] Deleting user profile with user_id:", userID)
 
-	if err := upc.DB.Delete(&models.UsersProfileModel{}, id).Error; err != nil {
+	var profile models.UsersProfileModel
+	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
+		log.Println("[ERROR] User profile not found:", err)
+		return helper.Error(c, fiber.StatusNotFound, "User profile not found")
+	}
+
+	if err := upc.DB.Delete(&profile).Error; err != nil {
 		log.Println("[ERROR] Failed to delete user profile:", err)
 		return helper.Error(c, fiber.StatusInternalServerError, "Failed to delete user profile")
 	}
