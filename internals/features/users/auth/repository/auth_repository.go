@@ -28,6 +28,16 @@ func FindUserByGoogleID(db *gorm.DB, googleID string) (*userModel.UserModel, err
 	return &user, nil
 }
 
+func FindUserByEmailOrUsernameLight(db *gorm.DB, identifier string) (*userModel.UserModel, error) {
+	var user userModel.UserModel
+	if err := db.Select("id", "password", "is_active").
+		Where("email = ? OR user_name = ?", identifier, identifier).
+		First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func FindUserByID(db *gorm.DB, userID uuid.UUID) (*userModel.UserModel, error) {
 	var user userModel.UserModel
 	if err := db.First(&user, userID).Error; err != nil {

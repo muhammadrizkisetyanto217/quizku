@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"quizku/internals/configs"
-	modelAuth "quizku/internals/features/users/auth/models"
+	TokenBlacklistModel "quizku/internals/features/users/auth/models"
 
 	"gorm.io/gorm"
 )
@@ -44,7 +44,7 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 		tokenString := tokenParts[1]
 
 		// ⛔ Cek blacklist
-		var existingToken modelAuth.TokenBlacklist
+		var existingToken TokenBlacklistModel.TokenBlacklist
 		err := db.Where("token = ?", tokenString).First(&existingToken).Error
 		if err == nil {
 			log.Println("[WARNING] Token ditemukan di blacklist")
@@ -123,6 +123,23 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 		}
 		c.Locals("user_id", userID)
 		log.Println("[SUCCESS] User ID stored:", userID)
+
+		// ✅ Tambahan validasi user is_active (lebih efisien)
+		var user struct {
+			IsActive bool
+		}
+		if err := db.Table("users").Select("is_active").Where("id = ?", userID).First(&user).Error; err != nil {
+			log.Println("[ERROR] User tidak ditemukan:", err)
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Unauthorized - User not found",
+			})
+		}
+		if !user.IsActive {
+			log.Println("[ERROR] User nonaktif")
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Akun Anda telah dinonaktifkan",
+			})
+		}
 
 		// 🧾 Simpan role dan nama
 		if role, ok := claims["role"].(string); ok {

@@ -1,6 +1,6 @@
 [
     {
-        "name_evaluation": "Evaluasi Unit 1",
+        "name_evaluations": "Evaluasi Unit 1",
         "status": "active",
         "total_question": [],
         "icon_url": "https://example.com/icon.png",
@@ -8,7 +8,7 @@
         "created_by": "848174ec-a819-4e03-878b-542d12063422"
     },
     {
-        "name_evaluation": "Evaluasi Unit 2",
+        "name_evaluations": "Evaluasi Unit 2",
         "status": "active",
         "total_question": [],
         "icon_url": "https://example.com/icon.png",

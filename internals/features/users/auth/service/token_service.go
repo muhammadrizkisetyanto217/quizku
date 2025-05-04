@@ -58,7 +58,18 @@ func RefreshToken(db *gorm.DB, c *fiber.Ctx) error {
 		return helpers.Error(c, fiber.StatusUnauthorized, "Refresh token expired")
 	}
 
-	// 🧑‍💼 Ambil user dari DB
+	// 🧑‍💼 Cek status aktif user sebelum lanjut
+	var userStatus struct {
+		IsActive bool
+	}
+	if err := db.Table("users").Select("is_active").Where("id = ?", rt.UserID).First(&userStatus).Error; err != nil {
+		return helpers.Error(c, fiber.StatusUnauthorized, "User not found")
+	}
+	if !userStatus.IsActive {
+		return helpers.Error(c, fiber.StatusForbidden, "Akun Anda telah dinonaktifkan")
+	}
+
+	// Jika aktif, baru ambil user lengkap untuk issueTokens
 	user, err := authRepo.FindUserByID(db, rt.UserID)
 	if err != nil {
 		return helpers.Error(c, fiber.StatusUnauthorized, "User not found")
@@ -70,36 +81,35 @@ func RefreshToken(db *gorm.DB, c *fiber.Ctx) error {
 
 // ========================== ISSUE TOKEN ==========================
 func issueTokens(c *fiber.Ctx, db *gorm.DB, user userModel.UserModel) error {
-	accessTokenDuration := 60 * time.Minute
-	refreshTokenDuration := 7 * 24 * time.Hour
+	// Durasi token
+	const (
+		accessTokenDuration  = 60 * time.Minute
+		refreshTokenDuration = 7 * 24 * time.Hour
+	)
 
-	// 🔐 Generate access token
+	// 🔐 Generate Access Token
 	accessToken, accessExp, err := generateToken(user, configs.JWTSecret, accessTokenDuration)
 	if err != nil {
-		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to generate access token")
+		return helpers.Error(c, fiber.StatusInternalServerError, "Gagal membuat access token")
 	}
 
-	// 🔐 Generate refresh token
+	// 🔐 Generate Refresh Token
 	refreshToken, refreshExp, err := generateToken(user, configs.JWTRefreshSecret, refreshTokenDuration)
 	if err != nil {
-		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to generate refresh token")
+		return helpers.Error(c, fiber.StatusInternalServerError, "Gagal membuat refresh token")
 	}
 
-	// 📝 Debug log durasi token
-	log.Printf("[DEBUG] Access Token Exp:  %v (%s)", accessExp.Unix(), accessExp.Format(time.RFC3339))
-	log.Printf("[DEBUG] Refresh Token Exp: %v (%s)", refreshExp.Unix(), refreshExp.Format(time.RFC3339))
-
-	// 💾 Simpan refresh token ke database
+	// 💾 Simpan Refresh Token ke DB
 	rt := authModel.RefreshToken{
 		UserID:    user.ID,
 		Token:     refreshToken,
 		ExpiresAt: refreshExp,
 	}
 	if err := authRepo.CreateRefreshToken(db, &rt); err != nil {
-		return helpers.Error(c, fiber.StatusInternalServerError, "Failed to save refresh token")
+		return helpers.Error(c, fiber.StatusInternalServerError, "Gagal menyimpan refresh token")
 	}
 
-	// 🍪 Simpan refresh token di cookie aman
+	// 🍪 Simpan Refresh Token di cookie
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
@@ -109,12 +119,12 @@ func issueTokens(c *fiber.Ctx, db *gorm.DB, user userModel.UserModel) error {
 		Expires:  refreshExp,
 	})
 
-	// ✅ Kembalikan response (plus refresh token untuk debug saja, hapus di production)
-	return helpers.Success(c, "Login successful", fiber.Map{
+	// ✅ Response ke client
+	return helpers.Success(c, "Login berhasil", fiber.Map{
 		"access_token":        accessToken,
-		"refresh_token_debug": refreshToken,      // ⛔ DEBUG SAJA!
-		"access_exp_unix":     accessExp.Unix(),  // debug tambahan
-		"refresh_exp_unix":    refreshExp.Unix(), // debug tambahan
+		"refresh_token_debug": refreshToken,      // ⚠️ Hapus ini di production
+		"access_exp_unix":     accessExp.Unix(),  // Opsional: monitoring waktu
+		"refresh_exp_unix":    refreshExp.Unix(), // Opsional
 		"user": fiber.Map{
 			"id":        user.ID,
 			"user_name": user.UserName,
@@ -125,19 +135,19 @@ func issueTokens(c *fiber.Ctx, db *gorm.DB, user userModel.UserModel) error {
 }
 
 // ========================== GENERATE TOKEN ==========================
-func generateToken(user userModel.UserModel, secret string, duration time.Duration) (string, time.Time, error) {
-	exp := time.Now().Add(duration)
+func generateToken(user userModel.UserModel, secretKey string, duration time.Duration) (string, time.Time, error) {
+	expiration := time.Now().Add(duration)
 
 	claims := jwt.MapClaims{
 		"id":        user.ID.String(),
 		"user_name": user.UserName,
 		"role":      user.Role,
-		"exp":       exp.Unix(),
+		"exp":       expiration.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(secret))
-	return tokenString, exp, err
+	tokenString, err := token.SignedString([]byte(secretKey))
+	return tokenString, expiration, err
 }
 
 func generateDummyPassword() string {

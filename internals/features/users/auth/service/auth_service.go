@@ -67,16 +67,27 @@ func Login(db *gorm.DB, c *fiber.Ctx) error {
 		return helpers.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	user, err := authRepo.FindUserByEmailOrUsername(db, input.Identifier)
+	// 🔍 Ambil data minimal (id, password, is_active)
+	userLight, err := authRepo.FindUserByEmailOrUsernameLight(db, input.Identifier)
 	if err != nil {
 		return helpers.Error(c, fiber.StatusUnauthorized, "Identifier atau Password salah")
 	}
 
-	if err := authHelper.CheckPasswordHash(user.Password, input.Password); err != nil {
+	if !userLight.IsActive {
+		return helpers.Error(c, fiber.StatusForbidden, "Akun Anda telah dinonaktifkan. Hubungi admin.")
+	}
+
+	if err := authHelper.CheckPasswordHash(userLight.Password, input.Password); err != nil {
 		return helpers.Error(c, fiber.StatusUnauthorized, "Identifier atau Password salah")
 	}
 
-	return issueTokens(c, db, *user)
+	// 🔄 Ambil data lengkap user
+	userFull, err := authRepo.FindUserByID(db, userLight.ID)
+	if err != nil {
+		return helpers.Error(c, fiber.StatusInternalServerError, "Gagal mengambil data user")
+	}
+
+	return issueTokens(c, db, *userFull)
 }
 
 // ========================== LOGIN GOOGLE ==========================

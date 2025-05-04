@@ -1,6 +1,6 @@
 [
     {
-        "user_id": "UUID-ADMIN-HERE",
+        "user_id": "68b1aa75-828e-4ddc-8633-6bbe82063128",
         "donation_name": "Admin Donator",
         "full_name": "Admin Satu",
         "gender": "male",
@@ -10,7 +10,7 @@
         "occupation": "Admin"
     },
     {
-        "user_id": "UUID-TEACHER-HERE",
+        "user_id": "cfa55f8e-2bd2-4291-a44f-3e7f7b8c2c2c",
         "donation_name": "Guru Dermawan",
         "full_name": "Guru Feri",
         "gender": "male",
@@ -20,7 +20,7 @@
         "occupation": "Teacher"
     },
     {
-        "user_id": "UUID-OWNER-HERE",
+        "user_id": "7a642936-2c05-4ffc-9903-c03714c40424",
         "donation_name": "Pemilik Platform",
         "full_name": "Owner Fulan",
         "gender": "male",
@@ -30,7 +30,7 @@
         "occupation": "Owner"
     },
     {
-        "user_id": "UUID-USER-HERE",
+        "user_id": "f250d33b-a4d8-4067-8e2f-b95609748345",
         "donation_name": "User Biasa",
         "full_name": "Pengguna Awal",
         "gender": "female",

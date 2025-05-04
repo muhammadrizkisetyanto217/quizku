@@ -11,14 +11,14 @@ import (
 )
 
 type UsersProfileSeed struct {
-	UserID       uuid.UUID        `json:"user_id"`
-	DonationName string           `json:"donation_name"`
-	FullName     string           `json:"full_name"`
-	Gender       *models.Gender   `json:"gender"`
-	PhoneNumber  string           `json:"phone_number"`
-	Bio          string           `json:"bio"`
-	Location     string           `json:"location"`
-	Occupation   string           `json:"occupation"`
+	UserID       uuid.UUID      `json:"user_id"`
+	DonationName string         `json:"donation_name"`
+	FullName     string         `json:"full_name"`
+	Gender       *models.Gender `json:"gender"`
+	PhoneNumber  string         `json:"phone_number"`
+	Bio          string         `json:"bio"`
+	Location     string         `json:"location"`
+	Occupation   string         `json:"occupation"`
 }
 
 func SeedUsersProfileFromJSON(db *gorm.DB, filePath string) {
@@ -29,20 +29,33 @@ func SeedUsersProfileFromJSON(db *gorm.DB, filePath string) {
 		log.Fatalf("❌ Gagal membaca file JSON: %v", err)
 	}
 
-	var profiles []UsersProfileSeed
-	if err := json.Unmarshal(file, &profiles); err != nil {
+	var seeds []UsersProfileSeed
+	if err := json.Unmarshal(file, &seeds); err != nil {
 		log.Fatalf("❌ Gagal decode JSON: %v", err)
 	}
 
-	for _, p := range profiles {
-		var existing models.UsersProfileModel
-		err := db.Where("user_id = ?", p.UserID).First(&existing).Error
-		if err == nil {
+	// Ambil semua user_id yang sudah ada
+	var existingIDs []uuid.UUID
+	if err := db.Model(&models.UsersProfileModel{}).
+		Select("user_id").
+		Find(&existingIDs).Error; err != nil {
+		log.Fatalf("❌ Gagal ambil user_id yang sudah ada: %v", err)
+	}
+
+	existingMap := make(map[uuid.UUID]bool)
+	for _, id := range existingIDs {
+		existingMap[id] = true
+	}
+
+	// Kumpulkan data yang belum ada
+	var newProfiles []models.UsersProfileModel
+	for _, p := range seeds {
+		if existingMap[p.UserID] {
 			log.Printf("ℹ️ Profil user dengan ID '%s' sudah ada, dilewati.", p.UserID)
 			continue
 		}
 
-		newProfile := models.UsersProfileModel{
+		newProfiles = append(newProfiles, models.UsersProfileModel{
 			UserID:       p.UserID,
 			DonationName: p.DonationName,
 			FullName:     p.FullName,
@@ -51,12 +64,16 @@ func SeedUsersProfileFromJSON(db *gorm.DB, filePath string) {
 			Bio:          p.Bio,
 			Location:     p.Location,
 			Occupation:   p.Occupation,
-		}
+		})
+	}
 
-		if err := db.Create(&newProfile).Error; err != nil {
-			log.Printf("❌ Gagal insert profil user ID %s: %v", p.UserID, err)
-		} else {
-			log.Printf("✅ Berhasil insert profil user ID %s", p.UserID)
+	// Bulk insert
+	if len(newProfiles) > 0 {
+		if err := db.Create(&newProfiles).Error; err != nil {
+			log.Fatalf("❌ Gagal bulk insert users_profile: %v", err)
 		}
+		log.Printf("✅ Berhasil insert %d profil user", len(newProfiles))
+	} else {
+		log.Println("ℹ️ Tidak ada profil baru untuk diinsert.")
 	}
 }

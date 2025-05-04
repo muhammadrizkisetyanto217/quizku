@@ -10,18 +10,18 @@ import (
 )
 
 type SectionQuizzesModel struct {
-	ID               uint           `gorm:"primaryKey" json:"id"`
-	NameQuizzes      string         `gorm:"size:50;not null" json:"name_quizzes"`
-	Status           string         `gorm:"size:10;default:'pending';check:status IN ('active', 'pending', 'archived')" json:"status"`
-	MaterialsQuizzes string         `gorm:"type:text;not null" json:"materials_quizzes"`
-	IconURL          string         `gorm:"size:100" json:"icon_url"`
-	TotalQuizzes     pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_quizzes"`
-	CreatedAt        time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt        time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
-	CreatedBy        uuid.UUID      `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE" json:"created_by"`
-	UnitID           uint           `gorm:"not null;constraint:OnDelete:CASCADE" json:"unit_id"`
-	Quizzes          []QuizModel    `gorm:"foreignKey:SectionQuizID" json:"quizzes"`
+	ID                 uint           `gorm:"primaryKey" json:"id"`
+	NameSectionQuizzes string         `gorm:"size:50;not null" json:"name_section_quizzes"`
+	Status             string         `gorm:"size:10;default:'pending';check:status IN ('active', 'pending', 'archived')" json:"status"`
+	MaterialsQuizzes   string         `gorm:"type:text;not null" json:"materials_quizzes"`
+	IconURL            string         `gorm:"size:100" json:"icon_url"`
+	TotalQuizzes       pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_quizzes"`
+	CreatedAt          time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt          time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt          gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	CreatedBy          uuid.UUID      `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE" json:"created_by"`
+	UnitID             uint           `gorm:"not null;constraint:OnDelete:CASCADE" json:"unit_id"`
+	Quizzes            []QuizModel    `gorm:"foreignKey:SectionQuizID" json:"quizzes"`
 }
 
 func (SectionQuizzesModel) TableName() string {

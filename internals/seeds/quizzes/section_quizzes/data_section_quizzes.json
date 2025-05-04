@@ -1,6 +1,6 @@
 [
     {
-        "name_quizzes": "Langkah Wudhu",
+        "name_section_quizzes": "Langkah Wudhu",
         "status": "active",
         "materials_quizzes": "Langkah-langkah berwudhu sesuai urutan dan sunnah.",
         "icon_url": "https://example.com/icons/wudhu-1.png",
@@ -9,7 +9,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Doa dan Bacaan Wudhu",
+        "name_section_quizzes": "Doa dan Bacaan Wudhu",
         "status": "active",
         "materials_quizzes": "Quiz tentang niat, bacaan, dan doa setelah wudhu.",
         "icon_url": "https://example.com/icons/wudhu-2.png",
@@ -18,7 +18,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Membatalkan Wudhu",
+        "name_section_quizzes": "Membatalkan Wudhu",
         "status": "active",
         "materials_quizzes": "Hal-hal yang membatalkan wudhu dan solusinya.",
         "icon_url": "https://example.com/icons/wudhu-break.png",
@@ -27,7 +27,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Dalil Pembatal Wudhu",
+        "name_section_quizzes": "Dalil Pembatal Wudhu",
         "status": "active",
         "materials_quizzes": "Dasar-dasar hukum dan hadits terkait pembatal wudhu.",
         "icon_url": "https://example.com/icons/wudhu-dalil.png",
@@ -36,7 +36,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Tata Cara Tayamum",
+        "name_section_quizzes": "Tata Cara Tayamum",
         "status": "active",
         "materials_quizzes": "Langkah tayamum dan niatnya.",
         "icon_url": "https://example.com/icons/tayamum-1.png",
@@ -45,7 +45,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Kapan Boleh Tayamum",
+        "name_section_quizzes": "Kapan Boleh Tayamum",
         "status": "active",
         "materials_quizzes": "Kondisi yang membolehkan tayamum serta syarat sahnya.",
         "icon_url": "https://example.com/icons/tayamum-2.png",
@@ -54,7 +54,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Perintah Sholat",
+        "name_section_quizzes": "Perintah Sholat",
         "status": "active",
         "materials_quizzes": "Kenapa sholat diwajibkan, berdasarkan Al-Qur’an.",
         "icon_url": "https://example.com/icons/sholat-1.png",
@@ -63,7 +63,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Sholat dalam Kehidupan",
+        "name_section_quizzes": "Sholat dalam Kehidupan",
         "status": "active",
         "materials_quizzes": "Manfaat sholat dalam membentuk karakter dan disiplin.",
         "icon_url": "https://example.com/icons/sholat-2.png",
@@ -72,7 +72,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Wajib dan Rukun Sholat",
+        "name_section_quizzes": "Wajib dan Rukun Sholat",
         "status": "active",
         "materials_quizzes": "Apa saja yang membedakan rukun dan wajib dalam sholat.",
         "icon_url": "https://example.com/icons/rukun-1.png",
@@ -81,7 +81,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Praktik Rukun Sholat",
+        "name_section_quizzes": "Praktik Rukun Sholat",
         "status": "active",
         "materials_quizzes": "Simulasi dan penguatan pemahaman rukun sholat.",
         "icon_url": "https://example.com/icons/rukun-2.png",
@@ -90,7 +90,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Bacaan Wajib Sholat",
+        "name_section_quizzes": "Bacaan Wajib Sholat",
         "status": "active",
         "materials_quizzes": "Teks bacaan yang wajib dihafal untuk sholat.",
         "icon_url": "https://example.com/icons/bacaan-1.png",
@@ -99,7 +99,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Makna Bacaan Sholat",
+        "name_section_quizzes": "Makna Bacaan Sholat",
         "status": "active",
         "materials_quizzes": "Pemahaman kandungan arti bacaan dalam sholat.",
         "icon_url": "https://example.com/icons/bacaan-2.png",
@@ -108,7 +108,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Jenis Sholat Sunnah",
+        "name_section_quizzes": "Jenis Sholat Sunnah",
         "status": "active",
         "materials_quizzes": "Macam-macam sholat sunnah dan dalilnya.",
         "icon_url": "https://example.com/icons/sunnah-1.png",
@@ -117,7 +117,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Waktu Sholat Sunnah",
+        "name_section_quizzes": "Waktu Sholat Sunnah",
         "status": "active",
         "materials_quizzes": "Kapan boleh dan tidak boleh melaksanakan sholat sunnah.",
         "icon_url": "https://example.com/icons/sunnah-2.png",
@@ -126,7 +126,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Kesalahan dalam Sholat",
+        "name_section_quizzes": "Kesalahan dalam Sholat",
         "status": "active",
         "materials_quizzes": "Kesalahan yang sering dilakukan saat sholat.",
         "icon_url": "https://example.com/icons/kesalahan-1.png",
@@ -135,7 +135,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Cara Menghindari Kesalahan",
+        "name_section_quizzes": "Cara Menghindari Kesalahan",
         "status": "active",
         "materials_quizzes": "Tips agar sholat sah dan khusyuk tanpa kesalahan.",
         "icon_url": "https://example.com/icons/kesalahan-2.png",
@@ -144,7 +144,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Bangun Khusyuk dalam Sholat",
+        "name_section_quizzes": "Bangun Khusyuk dalam Sholat",
         "status": "active",
         "materials_quizzes": "Langkah-langkah membangun fokus dan hati dalam sholat.",
         "icon_url": "https://example.com/icons/khusyuk-1.png",
@@ -153,7 +153,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Evaluasi Tingkat Khusyuk",
+        "name_section_quizzes": "Evaluasi Tingkat Khusyuk",
         "status": "active",
         "materials_quizzes": "Latihan untuk mengenali dan meningkatkan kekhusyukan.",
         "icon_url": "https://example.com/icons/khusyuk-2.png",
@@ -162,7 +162,7 @@
         "total_quizzes": []
     },
     {
-        "name_quizzes": "Sholat Khusyuk dari Hati",
+        "name_section_quizzes": "Sholat Khusyuk dari Hati",
         "status": "active",
         "materials_quizzes": "Renungan dan motivasi sholat dari hati, bukan sekadar gerakan.",
         "icon_url": "https://example.com/icons/khusyuk-3.png",

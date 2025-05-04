@@ -15,7 +15,7 @@ func TooltipRoute(app *fiber.App, db *gorm.DB) {
 	tooltipRoutes := api.Group("/tooltip",
 		authMiddleware.OnlyRolesSlice(
 			constants.RoleErrorNonUser("tooltip"),
-			constants.OwnerAndAbove,
+			constants.TeacherAndAbove,
 		),
 	)
 

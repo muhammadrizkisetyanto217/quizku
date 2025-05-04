@@ -34,7 +34,7 @@ func SeedQuizzesFromJSON(db *gorm.DB, filePath string) {
 
 	for _, seed := range seeds {
 		var existing model.QuizModel
-		if err := db.Where("name_quizzes = ?", seed.NameQuizzes).First(&existing).Error; err == nil {
+		if err := db.Where(" = ?", seed.NameQuizzes).First(&existing).Error; err == nil {
 			log.Printf("ℹ️ Quiz '%s' sudah ada, lewati...", seed.NameQuizzes)
 			continue
 		}

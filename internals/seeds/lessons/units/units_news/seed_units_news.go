@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	unitModel "quizku/internals/features/lessons/units/model"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -19,6 +20,7 @@ type UnitNewsSeedInput struct {
 func SeedUnitsNewsFromJSON(db *gorm.DB, filePath string) {
 	log.Println("📥 Membaca file:", filePath)
 
+	// 1. Baca file JSON
 	file, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("❌ Gagal membaca file JSON: %v", err)
@@ -29,25 +31,44 @@ func SeedUnitsNewsFromJSON(db *gorm.DB, filePath string) {
 		log.Fatalf("❌ Gagal decode JSON: %v", err)
 	}
 
+	// 2. Ambil semua yang sudah ada dari DB
+	var existingEntries []unitModel.UnitNewsModel
+	if err := db.Select("title", "unit_id").Find(&existingEntries).Error; err != nil {
+		log.Fatalf("❌ Gagal query data existing: %v", err)
+	}
+
+	existingMap := make(map[string]bool)
+	for _, e := range existingEntries {
+		key := e.Title + "_" + string(rune(e.UnitID))
+		existingMap[key] = true
+	}
+
+	// 3. Siapkan data untuk bulk insert
+	var toInsert []unitModel.UnitNewsModel
+	now := time.Now()
 	for _, news := range inputs {
-		var existing unitModel.UnitNewsModel
-		err := db.Where("title = ? AND unit_id = ?", news.Title, news.UnitID).First(&existing).Error
-		if err == nil {
+		key := news.Title + "_" + string(rune(news.UnitID))
+		if existingMap[key] {
 			log.Printf("ℹ️ News '%s' untuk unit_id '%d' sudah ada, lewati...", news.Title, news.UnitID)
 			continue
 		}
 
-		newsEntry := unitModel.UnitNewsModel{
+		toInsert = append(toInsert, unitModel.UnitNewsModel{
 			Title:       news.Title,
 			Description: news.Description,
 			IsPublic:    news.IsPublic,
 			UnitID:      news.UnitID,
-		}
+			UpdatedAt:   now, // kalau pakai autoUpdateTime juga bisa dikosongkan
+		})
+	}
 
-		if err := db.Create(&newsEntry).Error; err != nil {
-			log.Printf("❌ Gagal insert news '%s': %v", news.Title, err)
-		} else {
-			log.Printf("✅ Berhasil insert news '%s'", news.Title)
+	// 4. Jalankan bulk insert
+	if len(toInsert) > 0 {
+		if err := db.Create(&toInsert).Error; err != nil {
+			log.Fatalf("❌ Gagal bulk insert unit news: %v", err)
 		}
+		log.Printf("✅ Berhasil insert %d unit news", len(toInsert))
+	} else {
+		log.Println("ℹ️ Tidak ada unit news baru untuk diinsert.")
 	}
 }

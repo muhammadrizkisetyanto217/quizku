@@ -11,7 +11,7 @@ import (
 )
 
 type EvaluationSeed struct {
-	NameEvaluation string  `json:"name_evaluation"`
+	NameEvaluation string  `json:"name_evaluations"`
 	Status         string  `json:"status"`
 	TotalQuestion  []int64 `json:"total_question"`
 	IconURL        string  `json:"icon_url"`
@@ -34,7 +34,7 @@ func SeedEvaluationsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, seed := range seeds {
 		var existing model.EvaluationModel
-		if err := db.Where("name_evaluation = ?", seed.NameEvaluation).First(&existing).Error; err == nil {
+		if err := db.Where("name_evaluations = ?", seed.NameEvaluation).First(&existing).Error; err == nil {
 			log.Printf("ℹ️ Evaluation '%s' sudah ada, lewati...", seed.NameEvaluation)
 			continue
 		}

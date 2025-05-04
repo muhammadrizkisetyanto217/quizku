@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS evaluations (
 	id SERIAL PRIMARY KEY,
-	name_evaluation VARCHAR(50) NOT NULL,
+	name_evaluations VARCHAR(50) NOT NULL,
 	status VARCHAR(10) CHECK (status IN ('active', 'pending', 'archived')) DEFAULT 'pending',
 	total_question INTEGER[] NOT NULL DEFAULT '{}',
 	icon_url VARCHAR(100),

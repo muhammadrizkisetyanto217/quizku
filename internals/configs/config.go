@@ -2,6 +2,7 @@ package configs
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -72,17 +73,27 @@ func GetEnv(key string, defaultValue ...string) string {
 // =======================
 // DATABASE CONNECTOR
 // =======================
-func InitDB() *gorm.DB {
-	dsn := GetEnv("DB_URL")
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: NewGormLogger(), // pakai logger custom
+func InitSeederDB() *gorm.DB {
+	dbUser := GetEnv("DB_USER")
+	dbPassword := GetEnv("DB_PASSWORD")
+	dbHost := GetEnv("DB_HOST")
+	dbPort := GetEnv("DB_PORT")
+	dbName := GetEnv("DB_NAME")
+	dbSSL := GetEnv("DB_SSLMODE", "require")
+
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
+		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSL)
+
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true, // ✅ hindari cache prepared statement
+	}), &gorm.Config{
+		Logger: NewGormLogger(),
 	})
 	if err != nil {
-		log.Fatalf("❌ Gagal koneksi ke database: %v", err)
+		log.Fatalf("❌ Gagal koneksi ke database (Seeder): %v", err)
 	}
-	log.Println("✅ Database terkoneksi.")
-
-	DB = db
+	log.Println("✅ Database (Seeder) terkoneksi.")
 	return db
 }
 
