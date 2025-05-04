@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,10 +12,6 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	// ⛳ Load .env file
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("❌ Gagal load .env:", err)
-	}
 
 	// 🔐 Ambil dari .env
 	dsn := fmt.Sprintf(
