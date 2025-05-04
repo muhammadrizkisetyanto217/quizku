@@ -3,10 +3,12 @@ package controller
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"quizku/internals/features/quizzes/exams/model"
 	"quizku/internals/features/quizzes/exams/service"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -22,25 +24,49 @@ func NewUserExamController(db *gorm.DB) *UserExamController {
 
 // Create user_exam
 func (c *UserExamController) Create(ctx *fiber.Ctx) error {
-	var payload model.UserExamModel
+	// ✅ Ambil user_id dari JWT
+	userIDStr, ok := ctx.Locals("user_id").(string)
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
+	userUUID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid user ID format",
+		})
+	}
 
-	if err := ctx.BodyParser(&payload); err != nil {
+	// ✅ Struct input body tanpa user_id
+	type InputBody struct {
+		ExamID          uint    `json:"exam_id" validate:"required"`
+		UnitID          uint    `json:"unit_id" validate:"required"`
+		PercentageGrade float64 `json:"percentage_grade" validate:"required"`
+		TimeDuration    int     `json:"time_duration"`
+		Point           int     `json:"point"`
+	}
+
+	var body InputBody
+	if err := ctx.BodyParser(&body); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
 			"error":   err.Error(),
 		})
 	}
 
-	// Validasi user_id
-	if payload.UserID == uuid.Nil {
+	// ✅ Validasi
+	validate := validator.New()
+	if err := validate.Struct(body); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"message": "UserID is required and must be a valid UUID",
+			"message": "Missing or invalid fields",
+			"error":   err.Error(),
 		})
 	}
 
-	// Cek apakah sudah ada user_exam untuk kombinasi user_id + exam_id
+	// ✅ Cek jika sudah ada entry sebelumnya
 	var existing model.UserExamModel
-	err := c.DB.Where("user_id = ? AND exam_id = ?", payload.UserID, payload.ExamID).
+	err = c.DB.Where("user_id = ? AND exam_id = ?", userUUID, body.ExamID).
 		First(&existing).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -52,11 +78,13 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 	}
 
 	if err == nil {
-		// Sudah ada → update (attempt++, nilai tertinggi)
+		// ✅ Sudah ada → update attempt dan nilai jika lebih tinggi
 		existing.Attempt += 1
-		if payload.PercentageGrade > existing.PercentageGrade {
-			existing.PercentageGrade = payload.PercentageGrade
+		if body.PercentageGrade > float64(existing.PercentageGrade) {
+			existing.PercentageGrade = int(body.PercentageGrade)
 		}
+		existing.TimeDuration = body.TimeDuration
+		existing.Point = body.Point
 
 		if err := c.DB.Save(&existing).Error; err != nil {
 			log.Println("[ERROR] Gagal update user_exam:", err)
@@ -66,7 +94,6 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 			})
 		}
 
-		// Tambahkan log point
 		_ = service.AddPointFromExam(c.DB, existing.UserID, existing.ExamID, existing.Attempt)
 
 		return ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -75,18 +102,31 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Belum ada → buat baru
-	payload.Attempt = 1
-	if err := c.DB.Create(&payload).Error; err != nil {
+	// ✅ Belum ada → buat baru
+	newExam := model.UserExamModel{
+		UserID:          userUUID,
+		ExamID:          body.ExamID,
+		UnitID:          body.UnitID,
+		Attempt:         1,
+		PercentageGrade: int(body.PercentageGrade),
+		TimeDuration:    body.TimeDuration,
+		Point:           body.Point,
+		CreatedAt:       time.Now(),
+	}
+
+	if err := c.DB.Create(&newExam).Error; err != nil {
+		log.Println("[ERROR] Gagal create user_exam:", err)
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to create user exam record",
 			"error":   err.Error(),
 		})
 	}
 
+	_ = service.AddPointFromExam(c.DB, newExam.UserID, newExam.ExamID, newExam.Attempt)
+
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "User exam record created successfully",
-		"data":    payload,
+		"data":    newExam,
 	})
 }
 

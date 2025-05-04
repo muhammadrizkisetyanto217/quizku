@@ -4,7 +4,9 @@ import (
 	"log"
 	UserReadingModel "quizku/internals/features/quizzes/readings/model"
 	"quizku/internals/features/quizzes/readings/service"
+	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -20,46 +22,73 @@ func NewUserReadingController(db *gorm.DB) *UserReadingController {
 
 // POST /user-readings
 func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
-	var input UserReadingModel.UserReading
-	body := c.Body()
-	log.Println("[DEBUG] Raw request body:", string(body))
+	// ✅ Ambil user_id dari JWT (string UUID)
+	userIDStr, ok := c.Locals("user_id").(string)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
 
-	// Parse body
-	if err := c.BodyParser(&input); err != nil {
+	userUUID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Println("[ERROR] Invalid UUID format:", err)
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	// ✅ Parse body tanpa user_id
+	type InputBody struct {
+		ReadingID uint `json:"reading_id" validate:"required"`
+		UnitID    uint `json:"unit_id" validate:"required"`
+	}
+	var body InputBody
+	if err := c.BodyParser(&body); err != nil {
 		log.Println("[ERROR] Failed to parse body:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// ✅ Hitung Attempt ke-n
+	// ✅ Validasi
+	validate := validator.New()
+	if err := validate.Struct(body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Missing required fields"})
+	}
+
+	// ✅ Siapkan data
+	input := UserReadingModel.UserReading{
+		UserID:    userUUID,
+		ReadingID: body.ReadingID,
+		UnitID:    body.UnitID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// ✅ Hitung attempt ke-n
 	var latestAttempt int
-	err := ctrl.DB.Table("user_readings").
+	err = ctrl.DB.Table("user_readings").
 		Select("COALESCE(MAX(attempt), 0)").
 		Where("user_id = ? AND reading_id = ?", input.UserID, input.ReadingID).
 		Scan(&latestAttempt).Error
 	if err != nil {
 		log.Println("[ERROR] Failed to count latest attempt:", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 	input.Attempt = latestAttempt + 1
 
-	// ✅ Simpan user reading
+	// ✅ Simpan ke DB
 	if err := ctrl.DB.Create(&input).Error; err != nil {
 		log.Println("[ERROR] Failed to create user reading:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user reading"})
 	}
 
-	// ✅ Panggil service untuk update user_unit
+	// ✅ Update progres & poin
 	if err := service.UpdateUserUnitFromReading(ctrl.DB, input.UserID, input.UnitID); err != nil {
-		log.Println("[ERROR] Failed to update user unit from reading:", err)
+		log.Println("[ERROR] Gagal update user_unit:", err)
 	}
-
-	log.Println("[DEBUG] Sebelum panggil AddPointFromReading")
 	if err := service.AddPointFromReading(ctrl.DB, input.UserID, input.ReadingID, input.Attempt); err != nil {
-		log.Println("[ERROR] Gagal menambahkan poin dari reading:", err)
+		log.Println("[ERROR] Gagal menambahkan poin:", err)
 	}
-	log.Println("[DEBUG] Setelah panggil AddPointFromReading")
 
-	log.Println("[SUCCESS] User reading created successfully")
+	log.Printf("[SUCCESS] UserReading created: user_id=%s, reading_id=%d, attempt=%d\n",
+		input.UserID.String(), input.ReadingID, input.Attempt)
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User reading created successfully",
 		"data":    input,

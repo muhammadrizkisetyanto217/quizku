@@ -60,10 +60,10 @@ func main() {
 	case "quizzes":
 		evaluations.SeedEvaluationsFromJSON(db, "internals/seeds/quizzes/evaluations/data_evaluations.json")
 		exams.SeedExamsFromJSON(db, "internals/seeds/quizzes/exams/data_exams.json")
+		section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
 		questions.SeedQuestionsFromJSON(db, "internals/seeds/quizzes/questions/data_questions.json")
 		quizzes.SeedQuizzesFromJSON(db, "internals/seeds/quizzes/quizzes/data_quizzes.json")
 		reading.SeedReadingsFromJSON(db, "internals/seeds/quizzes/readings/data_readings.json")
-		section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
 	case "progress":
 		level.SeedLevelRequirementsFromJSON(db, "internals/seeds/progress/levels/data_levels_requirements.json")
 		rank.SeedRanksRequirementsFromJSON(db, "internals/seeds/progress/ranks/data_ranks_requirements.json")

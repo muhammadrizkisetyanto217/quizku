@@ -11,7 +11,7 @@ import (
 // Evaluation struct merepresentasikan tabel evaluations di database
 type EvaluationModel struct {
 	ID             uint           `gorm:"primaryKey" json:"id"`
-	NameEvaluation string         `gorm:"size:50;not null" json:"name_evaluations" validate:"required,max=50"`
+	NameEvaluation string         `gorm:"column:name_evaluations;size:50;not null" json:"name_evaluations"`
 	Status         string         `gorm:"type:varchar(10);default:'pending';check:status IN ('active', 'pending', 'archived')" json:"status" validate:"required,oneof=active pending archived"`
 	TotalQuestion  pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_question"`
 	IconURL        *string        `gorm:"size:100" json:"icon_url,omitempty" validate:"omitempty,url"`

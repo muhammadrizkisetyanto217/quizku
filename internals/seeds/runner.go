@@ -14,12 +14,12 @@ import (
 	// themes_or_levels_news "quizku/internals/seeds/lessons/themes_or_levels/themes_or_levels_news"
 
 	// units "quizku/internals/seeds/lessons/units/units"
-	units_news "quizku/internals/seeds/lessons/units/units_news"
+	// units_news "quizku/internals/seeds/lessons/units/units_news"
 
 	// evaluations "quizku/internals/seeds/quizzes/evaluations"
 	// exams "quizku/internals/seeds/quizzes/exams"
 	// questions "quizku/internals/seeds/quizzes/questions"
-	// quizzes "quizku/internals/seeds/quizzes/quizzes"
+	quizzes "quizku/internals/seeds/quizzes/quizzes"
 	// reading "quizku/internals/seeds/quizzes/readings"
 	// section_quizzes "quizku/internals/seeds/quizzes/section_quizzes"
 
@@ -47,7 +47,7 @@ func RunAllSeeds(db *gorm.DB) {
 	// themes_or_levels_news.SeedThemesOrLevelsNewsFromJSON(db, "internals/seeds/category/themes_or_levels_news/data_themes_or_levels_news.json")
 
 	// units.SeedUnitsFromJSON(db, "internals/seeds/lessons/units/units/data_units.json")
-	units_news.SeedUnitsNewsFromJSON(db, "internals/seeds/lessons//units/units_news/data_units_news.json")
+	// units_news.SeedUnitsNewsFromJSON(db, "internals/seeds/lessons//units/units_news/data_units_news.json")
 
 	// //* User
 	// users.SeedUsersFromJSON(db, "internals/seeds/users/auth/data_users.json")
@@ -57,7 +57,7 @@ func RunAllSeeds(db *gorm.DB) {
 	// evaluations.SeedEvaluationsFromJSON(db, "internals/seeds/quizzes/evaluations/data_evaluations.json")
 	// exams.SeedExamsFromJSON(db, "internals/seeds/quizzes/exams/data_exams.json")
 	// questions.SeedQuestionsFromJSON(db, "internals/seeds/quizzes/questions/data_questions.json")
-	// quizzes.SeedQuizzesFromJSON(db, "internals/seeds/quizzes/quizzes/data_quizzes.json")
+	quizzes.SeedQuizzesFromJSON(db, "internals/seeds/quizzes/quizzes/data_quizzes.json")
 	// reading.SeedReadingsFromJSON(db, "internals/seeds/quizzes/readings/data_readings.json")
 	// section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
 

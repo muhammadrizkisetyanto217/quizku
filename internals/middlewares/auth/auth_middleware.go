@@ -121,7 +121,7 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 				"error": "Unauthorized - Invalid user ID format",
 			})
 		}
-		c.Locals("user_id", userID)
+		c.Locals("user_id", userID.String())
 		log.Println("[SUCCESS] User ID stored:", userID)
 
 		// ✅ Tambahan validasi user is_active (lebih efisien)

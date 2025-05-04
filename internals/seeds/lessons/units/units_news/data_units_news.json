@@ -3,18 +3,18 @@
         "title": "Unit 1: Pengenalan Wudhu",
         "description": "Berisi materi awal mengenai pentingnya bersuci dalam Islam.",
         "is_public": true,
-        "unit_id": 9
+        "unit_id": 1
     },
     {
         "title": "Unit 2: Tata Cara Wudhu",
         "description": "Langkah demi langkah melaksanakan wudhu sesuai sunnah.",
         "is_public": true,
-        "unit_id": 9
+        "unit_id": 1
     },
     {
         "title": "Unit 3: Hal yang Membatalkan Wudhu",
         "description": "Penjelasan lengkap mengenai hal-hal yang membatalkan wudhu.",
         "is_public": false,
-        "unit_id": 10
+        "unit_id": 1
     }
 ]

@@ -4,8 +4,11 @@ import (
 	"log"
 	userEvaluationModel "quizku/internals/features/quizzes/evaluations/model"
 	"quizku/internals/features/quizzes/evaluations/service"
+	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -19,27 +22,61 @@ func NewUserEvaluationController(db *gorm.DB) *UserEvaluationController {
 
 // POST /api/user_evaluations3
 func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
-	var input userEvaluationModel.UserEvaluationModel
-	body := c.Body()
-	log.Println("[DEBUG] Raw request body:", string(body))
+	// ✅ Ambil user_id dari JWT
+	userIDStr, ok := c.Locals("user_id").(string)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
 
-	// ✅ Parse body
-	if err := c.BodyParser(&input); err != nil {
+	userUUID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Println("[ERROR] Invalid UUID format:", err)
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	// ✅ Parse body tanpa user_id
+	type InputBody struct {
+		EvaluationID    uint `json:"evaluation_id" validate:"required"`
+		UnitID          uint `json:"unit_id" validate:"required"`
+		PercentageGrade int  `json:"percentage_grade" validate:"required"`
+		TimeDuration    int  `json:"time_duration"` // opsional
+		Point           int  `json:"point"`         // opsional
+	}
+	var body InputBody
+	if err := c.BodyParser(&body); err != nil {
 		log.Println("[ERROR] Failed to parse body:", err)
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// ✅ Validasi
+	validate := validator.New()
+	if err := validate.Struct(body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Missing required fields"})
 	}
 
 	// ✅ Hitung attempt ke-n
 	var latestAttempt int
-	err := ctrl.DB.Table("user_evaluations").
+	err = ctrl.DB.Table("user_evaluations").
 		Select("COALESCE(MAX(attempt), 0)").
-		Where("user_id = ? AND evaluation_id = ?", input.UserID, input.EvaluationID).
+		Where("user_id = ? AND evaluation_id = ?", userUUID, body.EvaluationID).
 		Scan(&latestAttempt).Error
 	if err != nil {
 		log.Println("[ERROR] Failed to count latest attempt:", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
-	input.Attempt = latestAttempt + 1
+
+	// ✅ Siapkan data akhir
+	input := userEvaluationModel.UserEvaluationModel{
+		UserID:          userUUID,
+		EvaluationID:    body.EvaluationID,
+		UnitID:          body.UnitID,
+		Attempt:         latestAttempt + 1,
+		PercentageGrade: body.PercentageGrade,
+		TimeDuration:    body.TimeDuration,
+		Point:           body.Point,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
 
 	// ✅ Simpan ke DB
 	if err := ctrl.DB.Create(&input).Error; err != nil {
@@ -47,17 +84,17 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user evaluation"})
 	}
 
-	// ✅ Update ke user_unit hanya jika grade lebih tinggi
+	// ✅ Update progres & poin
 	if err := service.UpdateUserUnitFromEvaluation(ctrl.DB, input.UserID, input.UnitID, input.PercentageGrade); err != nil {
-		log.Println("[ERROR] Failed to update user unit from evaluation:", err)
+		log.Println("[ERROR] Gagal update user_unit:", err)
 	}
-
-	// Tambahkan log point dari evaluation
 	if err := service.AddPointFromEvaluation(ctrl.DB, input.UserID, input.EvaluationID, input.Attempt); err != nil {
-		log.Println("[ERROR] Gagal menambahkan poin dari evaluation:", err)
+		log.Println("[ERROR] Gagal menambahkan poin:", err)
 	}
 
-	log.Println("[SUCCESS] User evaluation created successfully")
+	log.Printf("[SUCCESS] UserEvaluation created: user_id=%s, evaluation_id=%d, attempt=%d\n",
+		input.UserID.String(), input.EvaluationID, input.Attempt)
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User evaluation created successfully",
 		"data":    input,

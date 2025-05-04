@@ -29,21 +29,32 @@ func NewUserSubcategoryController(db *gorm.DB) *UserSubcategoryController {
 }
 
 func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
-	var input subcategoryModel.UserSubcategoryModel
+	// Ambil user_id dari JWT token yang disimpan di Locals oleh middleware
+	userIDStr := c.Locals("user_id")
+	userID, err := uuid.Parse(fmt.Sprintf("%v", userIDStr))
+	if err != nil || userID == uuid.Nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User ID dari token tidak valid",
+		})
+	}
 
-	if err := c.BodyParser(&input); err != nil {
+	// Parse body: hanya menerima subcategory_id
+	type RequestBody struct {
+		SubcategoryID uint `json:"subcategory_id"`
+	}
+	var body RequestBody
+	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
-
-	if input.SubcategoryID == 0 || input.UserID == uuid.Nil {
+	if body.SubcategoryID == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "UserID dan SubcategoryID tidak boleh kosong atau nol",
+			"error": "SubcategoryID tidak boleh kosong atau nol",
 		})
 	}
 
-	// Mulai transaction
+	// Mulai transaksi database
 	tx := ctrl.DB.Begin()
 	if tx.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -51,9 +62,9 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil data subcategory
+	// Ambil data subcategory untuk ambil TotalThemesOrLevels
 	var subcategory subcategoryModel.SubcategoryModel
-	if err := tx.First(&subcategory, input.SubcategoryID).Error; err != nil {
+	if err := tx.First(&subcategory, body.SubcategoryID).Error; err != nil {
 		tx.Rollback()
 		log.Println("[ERROR] Gagal ambil subcategory:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -61,11 +72,13 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Set total themes dari subcategory
-	input.TotalThemesOrLevels = subcategory.TotalThemesOrLevels
-	input.CreatedAt = time.Now()
-
-	// Simpan user_subcategory
+	// Simpan data user_subcategory
+	input := subcategoryModel.UserSubcategoryModel{
+		UserID:              userID,
+		SubcategoryID:       int(body.SubcategoryID),
+		TotalThemesOrLevels: subcategory.TotalThemesOrLevels,
+		CreatedAt:           time.Now(),
+	}
 	if err := tx.Create(&input).Error; err != nil {
 		tx.Rollback()
 		log.Println("[ERROR] Gagal simpan user_subcategory:", err)
@@ -74,9 +87,9 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil semua themes_or_levels berdasarkan subcategory
+	// Ambil semua themes berdasarkan subcategory
 	var themes []themesModel.ThemesOrLevelsModel
-	if err := tx.Where("subcategories_id = ?", input.SubcategoryID).Find(&themes).Error; err != nil {
+	if err := tx.Where("subcategories_id = ?", body.SubcategoryID).Find(&themes).Error; err != nil {
 		tx.Rollback()
 		log.Println("[ERROR] Gagal ambil themes:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -84,22 +97,22 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Siapkan data user_themes dan ambil semua theme.ID untuk query units
+	// Siapkan userThemes dan kumpulkan themeIDs
 	var themeIDs []uint
 	var userThemes []themesModel.UserThemesOrLevelsModel
+	now := time.Now()
 	for _, theme := range themes {
 		themeIDs = append(themeIDs, theme.ID)
 		userThemes = append(userThemes, themesModel.UserThemesOrLevelsModel{
-			UserID:           input.UserID,
+			UserID:           userID,
 			ThemesOrLevelsID: theme.ID,
 			CompleteUnit:     datatypes.JSONMap{},
 			TotalUnit:        theme.TotalUnit,
 			GradeResult:      0,
-			CreatedAt:        time.Now(),
+			CreatedAt:        now,
 		})
 	}
 
-	// Batch insert userThemes
 	if len(userThemes) > 0 {
 		if err := tx.CreateInBatches(&userThemes, 100).Error; err != nil {
 			tx.Rollback()
@@ -110,22 +123,19 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		}
 	}
 
-	// Ambil semua units yang terkait dengan themes
+	// Ambil semua unit yang terkait dengan themeIDs
 	var units []unitModel.UnitModel
 	if err := tx.Where("themes_or_level_id IN ?", themeIDs).Find(&units).Error; err != nil {
 		tx.Rollback()
-		log.Println("[ERROR] Gagal ambil semua units:", err)
+		log.Println("[ERROR] Gagal ambil units:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal mengambil data unit",
 		})
 	}
 
-	// Buat data userUnits untuk batch insert
+	// Siapkan userUnits
 	var userUnits []unitModel.UserUnitModel
-	now := time.Now()
-
 	for _, unit := range units {
-		// Ambil semua ID dari section_quizzes berdasarkan unit_id
 		var sectionQuizIDs []int64
 		if err := tx.Model(&sectionQuizzesModel.SectionQuizzesModel{}).
 			Where("unit_id = ?", unit.ID).
@@ -137,9 +147,8 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 			})
 		}
 
-		// Tambahkan ke list user_unit
 		userUnits = append(userUnits, unitModel.UserUnitModel{
-			UserID:                 input.UserID,
+			UserID:                 userID,
 			UnitID:                 unit.ID,
 			AttemptReading:         0,
 			AttemptEvaluation:      datatypes.JSON([]byte(`{"attempt":0,"grade_evaluation":0}`)),
@@ -163,7 +172,7 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		}
 	}
 
-	// Commit transaksi jika semua berhasil
+	// Commit transaksi
 	if err := tx.Commit().Error; err != nil {
 		log.Println("[ERROR] Commit transaksi gagal:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -171,6 +180,7 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		})
 	}
 
+	// Sukses
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "UserSubcategory, UserThemes, dan UserUnits berhasil dibuat",
 		"data":    input,

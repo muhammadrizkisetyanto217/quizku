@@ -4,8 +4,8 @@
         "status": "active",
         "materials_quizzes": "Langkah-langkah berwudhu sesuai urutan dan sunnah.",
         "icon_url": "https://example.com/icons/wudhu-1.png",
-        "unit_id": 12,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 1,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -13,8 +13,8 @@
         "status": "active",
         "materials_quizzes": "Quiz tentang niat, bacaan, dan doa setelah wudhu.",
         "icon_url": "https://example.com/icons/wudhu-2.png",
-        "unit_id": 12,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 1,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -22,8 +22,8 @@
         "status": "active",
         "materials_quizzes": "Hal-hal yang membatalkan wudhu dan solusinya.",
         "icon_url": "https://example.com/icons/wudhu-break.png",
-        "unit_id": 13,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 1,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -31,8 +31,8 @@
         "status": "active",
         "materials_quizzes": "Dasar-dasar hukum dan hadits terkait pembatal wudhu.",
         "icon_url": "https://example.com/icons/wudhu-dalil.png",
-        "unit_id": 13,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 1,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -40,8 +40,8 @@
         "status": "active",
         "materials_quizzes": "Langkah tayamum dan niatnya.",
         "icon_url": "https://example.com/icons/tayamum-1.png",
-        "unit_id": 14,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 2,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -49,8 +49,8 @@
         "status": "active",
         "materials_quizzes": "Kondisi yang membolehkan tayamum serta syarat sahnya.",
         "icon_url": "https://example.com/icons/tayamum-2.png",
-        "unit_id": 14,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 2,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -58,8 +58,8 @@
         "status": "active",
         "materials_quizzes": "Kenapa sholat diwajibkan, berdasarkan Al-Qur’an.",
         "icon_url": "https://example.com/icons/sholat-1.png",
-        "unit_id": 15,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 2,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -67,8 +67,8 @@
         "status": "active",
         "materials_quizzes": "Manfaat sholat dalam membentuk karakter dan disiplin.",
         "icon_url": "https://example.com/icons/sholat-2.png",
-        "unit_id": 15,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 2,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -76,8 +76,8 @@
         "status": "active",
         "materials_quizzes": "Apa saja yang membedakan rukun dan wajib dalam sholat.",
         "icon_url": "https://example.com/icons/rukun-1.png",
-        "unit_id": 16,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 2,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -85,8 +85,8 @@
         "status": "active",
         "materials_quizzes": "Simulasi dan penguatan pemahaman rukun sholat.",
         "icon_url": "https://example.com/icons/rukun-2.png",
-        "unit_id": 16,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 3,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -94,8 +94,8 @@
         "status": "active",
         "materials_quizzes": "Teks bacaan yang wajib dihafal untuk sholat.",
         "icon_url": "https://example.com/icons/bacaan-1.png",
-        "unit_id": 17,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 3,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -103,8 +103,8 @@
         "status": "active",
         "materials_quizzes": "Pemahaman kandungan arti bacaan dalam sholat.",
         "icon_url": "https://example.com/icons/bacaan-2.png",
-        "unit_id": 17,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 3,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -112,8 +112,8 @@
         "status": "active",
         "materials_quizzes": "Macam-macam sholat sunnah dan dalilnya.",
         "icon_url": "https://example.com/icons/sunnah-1.png",
-        "unit_id": 18,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 3,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -121,8 +121,8 @@
         "status": "active",
         "materials_quizzes": "Kapan boleh dan tidak boleh melaksanakan sholat sunnah.",
         "icon_url": "https://example.com/icons/sunnah-2.png",
-        "unit_id": 18,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 3,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -130,8 +130,8 @@
         "status": "active",
         "materials_quizzes": "Kesalahan yang sering dilakukan saat sholat.",
         "icon_url": "https://example.com/icons/kesalahan-1.png",
-        "unit_id": 19,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 3,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -139,8 +139,8 @@
         "status": "active",
         "materials_quizzes": "Tips agar sholat sah dan khusyuk tanpa kesalahan.",
         "icon_url": "https://example.com/icons/kesalahan-2.png",
-        "unit_id": 19,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 4,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -148,8 +148,8 @@
         "status": "active",
         "materials_quizzes": "Langkah-langkah membangun fokus dan hati dalam sholat.",
         "icon_url": "https://example.com/icons/khusyuk-1.png",
-        "unit_id": 20,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 4,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -157,8 +157,8 @@
         "status": "active",
         "materials_quizzes": "Latihan untuk mengenali dan meningkatkan kekhusyukan.",
         "icon_url": "https://example.com/icons/khusyuk-2.png",
-        "unit_id": 20,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 5,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     },
     {
@@ -166,8 +166,8 @@
         "status": "active",
         "materials_quizzes": "Renungan dan motivasi sholat dari hati, bukan sekadar gerakan.",
         "icon_url": "https://example.com/icons/khusyuk-3.png",
-        "unit_id": 20,
-        "created_by": "848174ec-a819-4e03-878b-542d12063422",
+        "unit_id": 5,
+        "created_by": "11f49149-a265-4909-b000-29fba1bd368a",
         "total_quizzes": []
     }
 ]
