@@ -17,26 +17,25 @@ func main() {
 	configs.LoadEnv()
 	app := fiber.New()
 
-	// ✅ Aktifkan middleware lebih dulu
 	middlewares.SetupMiddlewares(app)
-
-	// ✅ Tangani preflight semua route sebelum SetupRoutes
-	app.Options("/*", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusNoContent) // 204 No Content
-	})
 
 	// ✅ Koneksi DB
 	database.ConnectDB()
 	scheduler.StartBlacklistCleanupScheduler(database.DB)
 
-	// ✅ Route
+	// ✅ Setup routes dulu
 	routes.SetupRoutes(app, database.DB)
 
+	// ✅ Baru tangani preflight OPTIONS (setelah semua route aktif)
+	app.Options("/*", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNoContent) // 204 No Content
+	})
+
+	// ✅ Jalankan server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
 	log.Printf("✅ Listening on PORT: %s", port)
 	log.Fatal(app.Listen(":" + port))
-
 }
