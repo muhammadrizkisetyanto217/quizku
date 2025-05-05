@@ -10,8 +10,8 @@ import (
 // SetupMiddlewareCors membuat middleware CORS
 func CorsMiddleware() fiber.Handler {
 	return cors.New(cors.Config{
-		AllowOrigins: "*", // Bebas dari semua origin
-		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+		AllowOrigins: "http://localhost:5173, https://quizku-production.vercel.app", // sesuaikan
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	})
 }

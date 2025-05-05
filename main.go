@@ -14,31 +14,27 @@ import (
 )
 
 func main() {
-	// ✅ Load .env variables
 	configs.LoadEnv()
-
-	// ✅ Inisialisasi Fiber
 	app := fiber.New()
 
-	// ✅ Setup global middleware (logger, recovery, dll)
+	// ✅ Aktifkan middleware lebih dulu
 	middlewares.SetupMiddlewares(app)
 
-	// ✅ Koneksi ke database
-	database.ConnectDB()
+	// ✅ Tangani preflight semua route sebelum SetupRoutes
+	app.Options("/*", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNoContent) // 204 No Content
+	})
 
-	// ✅ Jalankan scheduler pembersih token blacklist
+	// ✅ Koneksi DB
+	database.ConnectDB()
 	scheduler.StartBlacklistCleanupScheduler(database.DB)
 
-	// ✅ Setup semua route
+	// ✅ Route
 	routes.SetupRoutes(app, database.DB)
 
-	// ✅ Ambil PORT dari Railway atau default 3000
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
-
-	// ✅ Jalankan aplikasi
-	log.Printf("🚀 Server running at http://localhost:%s\n", port)
 	log.Fatal(app.Listen(":" + port))
 }
