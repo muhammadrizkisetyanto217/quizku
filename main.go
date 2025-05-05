@@ -36,5 +36,7 @@ func main() {
 	if port == "" {
 		port = "3000"
 	}
+	log.Printf("✅ Listening on PORT: %s", port)
 	log.Fatal(app.Listen(":" + port))
+
 }
