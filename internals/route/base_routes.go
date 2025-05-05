@@ -10,9 +10,9 @@ import (
 )
 
 func BaseRoutes(app *fiber.App, db *gorm.DB) {
-	// app.Get("/", func(c *fiber.Ctx) error {
-	// 	return c.SendString("Fiber & Supabase PostgreSQL connected successfully 🚀")
-	// })
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Fiber & Supabase PostgreSQL connected successfully 🚀")
+	})
 
 	app.Get("/panic-test", func(c *fiber.Ctx) error {
 		panic("Simulasi panic error!") // testing panic handler
