@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	authHelper "quizku/internals/features/users/auth/helpers"
+	authHelper "quizku/internals/features/users/auth/helper"
 	authRepo "quizku/internals/features/users/auth/repository"
 	helpers "quizku/internals/helpers"
 )

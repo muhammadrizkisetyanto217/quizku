@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"quizku/internals/features/users/user/models"
+	"quizku/internals/features/users/user/model"
 )
 
 type UserSeed struct {
@@ -34,13 +34,13 @@ func SeedUsersFromJSON(db *gorm.DB, filePath string) {
 	}
 
 	for _, data := range inputs {
-		var existing models.UserModel
+		var existing model.UserModel
 		if err := db.Where("email = ?", data.Email).First(&existing).Error; err == nil {
 			log.Printf("ℹ️ User dengan email '%s' sudah ada, dilewati.", data.Email)
 			continue
 		}
 
-		newUser := models.UserModel{
+		newUser := model.UserModel{
 			ID:               uuid.New(),
 			UserName:         data.UserName,
 			Email:            data.Email,

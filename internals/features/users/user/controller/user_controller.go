@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"quizku/internals/features/users/user/models"
+	"quizku/internals/features/users/user/model"
 	helper "quizku/internals/helpers"
 )
 
@@ -22,7 +22,7 @@ func NewUserController(db *gorm.DB) *UserController {
 
 // GET all users
 func (uc *UserController) GetUsers(c *fiber.Ctx) error {
-	var users []models.UserModel
+	var users []model.UserModel
 	if err := uc.DB.Find(&users).Error; err != nil {
 		log.Println("[ERROR] Failed to fetch users:", err)
 		return helper.Error(c, fiber.StatusInternalServerError, "Failed to retrieve users")
@@ -47,7 +47,7 @@ func (uc *UserController) GetUser(c *fiber.Ctx) error {
 		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized")
 	}
 
-	var user models.UserModel
+	var user model.UserModel
 	if err := uc.DB.First(&user, userID).Error; err != nil {
 		return helper.Error(c, fiber.StatusNotFound, "User not found")
 	}
@@ -58,8 +58,8 @@ func (uc *UserController) GetUser(c *fiber.Ctx) error {
 
 // POST create new user(s)
 func (uc *UserController) CreateUser(c *fiber.Ctx) error {
-	var singleUser models.UserModel
-	var multipleUsers []models.UserModel
+	var singleUser model.UserModel
+	var multipleUsers []model.UserModel
 
 	if err := c.BodyParser(&multipleUsers); err == nil && len(multipleUsers) > 0 {
 		if err := uc.DB.Create(&multipleUsers).Error; err != nil {
@@ -111,7 +111,7 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 		return helper.Error(c, fiber.StatusBadRequest, "Invalid UUID format")
 	}
 
-	var user models.UserModel
+	var user model.UserModel
 	if err := uc.DB.First(&user, "id = ?", userID).Error; err != nil {
 		return helper.Error(c, fiber.StatusNotFound, "User not found")
 	}
@@ -149,7 +149,7 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 func (uc *UserController) DeleteUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	if err := uc.DB.Delete(&models.UserModel{}, "id = ?", id).Error; err != nil {
+	if err := uc.DB.Delete(&model.UserModel{}, "id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete user:", err)
 		return helper.Error(c, fiber.StatusInternalServerError, "Failed to delete user")
 	}

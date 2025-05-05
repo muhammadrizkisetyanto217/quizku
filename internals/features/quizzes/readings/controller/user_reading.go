@@ -10,6 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	activityService "quizku/internals/features/progress/daily_activities/service"
 )
 
 type UserReadingController struct {
@@ -84,6 +86,11 @@ func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
 	}
 	if err := service.AddPointFromReading(ctrl.DB, input.UserID, input.ReadingID, input.Attempt); err != nil {
 		log.Println("[ERROR] Gagal menambahkan poin:", err)
+	}
+
+	// ✅ Tambahkan aktivitas harian
+	if err := activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserID); err != nil {
+		log.Println("[ERROR] Gagal mencatat aktivitas harian:", err)
 	}
 
 	log.Printf("[SUCCESS] UserReading created: user_id=%s, reading_id=%d, attempt=%d\n",

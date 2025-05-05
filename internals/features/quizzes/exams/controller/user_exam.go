@@ -12,6 +12,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	activityService "quizku/internals/features/progress/daily_activities/service"
 )
 
 type UserExamController struct {
@@ -96,6 +98,9 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 
 		_ = service.AddPointFromExam(c.DB, existing.UserID, existing.ExamID, existing.Attempt)
 
+		// ✅ Tambahkan pencatatan aktivitas harian
+		_ = activityService.UpdateOrInsertDailyActivity(c.DB, existing.UserID)
+
 		return ctx.Status(http.StatusOK).JSON(fiber.Map{
 			"message": "User exam record updated successfully",
 			"data":    existing,
@@ -123,6 +128,9 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 	}
 
 	_ = service.AddPointFromExam(c.DB, newExam.UserID, newExam.ExamID, newExam.Attempt)
+
+	// ✅ Tambahkan pencatatan aktivitas harian
+	_ = activityService.UpdateOrInsertDailyActivity(c.DB, newExam.UserID)
 
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "User exam record created successfully",

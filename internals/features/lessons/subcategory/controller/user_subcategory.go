@@ -250,6 +250,17 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil kategori"})
 	}
 
+	// 🔽 Tambahkan log debug setelah query ini
+	log.Println("[DEBUG] Jumlah kategori:", len(categories))
+	for _, cat := range categories {
+		log.Println("[DEBUG] Kategori:", cat.Name)
+		log.Println("  Jumlah Subkategori:", len(cat.Subcategories))
+		for _, sub := range cat.Subcategories {
+			log.Println("  - Subkategori:", sub.Name)
+			log.Println("    Jumlah Theme:", len(sub.ThemesOrLevels))
+		}
+	}
+
 	// Step 2: Ambil progres user_subcategory
 	var userSubcat []subcategoryModel.UserSubcategoryModel
 	if err := ctrl.DB.Where("user_id = ?", userID).Find(&userSubcat).Error; err != nil {

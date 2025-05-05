@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	userRoute "quizku/internals/features/users/user/routes"
+	surveyRoute "quizku/internals/features/users/survey/route"
 	rateLimiter "quizku/internals/middlewares"
 	authMiddleware "quizku/internals/middlewares/auth"
 )
@@ -18,9 +19,13 @@ func UserRoutes(app *fiber.App, db *gorm.DB) {
 	// 🔓 Prefix user biasa: /api/u/...
 	userGroup := api.Group("/u") // 👤 user login biasa
 	userRoute.UserAllRoutes(userGroup, db)
+	surveyRoute.SurveyUserRoutes(userGroup, db)
+
 
 	// 🔐 Prefix admin: /api/a/...
 	adminGroup := api.Group("/a") // 🔐 hanya teacher/admin/owner
 	userRoute.UserAdminRoutes(adminGroup, db)
+	surveyRoute.SurveyAdminRoutes(adminGroup, db)
+	
 
 }

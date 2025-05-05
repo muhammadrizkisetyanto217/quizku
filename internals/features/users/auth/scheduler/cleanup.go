@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"quizku/internals/features/users/auth/models"
+	"quizku/internals/features/users/auth/model"
 
 	"gorm.io/gorm"
 )
@@ -26,7 +26,7 @@ func StartBlacklistCleanupScheduler(db *gorm.DB) {
 
 			// Hanya hapus token yang expired > ttlDays yang lalu
 			deleteBefore := time.Now().Add(-time.Duration(ttlDays) * 24 * time.Hour)
-			result := db.Where("expired_at < ?", deleteBefore).Delete(&models.TokenBlacklist{})
+			result := db.Where("expired_at < ?", deleteBefore).Delete(&model.TokenBlacklist{})
 
 			if result.Error != nil {
 				log.Printf("[CLEANUP ERROR] %v", result.Error)

@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	authModel "quizku/internals/features/users/auth/models"
-	userModel "quizku/internals/features/users/user/models"
+	authModel "quizku/internals/features/users/auth/model"
+	userModel "quizku/internals/features/users/user/model"
 )
 
 // ====================== USER ======================

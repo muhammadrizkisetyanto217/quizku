@@ -2,33 +2,43 @@ package main
 
 import (
 	"log"
+	"os"
+
+	"github.com/gofiber/fiber/v2"
+
 	"quizku/internals/configs"
 	database "quizku/internals/databases"
 	scheduler "quizku/internals/features/users/auth/scheduler"
-	"quizku/internals/middlewares"
+	middlewares "quizku/internals/middlewares"
 	routes "quizku/internals/route"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-
-	// ✅ Muat file .env dulu
+	// ✅ Load .env variables
 	configs.LoadEnv()
-	// Inisialisasi Fiber
+
+	// ✅ Inisialisasi Fiber
 	app := fiber.New()
 
+	// ✅ Setup global middleware (logger, recovery, dll)
 	middlewares.SetupMiddlewares(app)
 
-	// Koneksi ke Supabase
+	// ✅ Koneksi ke database
 	database.ConnectDB()
 
-	// ✅ Jalankan scheduler harian
+	// ✅ Jalankan scheduler pembersih token blacklist
 	scheduler.StartBlacklistCleanupScheduler(database.DB)
 
-	// ✅ Panggil semua route dari folder routes
+	// ✅ Setup semua route
 	routes.SetupRoutes(app, database.DB)
 
-	// Start server
-	log.Fatal(app.Listen(":3000"))
+	// ✅ Ambil PORT dari Railway atau default 3000
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	// ✅ Jalankan aplikasi
+	log.Printf("🚀 Server running at http://localhost:%s\n", port)
+	log.Fatal(app.Listen(":" + port))
 }

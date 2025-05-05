@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"quizku/internals/features/users/user/models"
+	"quizku/internals/features/users/user/model"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -14,7 +14,7 @@ type UsersProfileSeed struct {
 	UserID       uuid.UUID      `json:"user_id"`
 	DonationName string         `json:"donation_name"`
 	FullName     string         `json:"full_name"`
-	Gender       *models.Gender `json:"gender"`
+	Gender       *model.Gender `json:"gender"`
 	PhoneNumber  string         `json:"phone_number"`
 	Bio          string         `json:"bio"`
 	Location     string         `json:"location"`
@@ -36,7 +36,7 @@ func SeedUsersProfileFromJSON(db *gorm.DB, filePath string) {
 
 	// Ambil semua user_id yang sudah ada
 	var existingIDs []uuid.UUID
-	if err := db.Model(&models.UsersProfileModel{}).
+	if err := db.Model(&model.UsersProfileModel{}).
 		Select("user_id").
 		Find(&existingIDs).Error; err != nil {
 		log.Fatalf("❌ Gagal ambil user_id yang sudah ada: %v", err)
@@ -48,14 +48,14 @@ func SeedUsersProfileFromJSON(db *gorm.DB, filePath string) {
 	}
 
 	// Kumpulkan data yang belum ada
-	var newProfiles []models.UsersProfileModel
+	var newProfiles []model.UsersProfileModel
 	for _, p := range seeds {
 		if existingMap[p.UserID] {
 			log.Printf("ℹ️ Profil user dengan ID '%s' sudah ada, dilewati.", p.UserID)
 			continue
 		}
 
-		newProfiles = append(newProfiles, models.UsersProfileModel{
+		newProfiles = append(newProfiles, model.UsersProfileModel{
 			UserID:       p.UserID,
 			DonationName: p.DonationName,
 			FullName:     p.FullName,

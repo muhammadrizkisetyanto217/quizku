@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"quizku/internals/configs"
-	TokenBlacklistModel "quizku/internals/features/users/auth/models"
+	TokenBlacklistModel "quizku/internals/features/users/auth/model"
 
 	"gorm.io/gorm"
 )

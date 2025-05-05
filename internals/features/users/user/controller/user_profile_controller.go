@@ -3,7 +3,7 @@ package controller
 import (
 	"log"
 
-	"quizku/internals/features/users/user/models"
+	"quizku/internals/features/users/user/model"
 	helper "quizku/internals/helpers"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,7 +22,7 @@ func NewUsersProfileController(db *gorm.DB) *UsersProfileController {
 func (upc *UsersProfileController) GetProfiles(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all user profiles")
 
-	var profiles []models.UsersProfileModel
+	var profiles []model.UsersProfileModel
 	if err := upc.DB.Find(&profiles).Error; err != nil {
 		log.Println("[ERROR] Failed to fetch user profiles:", err)
 		return helper.Error(c, fiber.StatusInternalServerError, "Failed to fetch user profiles")
@@ -35,7 +35,7 @@ func (upc *UsersProfileController) GetProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")
 	log.Println("[INFO] Fetching user profile with user_id:", userID)
 
-	var profile models.UsersProfileModel
+	var profile model.UsersProfileModel
 	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		log.Println("[ERROR] User profile not found:", err)
 		return helper.Error(c, fiber.StatusNotFound, "User profile not found")
@@ -54,7 +54,7 @@ func (upc *UsersProfileController) CreateProfile(c *fiber.Ctx) error {
 		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized: no user_id")
 	}
 
-	var input models.UsersProfileModel
+	var input model.UsersProfileModel
 	if err := c.BodyParser(&input); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return helper.Error(c, fiber.StatusBadRequest, "Invalid request format")
@@ -63,7 +63,7 @@ func (upc *UsersProfileController) CreateProfile(c *fiber.Ctx) error {
 	// Set user_id dari token ke model
 	input.UserID = userID.(uuid.UUID)
 
-	var existingProfile models.UsersProfileModel
+	var existingProfile model.UsersProfileModel
 	result := upc.DB.Where("user_id = ?", input.UserID).First(&existingProfile)
 
 	if result.RowsAffected > 0 {
@@ -88,7 +88,7 @@ func (upc *UsersProfileController) UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")
 	log.Println("[INFO] Updating user profile with user_id:", userID)
 
-	var profile models.UsersProfileModel
+	var profile model.UsersProfileModel
 	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		log.Println("[ERROR] User profile not found:", err)
 		return helper.Error(c, fiber.StatusNotFound, "User profile not found")
@@ -114,7 +114,7 @@ func (upc *UsersProfileController) DeleteProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")
 	log.Println("[INFO] Deleting user profile with user_id:", userID)
 
-	var profile models.UsersProfileModel
+	var profile model.UsersProfileModel
 	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		log.Println("[ERROR] User profile not found:", err)
 		return helper.Error(c, fiber.StatusNotFound, "User profile not found")

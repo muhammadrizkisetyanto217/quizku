@@ -10,10 +10,10 @@ import (
 	"gorm.io/gorm"
 
 	"quizku/internals/configs"
-	authHelper "quizku/internals/features/users/auth/helpers"
-	authModel "quizku/internals/features/users/auth/models"
+	authHelper "quizku/internals/features/users/auth/helper"
+	authModel "quizku/internals/features/users/auth/model"
 	authRepo "quizku/internals/features/users/auth/repository"
-	userModel "quizku/internals/features/users/user/models"
+	userModel "quizku/internals/features/users/user/model"
 	helpers "quizku/internals/helpers"
 )
 

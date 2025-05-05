@@ -10,6 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	activityService "quizku/internals/features/progress/daily_activities/service"
 )
 
 type UserEvaluationController struct {
@@ -90,6 +92,11 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 	}
 	if err := service.AddPointFromEvaluation(ctrl.DB, input.UserID, input.EvaluationID, input.Attempt); err != nil {
 		log.Println("[ERROR] Gagal menambahkan poin:", err)
+	}
+
+	// ✅ Tambahkan aktivitas harian
+	if err := activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserID); err != nil {
+		log.Println("[ERROR] Gagal mencatat aktivitas harian:", err)
 	}
 
 	log.Printf("[SUCCESS] UserEvaluation created: user_id=%s, evaluation_id=%d, attempt=%d\n",
