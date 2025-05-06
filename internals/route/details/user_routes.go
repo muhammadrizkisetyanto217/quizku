@@ -4,8 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
-	userRoute "quizku/internals/features/users/user/routes"
 	surveyRoute "quizku/internals/features/users/survey/route"
+	tokenRoute "quizku/internals/features/users/token/route"
+	userRoute "quizku/internals/features/users/user/routes"
 	rateLimiter "quizku/internals/middlewares"
 	authMiddleware "quizku/internals/middlewares/auth"
 )
@@ -16,16 +17,14 @@ func UserRoutes(app *fiber.App, db *gorm.DB) {
 		rateLimiter.GlobalRateLimiter(),
 	)
 
+	adminGroup := api.Group("/a") // 🔐 hanya teacher/admin/owner
+	userRoute.UserAdminRoutes(adminGroup, db)
+	surveyRoute.SurveyAdminRoutes(adminGroup, db)
+
 	// 🔓 Prefix user biasa: /api/u/...
 	userGroup := api.Group("/u") // 👤 user login biasa
 	userRoute.UserAllRoutes(userGroup, db)
 	surveyRoute.SurveyUserRoutes(userGroup, db)
-
-
-	// 🔐 Prefix admin: /api/a/...
-	adminGroup := api.Group("/a") // 🔐 hanya teacher/admin/owner
-	userRoute.UserAdminRoutes(adminGroup, db)
-	surveyRoute.SurveyAdminRoutes(adminGroup, db)
-	
+	tokenRoute.RegisterTokenRoutes(userGroup, db) // 🔓 Token routes
 
 }
