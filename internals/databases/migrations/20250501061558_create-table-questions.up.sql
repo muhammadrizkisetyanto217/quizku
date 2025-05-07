@@ -1,23 +1,32 @@
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
-    source_type_id INT NOT NULL CHECK (source_type_id IN (1, 2, 3)), -- enum enforcement
-    source_id INT NOT NULL,
-    question_text TEXT NOT NULL, -- ubah dari VARCHAR(200) ke TEXT
-    question_answer a NOT NULL,
+    question_text TEXT NOT NULL,
+    question_answer TEXT[] NOT NULL,  -- array jawaban pilihan (["A", "B", "C", "D"])
     question_correct TEXT NOT NULL CHECK (char_length(question_correct) <= 50),
-    tooltips_id INT[] DEFAULT '{}',
-    status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'archived')),
     paragraph_help TEXT NOT NULL,
     explain_question TEXT NOT NULL,
     answer_text TEXT NOT NULL,
+    tooltips_id INT[] DEFAULT '{}',  -- opsional relasi ke tabel tooltips
+    status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'archived')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
-
--- Index untuk performa query
-CREATE INDEX IF NOT EXISTS idx_questions_source ON questions(source_type_id, source_id);
+-- Index status untuk filter cepat soal aktif/pending
 CREATE INDEX IF NOT EXISTS idx_questions_status ON questions(status);
+-- Index tooltips_id untuk query berdasarkan isi array (jika digunakan)
+CREATE INDEX IF NOT EXISTS idx_questions_tooltips_id ON questions USING GIN(tooltips_id);
+
+
+CREATE TABLE IF NOT EXISTS question_links (
+    id SERIAL PRIMARY KEY,
+    question_id INT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('quiz', 'exam', 'evaluation', 'test')),
+    target_id INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_question_links_question_id ON question_links(question_id);
+CREATE INDEX IF NOT EXISTS idx_question_links_target ON question_links(target_type, target_id);
 
 
 CREATE TABLE IF NOT EXISTS question_saved (

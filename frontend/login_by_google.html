@@ -17,7 +17,6 @@
 
   <div class="g_id_signin" data-type="standard"></div>
 
-  <!-- Tempat output token -->
   <p id="token-output" style="margin-top:20px; font-family: monospace; white-space: pre-wrap;"></p>
 
   <script>
@@ -26,31 +25,45 @@
 
       fetch('https://quizku-production.up.railway.app/auth/login-google', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          id_token: response.credential
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_token: response.credential })
       })
         .then(res => res.json())
         .then(data => {
-          console.log('[DEBUG] Server response:', data);
-
           const output = document.getElementById('token-output');
 
-          // ✅ Akses token di dalam field `data.data.access_token`
           if (data.status === "success" && data.data && data.data.access_token) {
-            output.textContent = '✅ Login sukses!\n\nAccess Token:\n' + data.data.access_token;
-          } else if (data.error) {
-            output.textContent = '❌ Login gagal: ' + data.error;
+            const accessToken = data.data.access_token;
+
+            output.textContent = '✅ Login sukses!\n\nAccess Token:\n' + accessToken;
+
+            // 🔥 Kirim token ke endpoint /api/u/tokens
+            fetch('https://quizku-production.up.railway.app/api/u/tokens', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accessToken // jika endpoint dilindungi middleware
+              },
+              body: JSON.stringify({
+                token: accessToken
+              })
+            })
+              .then(res => res.json())
+              .then(result => {
+                console.log('[TOKEN POSTED]', result);
+                output.textContent += '\n\n🚀 Token berhasil dikirim ke server!';
+              })
+              .catch(err => {
+                console.error('[POST ERROR]', err);
+                output.textContent += '\n\n❌ Gagal mengirim token ke server: ' + err.message;
+              });
+
           } else {
-            output.textContent = '❌ Login gagal: Token tidak ditemukan.';
+            output.textContent = '❌ Login gagal: ' + (data.error || 'Token tidak ditemukan.');
           }
         })
-
         .catch(err => {
-          console.error('[ERROR] Fetch gagal:', err);
+          console.error('[LOGIN ERROR]', err);
           document.getElementById('token-output').textContent = '❌ Login gagal: ' + err.message;
         });
     }
