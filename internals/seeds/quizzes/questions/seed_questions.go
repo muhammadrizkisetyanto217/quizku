@@ -42,8 +42,6 @@ func SeedQuestionsFromJSON(db *gorm.DB, filePath string) {
 		}
 
 		question := model.QuestionModel{
-			SourceTypeID:    seed.SourceTypeID,
-			SourceID:        seed.SourceID,
 			QuestionText:    seed.QuestionText,
 			QuestionAnswer:  pq.StringArray(seed.QuestionAnswer),
 			QuestionCorrect: seed.QuestionCorrect,

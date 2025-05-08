@@ -11,22 +11,20 @@ import (
 
 type QuestionModel struct {
 	ID              uint           `gorm:"primaryKey" json:"id"`
-	SourceTypeID    int            `gorm:"not null" json:"source_type_id"` // 1=Quiz, 2=Evaluation, 3=Exam
-	SourceID        uint           `gorm:"not null" json:"source_id"`      // quizzes_id / evaluation_id / exam_id
-	QuestionText    string         `gorm:"type:varchar(200);not null" json:"question_text"`
-	QuestionAnswer  pq.StringArray `gorm:"type:text[];not null" json:"question_answer"`
+	QuestionText    string         `gorm:"type:text;not null" json:"question_text"`
+	QuestionAnswer  pq.StringArray `gorm:"type:text[];not null" json:"question_answer"` // pilihan jawaban
 	QuestionCorrect string         `gorm:"type:varchar(50);not null" json:"question_correct"`
-	TooltipsID      pq.Int64Array  `gorm:"type:int[]" json:"tooltips_id,omitempty"` // hanya digunakan jika source_type_id = 1
-	Status          string         `gorm:"type:varchar(10);default:'pending';check:status IN ('active', 'pending', 'archived')" json:"status"`
 	ParagraphHelp   string         `gorm:"type:text;not null" json:"paragraph_help"`
 	ExplainQuestion string         `gorm:"type:text;not null" json:"explain_question"`
 	AnswerText      string         `gorm:"type:text;not null" json:"answer_text"`
+	TooltipsID      pq.Int64Array  `gorm:"type:int[]" json:"tooltips_id,omitempty"` // opsional
+	DonationID      *int           `gorm:"type:int" json:"donation_id"`             // relasi ke user_question_donations, nullable
+	Status          string         `gorm:"type:varchar(10);default:'pending';check:status IN ('active','pending','archived')" json:"status"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
-// TableName mengatur nama tabel sesuai struktur di database
 func (QuestionModel) TableName() string {
 	return "questions"
 }
@@ -41,14 +39,6 @@ func (q QuestionModel) MarshalJSON() ([]byte, error) {
 		TooltipsID: []int64(q.TooltipsID),
 		Alias:      (*Alias)(&q),
 	})
-}
-
-func (q *QuestionModel) AfterSave(tx *gorm.DB) error {
-	return SyncTotalQuestions(tx, int(q.SourceTypeID), int(q.SourceID))
-}
-
-func (q *QuestionModel) AfterDelete(tx *gorm.DB) error {
-	return SyncTotalQuestions(tx, int(q.SourceTypeID), int(q.SourceID))
 }
 
 // ✅ Fungsi dinamis untuk update total_question ke quizzes/evaluations/exams

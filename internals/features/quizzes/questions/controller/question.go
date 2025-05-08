@@ -156,16 +156,6 @@ func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 			return c.Status(400).JSON(fiber.Map{"error": "Array of questions is empty"})
 		}
 
-		// Optional: validasi
-		for i, q := range multiple {
-			if q.SourceTypeID == 0 || q.SourceID == 0 || q.QuestionText == "" {
-				log.Printf("[ERROR] Invalid question at index %d: %+v\n", i, q)
-				return c.Status(400).JSON(fiber.Map{
-					"error": "Each question must have source_type_id, source_id, and question_text",
-					"index": i,
-				})
-			}
-		}
 
 		// Simpan batch
 		if err := qqc.DB.Create(&multiple).Error; err != nil {
@@ -184,10 +174,6 @@ func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Failed to parse single question: %v", err)
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request format"})
-	}
-
-	if single.SourceTypeID == 0 || single.SourceID == 0 || single.QuestionText == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "source_type_id, source_id, and question_text are required"})
 	}
 
 	if err := qqc.DB.Create(&single).Error; err != nil {
@@ -319,8 +305,6 @@ func (qqc *QuizzesQuestionController) GetQuestionWithTooltipsMarked(c *fiber.Ctx
 		"message": "Quiz question with marked tooltips fetched successfully",
 		"quiz_question": fiber.Map{
 			"id":               question.ID,
-			"source_type_id":   question.SourceTypeID,
-			"source_id":        question.SourceID,
 			"question_text":    markedText,
 			"question_answer":  question.QuestionAnswer,
 			"question_correct": question.QuestionCorrect,
