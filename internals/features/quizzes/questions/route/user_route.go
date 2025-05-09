@@ -23,10 +23,6 @@ func QuestionUserRoutes(api fiber.Router, db *gorm.DB) {
 	questionRoutes.Get("/:testId/questionsTest", questionController.GetQuestionsByTestID)
 	// 
 
-	questionRoutes.Get("/:id/questionTooltips", questionController.GetQuestionWithTooltips)
-	questionRoutes.Get("/:id/questionTooltips/:tooltipId", questionController.GetOnlyQuestionTooltips)
-	questionRoutes.Get("/:id/questionTooltipsMarked", questionController.GetQuestionWithTooltipsMarked)
-
 	// Question Saved
 	questionSavedRoutes := api.Group("/question-saved")
 	questionSavedRoutes.Post("/", questionSavedController.Create)

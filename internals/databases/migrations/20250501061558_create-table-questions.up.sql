@@ -1,22 +1,21 @@
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     question_text TEXT NOT NULL,
-    question_answer TEXT[] NOT NULL,  -- array jawaban pilihan (["A", "B", "C", "D"])
+    question_answer TEXT[] NOT NULL,
     question_correct TEXT NOT NULL CHECK (char_length(question_correct) <= 50),
     paragraph_help TEXT NOT NULL,
     explain_question TEXT NOT NULL,
     answer_text TEXT NOT NULL,
-    tooltips_id INT[] DEFAULT '{}',  -- opsional relasi ke tabel tooltips
     donation_id INT REFERENCES user_question_donations(id) ON DELETE SET NULL,
     status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'archived')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
--- Index status untuk filter cepat soal aktif/pending
+
+-- Tetap jaga index status
 CREATE INDEX IF NOT EXISTS idx_questions_status ON questions(status);
--- Index tooltips_id untuk query berdasarkan isi array (jika digunakan)
-CREATE INDEX IF NOT EXISTS idx_questions_tooltips_id ON questions USING GIN(tooltips_id);
+
 
 
 CREATE TABLE IF NOT EXISTS question_links (

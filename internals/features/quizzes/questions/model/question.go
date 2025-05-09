@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"log"
 	"time"
 
@@ -12,14 +11,15 @@ import (
 type QuestionModel struct {
 	ID              uint           `gorm:"primaryKey" json:"id"`
 	QuestionText    string         `gorm:"type:text;not null" json:"question_text"`
-	QuestionAnswer  pq.StringArray `gorm:"type:text[];not null" json:"question_answer"` // pilihan jawaban
+	QuestionAnswer  pq.StringArray `gorm:"type:text[];not null" json:"question_answer"`
 	QuestionCorrect string         `gorm:"type:varchar(50);not null" json:"question_correct"`
 	ParagraphHelp   string         `gorm:"type:text;not null" json:"paragraph_help"`
 	ExplainQuestion string         `gorm:"type:text;not null" json:"explain_question"`
 	AnswerText      string         `gorm:"type:text;not null" json:"answer_text"`
-	TooltipsID      pq.Int64Array  `gorm:"type:int[]" json:"tooltips_id,omitempty"` // opsional
-	DonationID      *int           `gorm:"type:int" json:"donation_id"`             // relasi ke user_question_donations, nullable
-	Status          string         `gorm:"type:varchar(10);default:'pending';check:status IN ('active','pending','archived')" json:"status"`
+	SourceTypeID    int            `gorm:"not null" json:"source_type_id"` // 🔥 Tambahkan untuk relasi quizzes/evaluations/exams
+	SourceID        uint           `gorm:"not null" json:"source_id"`      // 🔥 Tambahkan ID sumber
+	DonationID      *int           `gorm:"type:int" json:"donation_id"`    // nullable
+	Status          string         `gorm:"type:varchar(10);not null;default:'pending';check:status IN ('active','pending','archived')" json:"status"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at"`
@@ -27,18 +27,6 @@ type QuestionModel struct {
 
 func (QuestionModel) TableName() string {
 	return "questions"
-}
-
-// MarshalJSON untuk menyesuaikan array Tooltips agar bisa terbaca JSON
-func (q QuestionModel) MarshalJSON() ([]byte, error) {
-	type Alias QuestionModel
-	return json.Marshal(&struct {
-		TooltipsID []int64 `json:"tooltips_id"`
-		*Alias
-	}{
-		TooltipsID: []int64(q.TooltipsID),
-		Alias:      (*Alias)(&q),
-	})
 }
 
 // ✅ Fungsi dinamis untuk update total_question ke quizzes/evaluations/exams

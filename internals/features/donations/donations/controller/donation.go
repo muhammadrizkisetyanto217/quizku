@@ -39,7 +39,7 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 		UserID:  userUUID,
 		Amount:  body.Amount,
 		Message: body.Message,
-		Status:  "pending",
+		Status:  0,
 		OrderID: orderID,
 	}
 

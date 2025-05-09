@@ -42,9 +42,15 @@ func (uc *UserController) GetUsers(c *fiber.Ctx) error {
 
 // GET profile user by ID (dari JWT)
 func (uc *UserController) GetUser(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(uuid.UUID)
+	userIDRaw := c.Locals("user_id")
+	userIDStr, ok := userIDRaw.(string)
 	if !ok {
 		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized")
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return helper.Error(c, fiber.StatusUnauthorized, "Invalid user ID format")
 	}
 
 	var user model.UserModel
@@ -52,7 +58,7 @@ func (uc *UserController) GetUser(c *fiber.Ctx) error {
 		return helper.Error(c, fiber.StatusNotFound, "User not found")
 	}
 
-	user.Password = "" // Hilangkan password
+	user.Password = ""
 	return helper.Success(c, "User profile fetched successfully", user)
 }
 
@@ -138,10 +144,10 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 
 	log.Printf("[SUCCESS] Updated user ID: %v\n", user.ID)
 	return helper.Success(c, "User updated successfully", fiber.Map{
-		"id":            user.ID,
-		"user_name":     user.UserName,
-		"email":         user.Email,
-		"updated_at":    user.UpdatedAt,
+		"id":         user.ID,
+		"user_name":  user.UserName,
+		"email":      user.Email,
+		"updated_at": user.UpdatedAt,
 	})
 }
 

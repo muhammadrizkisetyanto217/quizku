@@ -11,8 +11,15 @@ import (
 )
 
 func HandleDonationStatusWebhook(db *gorm.DB, body map[string]interface{}) error {
-	orderID := body["order_id"].(string)
-	transactionStatus := body["transaction_status"].(string)
+	orderID, ok := body["order_id"].(string)
+	if !ok {
+		return fmt.Errorf("invalid or missing order_id in webhook body")
+	}
+
+	transactionStatus, ok := body["transaction_status"].(string)
+	if !ok {
+		return fmt.Errorf("invalid or missing transaction_status in webhook body")
+	}
 
 	log.Println("📄 Order ID:", orderID)
 	log.Println("📌 Transaction Status:", transactionStatus)
@@ -26,15 +33,21 @@ func HandleDonationStatusWebhook(db *gorm.DB, body map[string]interface{}) error
 	switch transactionStatus {
 	case "capture", "settlement":
 		now := time.Now()
-		donation.Status = "paid"
+		donation.Status = model.StatusPaid
 		donation.PaidAt = &now
 	case "expire":
-		donation.Status = "expired"
+		donation.Status = model.StatusExpired
 	case "cancel":
-		donation.Status = "canceled"
+		donation.Status = model.StatusCanceled
 	default:
 		log.Println("Status tidak diproses:", transactionStatus)
 	}
 
-	return db.Save(&donation).Error
+	if err := db.Save(&donation).Error; err != nil {
+		log.Println("[ERROR] Gagal menyimpan status donasi:", err)
+		return fmt.Errorf("gagal menyimpan status donasi")
+	}
+
+	log.Println("✅ Status donasi berhasil diperbarui")
+	return nil
 }
