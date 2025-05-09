@@ -16,11 +16,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// 🔐 Middleware untuk proteksi route
 func AuthMiddleware(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		// 🚨 Skip untuk webhook Midtrans
+		log.Printf("[MIDDLEWARE] Request: %s %s", c.Method(), c.OriginalURL())
+
+		// 🚨 Skip auth untuk Midtrans webhook
 		if c.Path() == "/api/donations/notification" {
 			log.Println("[INFO] Skip AuthMiddleware untuk webhook Midtrans")
 			return c.Next()
@@ -43,22 +44,25 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 
 		tokenString := tokenParts[1]
 
-		// ⛔ Cek blacklist
-		var existingToken TokenBlacklistModel.TokenBlacklist
-		err := db.Where("token = ?", tokenString).First(&existingToken).Error
-		if err == nil {
-			log.Println("[WARNING] Token ditemukan di blacklist")
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Unauthorized - Token is blacklisted",
-			})
-		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Println("[ERROR] DB error saat cek blacklist:", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Internal Server Error",
-			})
+		// ✅ Optimasi: hindari query berulang ke blacklist
+		if c.Locals("token_checked") == nil {
+			var existingToken TokenBlacklistModel.TokenBlacklist
+			err := db.Where("token = ? AND deleted_at IS NULL", tokenString).First(&existingToken).Error
+			if err == nil {
+				log.Println("[WARNING] Token ditemukan di blacklist")
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "Unauthorized - Token is blacklisted",
+				})
+			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Println("[ERROR] DB error saat cek blacklist:", err)
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": "Internal Server Error",
+				})
+			}
+			c.Locals("token_checked", true)
 		}
 
-		// 🔑 Secret key
+		// 🔐 Validasi token
 		secretKey := configs.JWTSecret
 		if secretKey == "" {
 			log.Println("[ERROR] JWT_SECRET kosong")
@@ -67,11 +71,10 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// ✅ Parse token manual (tanpa validasi otomatis)
 		claims := jwt.MapClaims{}
 		parser := jwt.Parser{SkipClaimsValidation: true}
 
-		_, err = parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		_, err := parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(secretKey), nil
 		})
 		if err != nil {
@@ -81,7 +84,7 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// 🔎 Validasi manual exp
+		// ⏳ Validasi exp token
 		exp, exists := claims["exp"].(float64)
 		if !exists {
 			log.Println("[ERROR] Token tidak memiliki exp")
@@ -106,7 +109,7 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// 🧾 Ambil user ID
+		// 🧾 Ambil dan simpan user ID dari token
 		idStr, exists := claims["id"].(string)
 		if !exists {
 			log.Println("[ERROR] Token tidak berisi user ID")
@@ -124,7 +127,7 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 		c.Locals("user_id", userID.String())
 		log.Println("[SUCCESS] User ID stored:", userID)
 
-		// ✅ Tambahan validasi user is_active (lebih efisien)
+		// 🧍 Validasi apakah user aktif
 		var user struct {
 			IsActive bool
 		}
@@ -141,7 +144,7 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// 🧾 Simpan role dan nama
+		// 🎭 Simpan role dan nama user dari token ke context
 		if role, ok := claims["role"].(string); ok {
 			c.Locals("userRole", role)
 		}

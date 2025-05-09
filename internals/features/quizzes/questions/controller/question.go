@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"log"
+	"quizku/internals/features/quizzes/questions/model"
 	questionModel "quizku/internals/features/quizzes/questions/model"
 	tooltipModel "quizku/internals/features/utils/tooltips/model"
 	"regexp"
@@ -64,45 +65,103 @@ func (qqc *QuizzesQuestionController) GetQuestion(c *fiber.Ctx) error {
 	})
 }
 
-// Fungsi GetQuestionsByQuizID (seperti sebelumnya, dengan filter SourceTypeID = 1)
+// GET quiz questions by quiz ID
 func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
-	quizID := c.Params("quizId") // Mengambil quizId dari parameter rute
-	log.Printf("[INFO] Fetching quiz questions for source_id: %s\n", quizID)
+	quizID := c.Params("quizId")
+	log.Printf("[INFO] Fetching quiz questions linked to quiz ID: %s\n", quizID)
 
-	var questions []questionModel.QuestionModel
-	// Query menggunakan source_id dan source_type_id = 1 (untuk Quiz)
-	if err := qqc.DB.Where("source_id = ? AND source_type_id = 1", quizID).Find(&questions).Error; err != nil {
-		log.Printf("[ERROR] Failed to fetch quiz questions for source_id %s: %v\n", quizID, err)
+	var links []model.QuestionLink
+	if err := qqc.DB.
+		Where("target_type = ? AND target_id = ?", model.TargetTypeQuiz, quizID).
+		Find(&links).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch question links for quiz_id %s: %v\n", quizID, err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
-			"message": "Failed to fetch quiz questions by quiz ID",
+			"message": "Failed to fetch question links",
 		})
 	}
 
-	log.Printf("[SUCCESS] Retrieved %d quiz questions for source_id %s\n", len(questions), quizID)
+	var questionIDs []int
+	for _, link := range links {
+		questionIDs = append(questionIDs, link.QuestionID)
+	}
+
+	if len(questionIDs) == 0 {
+		log.Printf("[INFO] No questions linked to quiz_id %s\n", quizID)
+		return c.JSON(fiber.Map{
+			"status":  true,
+			"message": "No questions found for this quiz",
+			"total":   0,
+			"data":    []any{},
+		})
+	}
+
+	var questions []questionModel.QuestionModel
+	if err := qqc.DB.
+		Where("id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to fetch questions",
+		})
+	}
+
+	log.Printf("[SUCCESS] Retrieved %d questions linked to quiz_id %s\n", len(questions), quizID)
 	return c.JSON(fiber.Map{
 		"status":  true,
-		"message": "Quiz questions fetched successfully by quiz ID",
+		"message": "Quiz questions fetched successfully",
 		"total":   len(questions),
 		"data":    questions,
 	})
 }
 
-// Fungsi GetQuestionsByEvaluationID (seperti sebelumnya, dengan filter SourceTypeID = 2)
+// GET quiz questions by evaluation ID
 func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) error {
 	evaluationID := c.Params("evaluationId")
-	log.Printf("[INFO] Fetching evaluation questions for source_id: %s\n", evaluationID)
+	log.Printf("[INFO] Fetching evaluation questions linked to evaluation ID: %s\n", evaluationID)
 
-	var questions []questionModel.QuestionModel
-	if err := qqc.DB.Where("source_id = ? AND source_type_id = 2", evaluationID).Find(&questions).Error; err != nil {
-		log.Printf("[ERROR] Failed to fetch evaluation questions for source_id %s: %v\n", evaluationID, err)
+	// Ambil data dari question_links
+	var links []model.QuestionLink
+	if err := qqc.DB.
+		Where("target_type = ? AND target_id = ?", model.TargetTypeEvaluation, evaluationID).
+		Find(&links).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch question links for evaluation_id %s: %v\n", evaluationID, err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
-			"message": "Failed to fetch evaluation questions by ID",
+			"message": "Failed to fetch question links for evaluation",
 		})
 	}
 
-	log.Printf("[SUCCESS] Retrieved %d evaluation questions for source_id %s\n", len(questions), evaluationID)
+	// Ambil question_id dari links
+	var questionIDs []int
+	for _, link := range links {
+		questionIDs = append(questionIDs, link.QuestionID)
+	}
+
+	if len(questionIDs) == 0 {
+		log.Printf("[INFO] No questions linked to evaluation_id %s\n", evaluationID)
+		return c.JSON(fiber.Map{
+			"status":  true,
+			"message": "No questions found for this evaluation",
+			"total":   0,
+			"data":    []any{},
+		})
+	}
+
+	// Ambil question dari tabel questions
+	var questions []questionModel.QuestionModel
+	if err := qqc.DB.
+		Where("id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to fetch questions for evaluation",
+		})
+	}
+
+	log.Printf("[SUCCESS] Retrieved %d questions linked to evaluation_id %s\n", len(questions), evaluationID)
 	return c.JSON(fiber.Map{
 		"status":  true,
 		"message": "Evaluation questions fetched successfully",
@@ -111,24 +170,109 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 	})
 }
 
-// Fungsi GetQuestionsByExamID (seperti sebelumnya, dengan filter SourceTypeID = 3)
+// Get quiz questions by exam ID
 func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 	examID := c.Params("examId")
-	log.Printf("[INFO] Fetching exam questions for source_id: %s\n", examID)
+	log.Printf("[INFO] Fetching exam questions linked to exam ID: %s\n", examID)
 
-	var questions []questionModel.QuestionModel
-	if err := qqc.DB.Where("source_id = ? AND source_type_id = 3", examID).Find(&questions).Error; err != nil {
-		log.Printf("[ERROR] Failed to fetch exam questions for source_id %s: %v\n", examID, err)
+	// Ambil data dari question_links dengan target_type = 3 (exam)
+	var links []model.QuestionLink
+	if err := qqc.DB.
+		Where("target_type = ? AND target_id = ?", model.TargetTypeExam, examID).
+		Find(&links).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch question links for exam_id %s: %v\n", examID, err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
-			"message": "Failed to fetch exam questions by ID",
+			"message": "Failed to fetch question links for exam",
 		})
 	}
 
-	log.Printf("[SUCCESS] Retrieved %d exam questions for source_id %s\n", len(questions), examID)
+	// Ambil question_id dari links
+	var questionIDs []int
+	for _, link := range links {
+		questionIDs = append(questionIDs, link.QuestionID)
+	}
+
+	if len(questionIDs) == 0 {
+		log.Printf("[INFO] No questions linked to exam_id %s\n", examID)
+		return c.JSON(fiber.Map{
+			"status":  true,
+			"message": "No questions found for this exam",
+			"total":   0,
+			"data":    []any{},
+		})
+	}
+
+	// Ambil question dari tabel questions
+	var questions []questionModel.QuestionModel
+	if err := qqc.DB.
+		Where("id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to fetch questions for exam",
+		})
+	}
+
+	log.Printf("[SUCCESS] Retrieved %d questions linked to exam_id %s\n", len(questions), examID)
 	return c.JSON(fiber.Map{
 		"status":  true,
 		"message": "Exam questions fetched successfully",
+		"total":   len(questions),
+		"data":    questions,
+	})
+}
+
+// Get quiz questions by test ID
+func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
+	testID := c.Params("testId")
+	log.Printf("[INFO] Fetching test_exam questions linked to test ID: %s\n", testID)
+
+	// Ambil data dari question_links dengan target_type = 4 (test_exam)
+	var links []model.QuestionLink
+	if err := qqc.DB.
+		Where("target_type = ? AND target_id = ?", model.TargetTypeTest, testID).
+		Find(&links).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch question links for test_id %s: %v\n", testID, err)
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to fetch question links for test_exam",
+		})
+	}
+
+	// Ambil question_id dari links
+	var questionIDs []int
+	for _, link := range links {
+		questionIDs = append(questionIDs, link.QuestionID)
+	}
+
+	if len(questionIDs) == 0 {
+		log.Printf("[INFO] No questions linked to test_id %s\n", testID)
+		return c.JSON(fiber.Map{
+			"status":  true,
+			"message": "No questions found for this test_exam",
+			"total":   0,
+			"data":    []any{},
+		})
+	}
+
+	// Ambil question dari tabel questions
+	var questions []questionModel.QuestionModel
+	if err := qqc.DB.
+		Where("id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to fetch questions for test_exam",
+		})
+	}
+
+	log.Printf("[SUCCESS] Retrieved %d questions linked to test_id %s\n", len(questions), testID)
+	return c.JSON(fiber.Map{
+		"status":  true,
+		"message": "Test exam questions fetched successfully",
 		"total":   len(questions),
 		"data":    questions,
 	})
@@ -155,7 +299,6 @@ func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 			log.Println("[ERROR] Empty question array")
 			return c.Status(400).JSON(fiber.Map{"error": "Array of questions is empty"})
 		}
-
 
 		// Simpan batch
 		if err := qqc.DB.Create(&multiple).Error; err != nil {

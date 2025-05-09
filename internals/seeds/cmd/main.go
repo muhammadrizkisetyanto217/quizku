@@ -28,6 +28,7 @@ import (
 	section_quizzes "quizku/internals/seeds/quizzes/section_quizzes"
 	users "quizku/internals/seeds/users/auth"
 	userProfiles "quizku/internals/seeds/users/users"
+	tooltips "quizku/internals/seeds/utils/tooltips"
 )
 
 func main() {
@@ -67,6 +68,8 @@ func main() {
 	case "progress":
 		level.SeedLevelRequirementsFromJSON(db, "internals/seeds/progress/levels/data_levels_requirements.json")
 		rank.SeedRanksRequirementsFromJSON(db, "internals/seeds/progress/ranks/data_ranks_requirements.json")
+	case "utils":
+		tooltips.SeedTooltipsFromJSON(db, "internals/seeds/utils/tooltips/data_tooltips.json")
 	default:
 		log.Fatalf("❌ Argumen '%s' tidak dikenali", os.Args[1])
 	}

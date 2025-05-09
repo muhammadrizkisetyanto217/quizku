@@ -52,24 +52,47 @@ func (ctrl *TestExamController) Create(c *fiber.Ctx) error {
 // ✅ Update test exam
 func (ctrl *TestExamController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
+
+	// Cari data berdasarkan ID
 	var exam model.TestExam
 	if err := ctrl.DB.First(&exam, id).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Test exam not found"})
 	}
 
+	// Parse input dari user
 	var payload model.TestExam
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	// Validasi status agar tidak kosong dan sesuai nilai yang diizinkan
+	validStatuses := map[string]bool{
+		"active":   true,
+		"inactive": true,
+		"archived": true,
+	}
+
+	if payload.Status == "" {
+		payload.Status = "active" // fallback default
+	} else if !validStatuses[payload.Status] {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid status value"})
+	}
+
+	// Update field
 	exam.Name = payload.Name
 	exam.Status = payload.Status
 	exam.UpdatedAt = time.Now()
 
+	// Simpan ke DB
 	if err := ctrl.DB.Save(&exam).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update test exam"})
 	}
-	return c.JSON(exam)
+
+	return c.JSON(fiber.Map{
+		"status":  true,
+		"message": "Test exam updated successfully",
+		"data":    exam,
+	})
 }
 
 // ✅ Delete test exam

@@ -1,8 +1,9 @@
-package utils
+package controller
 
 import (
 	"fmt"
 	"log"
+	"time"
 
 	database "quizku/internals/databases"
 	"quizku/internals/features/utils/tooltips/model"
@@ -121,6 +122,33 @@ func (tc *TooltipsController) CreateTooltip(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Tooltip created successfully",
 		"data":    single,
+	})
+}
+
+func (tc *TooltipsController) GetTooltipByID(c *fiber.Ctx) error {
+	start := time.Now()
+	id := c.Params("id")
+	var tooltip model.Tooltip
+
+	if err := tc.DB.
+		Select("id", "keyword", "description_short", "description_long").
+		First(&tooltip, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"error":  "Tooltip not found",
+		})
+	}
+
+	log.Printf("[PERF] Load tooltip %s in %v", id, time.Since(start))
+
+	return c.JSON(fiber.Map{
+		"status": true,
+		"data": fiber.Map{
+			"id":                tooltip.ID,
+			"keyword":           tooltip.Keyword,
+			"description_short": tooltip.DescriptionShort,
+			"description_long":  tooltip.DescriptionLong,
+		},
 	})
 }
 

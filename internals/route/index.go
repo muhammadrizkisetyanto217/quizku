@@ -30,4 +30,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 
 	log.Println("[INFO] Setting up DonationRoutes...")
 	routeDetails.DonationRoutes(app, db)
+
+	log.Println("[INFO] Setting up UtilsRoutes...")
+	routeDetails.UtilsRoutes(app, db)
 } 

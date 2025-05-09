@@ -15,9 +15,14 @@ func QuestionUserRoutes(api fiber.Router, db *gorm.DB) {
 	questionRoutes := api.Group("/question")
 	questionRoutes.Get("/", questionController.GetQuestions)
 	questionRoutes.Get("/:id", questionController.GetQuestion)
+
+	//* Main
 	questionRoutes.Get("/:quizId/questionsQuiz", questionController.GetQuestionsByQuizID)
 	questionRoutes.Get("/:evaluationId/questionsEvaluation", questionController.GetQuestionsByEvaluationID)
 	questionRoutes.Get("/:examId/questionsExam", questionController.GetQuestionsByExamID)
+	questionRoutes.Get("/:testId/questionsTest", questionController.GetQuestionsByTestID)
+	// 
+
 	questionRoutes.Get("/:id/questionTooltips", questionController.GetQuestionWithTooltips)
 	questionRoutes.Get("/:id/questionTooltips/:tooltipId", questionController.GetOnlyQuestionTooltips)
 	questionRoutes.Get("/:id/questionTooltipsMarked", questionController.GetQuestionWithTooltipsMarked)

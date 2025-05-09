@@ -22,7 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_questions_tooltips_id ON questions USING GIN(tool
 CREATE TABLE IF NOT EXISTS question_links (
     id SERIAL PRIMARY KEY,
     question_id INT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
-    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('quiz', 'exam', 'evaluation', 'test')),
+    target_type SMALLINT NOT NULL CHECK (target_type IN (1, 2, 3, 4)),
     target_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS user_questions (
 );
 
 -- Indexing
-CREATE INDEX idx_user_questions_user_id ON user_questions (user_id);
-CREATE INDEX idx_user_questions_question_id ON user_questions (question_id);
-CREATE INDEX idx_user_questions_source_type_id ON user_questions (source_type_id);
-CREATE INDEX idx_user_questions_source_id ON user_questions (source_id);
+CREATE INDEX IF NOT EXISTS idx_user_questions_user_id ON user_questions (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_questions_question_id ON user_questions (question_id);
+CREATE INDEX IF NOT EXISTS idx_user_questions_source_type_id ON user_questions (source_type_id);
+CREATE INDEX IF NOT EXISTS idx_user_questions_source_id ON user_questions (source_id);

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"quizku/internals/features/users/survey/model"
 	"time"
 
@@ -37,22 +38,54 @@ func (ctrl *SurveyQuestionController) GetByID(c *fiber.Ctx) error {
 
 // ✅ Create new question
 func (ctrl *SurveyQuestionController) Create(c *fiber.Ctx) error {
-	var payload model.SurveyQuestion
-	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
-	}
+	body := c.Body()
 
-	// Hitung order_index terakhir
-	var maxOrder int
-	ctrl.DB.Model(&model.SurveyQuestion{}).Select("COALESCE(MAX(order_index), 0)").Scan(&maxOrder)
-	payload.OrderIndex = maxOrder + 1
+	// Cek apakah body diawali dengan [ (berarti array)
+	if len(body) > 0 && body[0] == '[' {
+		var payloads []model.SurveyQuestion
+		if err := json.Unmarshal(body, &payloads); err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid array request body"})
+		}
 
-	payload.CreatedAt = time.Now()
-	payload.UpdatedAt = time.Now()
-	if err := ctrl.DB.Create(&payload).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to create question"})
+		// Ambil order terakhir
+		var maxOrder int
+		ctrl.DB.Model(&model.SurveyQuestion{}).Select("COALESCE(MAX(order_index), 0)").Scan(&maxOrder)
+
+		for i := range payloads {
+			payloads[i].OrderIndex = maxOrder + i + 1
+			payloads[i].CreatedAt = time.Now()
+			payloads[i].UpdatedAt = time.Now()
+		}
+
+		if err := ctrl.DB.Create(&payloads).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to insert questions"})
+		}
+		return c.Status(201).JSON(fiber.Map{
+			"message": "Multiple questions created",
+			"data":    payloads,
+		})
+	} else {
+		var payload model.SurveyQuestion
+		if err := json.Unmarshal(body, &payload); err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid object request body"})
+		}
+
+		// Hitung order terakhir
+		var maxOrder int
+		ctrl.DB.Model(&model.SurveyQuestion{}).Select("COALESCE(MAX(order_index), 0)").Scan(&maxOrder)
+
+		payload.OrderIndex = maxOrder + 1
+		payload.CreatedAt = time.Now()
+		payload.UpdatedAt = time.Now()
+
+		if err := ctrl.DB.Create(&payload).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to insert question"})
+		}
+		return c.Status(201).JSON(fiber.Map{
+			"message": "Single question created",
+			"data":    payload,
+		})
 	}
-	return c.Status(201).JSON(payload)
 }
 
 // ✅ Update question
