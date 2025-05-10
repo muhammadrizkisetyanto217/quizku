@@ -1,9 +1,9 @@
-CREATE TABLE IF NOT EXISTS donations (
+CREATE TABLE donations (
     id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     amount INTEGER NOT NULL,
     message TEXT,
-    status INTEGER NOT NULL DEFAULT 0, -- 0: pending, 1: paid, 2: expired, 3: canceled
+    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, paid, expired, canceled
     order_id VARCHAR(100) UNIQUE NOT NULL,
     payment_token TEXT,
     payment_gateway VARCHAR(50) DEFAULT 'midtrans',

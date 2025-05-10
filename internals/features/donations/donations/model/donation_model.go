@@ -12,7 +12,7 @@ type Donation struct {
 	UserID         uuid.UUID  `gorm:"type:uuid"`                           // Relasi ke users
 	Amount         int        `gorm:"not null"`                            // Jumlah donasi
 	Message        string     `gorm:"type:text"`                           // Pesan dari donor
-	Status         int        `gorm:"default:0"`                           // 0 = pending, 1 = paid, 2 = expired, 3 = canceled
+	Status         string     `gorm:"type:varchar(20);default:'pending'"`  // pending, paid, expired
 	OrderID        string     `gorm:"uniqueIndex;not null"`                // Order ID unik (DONATION-123...)
 	PaymentToken   string     `gorm:"type:text"`                           // Snap token
 	PaymentGateway string     `gorm:"type:varchar(50);default:'midtrans'"` // Bisa juga xendit, dll
@@ -22,4 +22,3 @@ type Donation struct {
 	UpdatedAt      time.Time
 	DeletedAt      gorm.DeletedAt `gorm:"index"` // Soft delete (opsional)
 }
-
