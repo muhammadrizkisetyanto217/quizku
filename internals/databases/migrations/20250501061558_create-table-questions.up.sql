@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS questions (
     paragraph_help TEXT NOT NULL,
     explain_question TEXT NOT NULL,
     answer_text TEXT NOT NULL,
-    donation_id INT REFERENCES user_question_donations(id) ON DELETE SET NULL,
     status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'archived')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

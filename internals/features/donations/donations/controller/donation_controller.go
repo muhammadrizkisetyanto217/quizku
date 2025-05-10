@@ -4,11 +4,11 @@ package controller
 import (
 	"fmt"
 	"log"
-	"time"
-
-	"quizku/internals/features/donations/donations/dto"
+	donationQuestionModel "quizku/internals/features/donations/donation_questions/model"
 	"quizku/internals/features/donations/donations/model"
+	donationModel "quizku/internals/features/donations/donations/model"
 	donationService "quizku/internals/features/donations/donations/service"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -24,7 +24,14 @@ func NewDonationController(db *gorm.DB) *DonationController {
 }
 
 func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
-	var body dto.CreateDonationRequest
+	var body struct {
+		UserID  string `json:"user_id"`
+		Amount  int    `json:"amount"`
+		Message string `json:"message"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+	}
+
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
@@ -35,7 +42,7 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 	}
 
 	orderID := fmt.Sprintf("DONATION-%d", time.Now().UnixNano())
-	donation := model.Donation{
+	donation := donationModel.Donation{
 		UserID:  userUUID,
 		Amount:  body.Amount,
 		Message: body.Message,
@@ -55,11 +62,39 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 	donation.PaymentToken = token
 	ctrl.DB.Save(&donation)
 
+	if donation.Status == donationModel.StatusPaid {
+		soalCount := donation.Amount / 5000
+		for i := 0; i < soalCount; i++ {
+			entry := donationQuestionModel.DonationQuestionModel{
+				DonationID:  donation.ID,
+				QuestionID:  0,
+				UserMessage: donation.Message,
+			}
+			if err := ctrl.DB.Create(&entry).Error; err != nil {
+				log.Printf("[ERROR] Gagal buat slot kosong donation_question: %v", err)
+			}
+		}
+		log.Printf("✅ Donasi paid langsung buat %d slot soal untuk donasi ID %d", soalCount, donation.ID)
+	}
+
 	return c.JSON(fiber.Map{
 		"message":    "Donasi berhasil dibuat",
 		"order_id":   donation.OrderID,
 		"snap_token": token,
 	})
+}
+
+func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
+	var body map[string]interface{}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid webhook"})
+	}
+	db := c.Locals("db").(*gorm.DB)
+	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
+		log.Println("[ERROR] Webhook gagal:", err)
+		return c.SendStatus(500)
+	}
+	return c.SendStatus(200)
 }
 
 func (ctrl *DonationController) GetAllDonations(c *fiber.Ctx) error {
@@ -82,18 +117,4 @@ func (ctrl *DonationController) GetDonationsByUserID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal mengambil data donasi user"})
 	}
 	return c.JSON(donations)
-}
-
-func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
-	var body map[string]interface{}
-	if err := c.BodyParser(&body); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid webhook"})
-	}
-
-	db := c.Locals("db").(*gorm.DB)
-	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
-		log.Println("[ERROR] Webhook gagal:", err)
-		return c.SendStatus(500)
-	}
-	return c.SendStatus(200)
 }

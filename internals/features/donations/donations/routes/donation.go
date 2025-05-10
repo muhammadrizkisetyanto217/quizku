@@ -15,7 +15,4 @@ func DonationRoutes(api fiber.Router, db *gorm.DB) {
 	donationRoutes.Get("/", donationCtrl.GetAllDonations)                   // Semua donasi
 	donationRoutes.Get("/user/:user_id", donationCtrl.GetDonationsByUserID) // Donasi per user
 
-	// Webhook (dibiarkan tetap pakai app karena di luar protected routes)
-	// Tapi kamu bisa pisahkan di main.go langsung jika ingin murni konsisten
-	// atau buat route khusus public di main
 }

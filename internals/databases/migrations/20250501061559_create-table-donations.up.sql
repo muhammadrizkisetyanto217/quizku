@@ -15,11 +15,12 @@ CREATE TABLE IF NOT EXISTS donations (
 );
 
 
-CREATE TABLE IF NOT EXISTS user_question_donations (
+CREATE TABLE IF NOT EXISTS donation_questions (
     id SERIAL PRIMARY KEY,
-    donation_id INT NOT NULL REFERENCES donations(id) ON DELETE CASCADE,
-    user_progress_id INT NOT NULL REFERENCES user_progress(id) ON DELETE CASCADE,
-    question_id INT, -- bisa nullable sebelum soal dibuat
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    donation_id BIGINT REFERENCES donations(id) ON DELETE CASCADE,
+    question_id BIGINT REFERENCES questions(id) ON DELETE CASCADE,
+    user_progress_id BIGINT REFERENCES user_progress(id) ON DELETE SET NULL,
+    user_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
