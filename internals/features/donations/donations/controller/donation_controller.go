@@ -61,6 +61,20 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 	})
 }
 
+func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
+	var body map[string]interface{}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid webhook"})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
+		log.Println("[ERROR] Webhook gagal:", err)
+		return c.SendStatus(500)
+	}
+	return c.SendStatus(200)
+}
+
 func (ctrl *DonationController) GetAllDonations(c *fiber.Ctx) error {
 	var donations []model.Donation
 	if err := ctrl.DB.Order("created_at desc").Find(&donations).Error; err != nil {
@@ -81,18 +95,4 @@ func (ctrl *DonationController) GetDonationsByUserID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal mengambil data donasi user"})
 	}
 	return c.JSON(donations)
-}
-
-func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
-	var body map[string]interface{}
-	if err := c.BodyParser(&body); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid webhook"})
-	}
-
-	db := c.Locals("db").(*gorm.DB)
-	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
-		log.Println("[ERROR] Webhook gagal:", err)
-		return c.SendStatus(500)
-	}
-	return c.SendStatus(200)
 }
