@@ -87,13 +87,24 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
 	var body map[string]interface{}
 	if err := c.BodyParser(&body); err != nil {
+		log.Println("[WEBHOOK ERROR] BodyParser:", err)
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid webhook"})
 	}
-	db := c.Locals("db").(*gorm.DB)
-	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
-		log.Println("[ERROR] Webhook gagal:", err)
+
+	log.Println("🔥🔥🔥 WEBHOOK MASUK 🔥🔥🔥")
+	log.Printf("📩 Payload dari Midtrans: %+v", body)
+
+	db, ok := c.Locals("db").(*gorm.DB)
+	if !ok || db == nil {
+		log.Println("[WEBHOOK ERROR] DB not found in Locals")
 		return c.SendStatus(500)
 	}
+
+	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
+		log.Println("[WEBHOOK ERROR] Gagal handle status:", err)
+		return c.SendStatus(500)
+	}
+	log.Println("✅ Webhook berhasil diproses!")
 	return c.SendStatus(200)
 }
 
