@@ -100,10 +100,10 @@ func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
 		return c.SendStatus(500)
 	}
 
-	// if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
-	// 	log.Println("[WEBHOOK ERROR] Gagal handle status:", err)
-	// 	return c.SendStatus(500)
-	// }
+	if err := donationService.HandleDonationStatusWebhook(db, body); err != nil {
+		log.Println("[WEBHOOK ERROR] Gagal handle status:", err)
+		return c.SendStatus(500)
+	}
 	log.Println("✅ Webhook berhasil diproses!")
 	return c.SendStatus(200)
 }
