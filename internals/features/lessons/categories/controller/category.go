@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	dto "quizku/internals/features/lessons/categories/dto"
 	"quizku/internals/features/lessons/categories/model"
 
 	"github.com/gofiber/fiber/v2"
@@ -59,15 +60,27 @@ func (cc *CategoryController) GetCategoriesByDifficulty(c *fiber.Ctx) error {
 	log.Printf("[INFO] Fetching categories with difficulty ID: %s\n", difficultyID)
 
 	var categories []model.CategoryModel
-	if err := cc.DB.Where("difficulty_id = ?", difficultyID).Find(&categories).Error; err != nil {
+	if err := cc.DB.
+		Select("id", "name").
+		Where("difficulty_id = ?", difficultyID).
+		Find(&categories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch categories for difficulty ID %s: %v\n", difficultyID, err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch categories"})
 	}
-	log.Printf("[SUCCESS] Retrieved %d categories for difficulty ID %s\n", len(categories), difficultyID)
+
+	var responses []dto.CategoryTooltipResponse
+	for _, c := range categories {
+		responses = append(responses, dto.CategoryTooltipResponse{
+			ID:   c.ID,
+			Name: c.Name,
+		})
+	}
+
+	log.Printf("[SUCCESS] Retrieved %d category tooltips for difficulty ID %s\n", len(responses), difficultyID)
 	return c.JSON(fiber.Map{
-		"message": "Categories fetched successfully by difficulty",
-		"total":   len(categories),
-		"data":    categories,
+		"message": "Category names fetched successfully",
+		"total":   len(responses),
+		"data":    responses,
 	})
 }
 

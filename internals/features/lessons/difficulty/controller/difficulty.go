@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	dto "quizku/internals/features/lessons/difficulty/dto"
 	"quizku/internals/features/lessons/difficulty/model"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/lib/pq"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -20,19 +23,32 @@ func NewDifficultyController(db *gorm.DB) *DifficultyController {
 
 // Get all difficulties
 func (dc *DifficultyController) GetDifficulties(c *fiber.Ctx) error {
-	var difficulties []model.DifficultyModel
+	var models []model.DifficultyModel
 	log.Println("[INFO] Received request to fetch all difficulties")
 
-	if err := dc.DB.Find(&difficulties).Error; err != nil {
+	if err := dc.DB.Find(&models).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch difficulties: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	log.Printf("[SUCCESS] Retrieved %d difficulties\n", len(difficulties))
+	var responses []dto.DifficultyResponse
+	for _, d := range models {
+		responses = append(responses, dto.DifficultyResponse{
+			ID:               d.ID,
+			Name:             d.Name,
+			Status:           d.Status,
+			DescriptionShort: d.DescriptionShort,
+			DescriptionLong:  d.DescriptionLong,
+			TotalCategories:  convertInt64ArrayToInt(d.TotalCategories),
+			ImageURL:         d.ImageURL,
+		})
+	}
+
+	log.Printf("[SUCCESS] Retrieved %d difficulties\n", len(responses))
 	return c.JSON(fiber.Map{
 		"message": "All difficulties fetched successfully",
-		"total":   len(difficulties),
-		"data":    difficulties,
+		"total":   len(responses),
+		"data":    responses,
 	})
 }
 
@@ -160,4 +176,12 @@ func (dc *DifficultyController) DeleteDifficulty(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": fmt.Sprintf("Difficulty with ID %s deleted successfully", id),
 	})
+}
+
+func convertInt64ArrayToInt(arr pq.Int64Array) []int {
+	var result []int
+	for _, v := range arr {
+		result = append(result, int(v))
+	}
+	return result
 }

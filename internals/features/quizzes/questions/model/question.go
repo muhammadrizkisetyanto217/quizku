@@ -16,10 +16,7 @@ type QuestionModel struct {
 	ParagraphHelp   string         `gorm:"type:text;not null" json:"paragraph_help"`
 	ExplainQuestion string         `gorm:"type:text;not null" json:"explain_question"`
 	AnswerText      string         `gorm:"type:text;not null" json:"answer_text"`
-	SourceTypeID    int            `gorm:"not null" json:"source_type_id"` // 🔥 Tambahkan untuk relasi quizzes/evaluations/exams
-	SourceID        uint           `gorm:"not null" json:"source_id"`      // 🔥 Tambahkan ID sumber
-	DonationID      *int           `gorm:"type:int" json:"donation_id"`    // nullable
-	Status          string         `gorm:"type:varchar(10);not null;default:'pending';check:status IN ('active','pending','archived')" json:"status"`
+	Status          string         `gorm:"type:varchar(10);not null;default:'pending'" json:"status"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at"`

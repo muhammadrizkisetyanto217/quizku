@@ -10,11 +10,6 @@
         "description": "Penjelasan tentang tata cara dan syarat sah wudhu.",
         "is_public": true,
         "subcategories_id": 2
-    },
-    {
-        "title": "Sejarah Nabi",
-        "description": "Rangkuman sejarah para nabi sejak awal hingga akhir.",
-        "is_public": false,
-        "subcategories_id": 3
     }
+    
 ]

@@ -36,20 +36,3 @@ CREATE TABLE IF NOT EXISTS categories_news (
 CREATE INDEX IF NOT EXISTS idx_categories_news_category_id ON categories_news(category_id);
 CREATE INDEX IF NOT EXISTS idx_categories_news_is_public ON categories_news(is_public);
 CREATE INDEX IF NOT EXISTS idx_news_public_per_category ON categories_news(category_id, is_public);
-
--- ✅ TABLE: user_category
-CREATE TABLE IF NOT EXISTS user_category (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-    complete_category INTEGER[] NOT NULL DEFAULT '{}',
-    total_category INTEGER[] NOT NULL DEFAULT '{}',
-    grade_result INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-);
-
-CREATE INDEX IF NOT EXISTS idx_user_category_user_id ON user_category(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_category_cat_id ON user_category(category_id);
-CREATE INDEX IF NOT EXISTS idx_user_category_user_cat ON user_category(user_id, category_id);

@@ -25,15 +25,29 @@ func NewDonationController(db *gorm.DB) *DonationController {
 func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 	var body dto.CreateDonationRequest
 	if err := c.BodyParser(&body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request",
+		})
 	}
 
-	userUUID, err := uuid.Parse(body.UserID)
+	// Ambil user ID dari token (yang sudah disimpan di middleware)
+	userIDRaw := c.Locals("user_id")
+	userIDStr, ok := userIDRaw.(string)
+	if !ok || userIDStr == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User ID tidak valid",
+		})
+	}
+
+	userUUID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "user_id tidak valid"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "User ID dalam token tidak valid",
+		})
 	}
 
 	orderID := fmt.Sprintf("DONATION-%d", time.Now().UnixNano())
+
 	donation := model.Donation{
 		UserID:  userUUID,
 		Amount:  body.Amount,
@@ -43,12 +57,16 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 	}
 
 	if err := ctrl.DB.Create(&donation).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal menyimpan donasi"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Gagal menyimpan donasi",
+		})
 	}
 
 	token, err := donationService.GenerateSnapToken(donation, body.Name, body.Email)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal membuat token Midtrans"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Gagal membuat token pembayaran",
+		})
 	}
 
 	donation.PaymentToken = token

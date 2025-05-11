@@ -37,20 +37,18 @@ CREATE INDEX IF NOT EXISTS idx_subnews_is_public ON subcategories_news(is_public
 CREATE INDEX IF NOT EXISTS idx_subnews_public_per_subcat ON subcategories_news(subcategory_id, is_public);
 
 
--- ✅ TABLE: user_subcategory
+-- ✅ TABLE: user_subcategory (revisi final)
 CREATE TABLE IF NOT EXISTS user_subcategory (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
     subcategory_id INTEGER NOT NULL REFERENCES subcategories(id) ON DELETE CASCADE,
     complete_themes_or_levels JSONB NOT NULL DEFAULT '{}'::jsonb,
-    total_themes_or_levels INTEGER[] NOT NULL DEFAULT '{}',
     grade_result INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
 );
 
--- ✅ Index untuk query performa
+-- ✅ Index untuk performa
 CREATE INDEX IF NOT EXISTS idx_user_subcategory_user_id ON user_subcategory (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_subcategory_subcat_id ON user_subcategory (subcategory_id);
 CREATE INDEX IF NOT EXISTS idx_user_subcategory_user_subcat ON user_subcategory(user_id, subcategory_id);

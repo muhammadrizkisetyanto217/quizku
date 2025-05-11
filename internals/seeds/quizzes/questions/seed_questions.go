@@ -11,8 +11,6 @@ import (
 )
 
 type QuestionSeed struct {
-	SourceTypeID    int      `json:"source_type_id"`
-	SourceID        uint     `json:"source_id"`
 	QuestionText    string   `json:"question_text"`
 	QuestionAnswer  []string `json:"question_answer"`
 	QuestionCorrect string   `json:"question_correct"`
@@ -35,8 +33,9 @@ func SeedQuestionsFromJSON(db *gorm.DB, filePath string) {
 	}
 
 	for _, seed := range seeds {
+		// Cek duplikat hanya berdasarkan text
 		var existing model.QuestionModel
-		if err := db.Where("question_text = ? AND source_id = ? AND source_type_id = ?", seed.QuestionText, seed.SourceID, seed.SourceTypeID).First(&existing).Error; err == nil {
+		if err := db.Where("question_text = ?", seed.QuestionText).First(&existing).Error; err == nil {
 			log.Printf("ℹ️ Soal '%s' sudah ada, lewati...", seed.QuestionText)
 			continue
 		}

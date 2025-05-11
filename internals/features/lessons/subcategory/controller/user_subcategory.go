@@ -76,7 +76,6 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 	input := subcategoryModel.UserSubcategoryModel{
 		UserID:              userID,
 		SubcategoryID:       int(body.SubcategoryID),
-		TotalThemesOrLevels: subcategory.TotalThemesOrLevels,
 		CreatedAt:           time.Now(),
 	}
 	if err := tx.Create(&input).Error; err != nil {
@@ -107,7 +106,6 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 			UserID:           userID,
 			ThemesOrLevelsID: theme.ID,
 			CompleteUnit:     datatypes.JSONMap{},
-			TotalUnit:        theme.TotalUnit,
 			GradeResult:      0,
 			CreatedAt:        now,
 		})
@@ -296,6 +294,7 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		SubcategoriesID  uint           `json:"subcategories_id"`
 		GradeResult      int            `json:"grade_result"`
 		CompleteUnit     datatypes.JSON `json:"complete_unit"`
+		HasProgressTheme bool           `json:"has_progress_theme"`
 	}
 
 	type SubcategoryWithProgress struct {
@@ -312,8 +311,9 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		GradeResult            int                 `json:"grade_result"`
 		CompleteThemesOrLevels any                 `json:"complete_themes_or_levels"`
 		UserSubcategoryID      uint                `json:"user_subcategory_id"`
-		UserID                 uuid.UUID           `json:"user_id"`
+		UserID                 *uuid.UUID          `json:"user_id,omitempty"`
 		ThemesOrLevels         []ThemeWithProgress `json:"themes_or_levels"`
+		HasProgressSubcategory bool                `json:"has_progress_subcategory"`
 	}
 
 	type CategoryWithSubcat struct {
@@ -362,11 +362,13 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 					SubcategoriesID:  uint(theme.SubcategoriesID),
 					GradeResult:      userTheme.GradeResult,
 					CompleteUnit:     datatypes.JSON(rawJSON),
+					HasProgressTheme: userTheme.GradeResult > 0 || string(rawJSON) != "null",
 				})
 				if userTheme.GradeResult > 0 {
 					totalGrade += userTheme.GradeResult
 					totalCount++
 				}
+
 			}
 
 			if us.GradeResult > 0 {
@@ -387,8 +389,15 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 				GradeResult:            us.GradeResult,
 				CompleteThemesOrLevels: us.CompleteThemesOrLevels,
 				UserSubcategoryID:      us.ID,
-				UserID:                 us.UserID,
-				ThemesOrLevels:         themes,
+				UserID: func() *uuid.UUID {
+					if us.ID != 0 {
+						return &us.UserID
+					}
+					return nil
+				}(),
+				ThemesOrLevels: themes,
+				HasProgressSubcategory: us.ID != 0,
+
 			})
 		}
 

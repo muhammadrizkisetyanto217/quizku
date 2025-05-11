@@ -1,7 +1,5 @@
 [
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa yang pertama kali dilakukan sebelum berwudhu?",
         "question_answer": [
             "Membasuh wajah",
@@ -15,8 +13,6 @@
         "answer_text": "Membaca niat"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa yang dibasuh pertama kali setelah niat?",
         "question_answer": [
             "Kaki",
@@ -30,8 +26,6 @@
         "answer_text": "Wajah"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Berapa kali membasuh setiap anggota wudhu menurut sunnah?",
         "question_answer": [
             "1 kali",
@@ -45,8 +39,6 @@
         "answer_text": "3 kali"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa yang dilakukan setelah membasuh kedua tangan dalam wudhu?",
         "question_answer": [
             "Menyapu kepala",
@@ -60,8 +52,6 @@
         "answer_text": "Menyapu kepala"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa hukum mencuci mulut dan hidung saat wudhu?",
         "question_answer": [
             "Wajib",
@@ -75,8 +65,6 @@
         "answer_text": "Sunnah"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa langkah terakhir dalam wudhu?",
         "question_answer": [
             "Menyapu kepala",
@@ -90,8 +78,6 @@
         "answer_text": "Membasuh kaki"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa manfaat dari menjaga wudhu?",
         "question_answer": [
             "Menjadi sehat",
@@ -105,8 +91,6 @@
         "answer_text": "Menghapus dosa kecil"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Bagaimana posisi membasuh tangan dalam wudhu?",
         "question_answer": [
             "Dari lengan ke telapak",
@@ -120,8 +104,6 @@
         "answer_text": "Dari jari ke siku"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apakah sah wudhu tanpa niat?",
         "question_answer": [
             "Sah",
@@ -135,8 +117,6 @@
         "answer_text": "Tidak sah"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa yang membatalkan wudhu?",
         "question_answer": [
             "Tidur terlentang",
@@ -150,8 +130,6 @@
         "answer_text": "Tidur terlentang"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apakah wanita haid wajib berwudhu?",
         "question_answer": [
             "Ya",
@@ -165,8 +143,6 @@
         "answer_text": "Tidak"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apakah boleh berbicara saat wudhu?",
         "question_answer": [
             "Boleh",
@@ -180,8 +156,6 @@
         "answer_text": "Makruh"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apakah doa setelah wudhu ada dalilnya?",
         "question_answer": [
             "Tidak ada",
@@ -195,8 +169,6 @@
         "answer_text": "Ada"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Apa hukum mendahulukan kiri sebelum kanan dalam wudhu?",
         "question_answer": [
             "Wajib",
@@ -210,8 +182,6 @@
         "answer_text": "Menyelisihi sunnah"
     },
     {
-        "source_type_id": 2,
-        "source_id": 1,
         "question_text": "Berapa kali Nabi SAW biasa menyapu kepala saat wudhu?",
         "question_answer": [
             "1 kali",

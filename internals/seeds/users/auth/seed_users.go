@@ -6,9 +6,12 @@ import (
 	"os"
 	"time"
 
+	"quizku/internals/features/users/user/model"
+
+	authHelper "quizku/internals/features/users/auth/helper"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"quizku/internals/features/users/user/model"
 )
 
 type UserSeed struct {
@@ -40,11 +43,18 @@ func SeedUsersFromJSON(db *gorm.DB, filePath string) {
 			continue
 		}
 
+		// 🔐 Hash password sebelum disimpan
+		hashedPassword, err := authHelper.HashPassword(data.Password)
+		if err != nil {
+			log.Printf("❌ Gagal hash password untuk '%s': %v", data.Email, err)
+			continue
+		}
+
 		newUser := model.UserModel{
 			ID:               uuid.New(),
 			UserName:         data.UserName,
 			Email:            data.Email,
-			Password:         data.Password, // ⚠️ Sebaiknya hash dulu jika di production
+			Password:         hashedPassword,
 			Role:             data.Role,
 			SecurityQuestion: data.SecurityQuestion,
 			SecurityAnswer:   data.SecurityAnswer,
