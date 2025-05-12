@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS readings (
 	title VARCHAR(50) UNIQUE NOT NULL,
     status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'archived')),
 	description_long TEXT NOT NULL,
-	tooltips_id INTEGER[] NOT NULL DEFAULT '{}',
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	deleted_at TIMESTAMP,

@@ -10,11 +10,5 @@
         "description": "Pengantar materi tentang sholat wajib dan rukunnya.",
         "is_public": true,
         "themes_or_levels_id": 2
-    },
-    {
-        "title": "Puasa Ramadhan",
-        "description": "Hukum, syarat dan hikmah berpuasa Ramadhan.",
-        "is_public": false,
-        "themes_or_levels_id": 3
     }
 ]

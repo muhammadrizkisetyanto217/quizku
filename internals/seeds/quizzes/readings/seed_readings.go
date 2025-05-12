@@ -14,7 +14,6 @@ type ReadingSeed struct {
 	Title           string  `json:"title"`
 	Status          string  `json:"status"`
 	DescriptionLong string  `json:"description_long"`
-	TooltipsID      []int64 `json:"tooltips_id"`
 	UnitID          uint    `json:"unit_id"`
 	CreatedBy       string  `json:"created_by"`
 }
@@ -43,7 +42,6 @@ func SeedReadingsFromJSON(db *gorm.DB, filePath string) {
 			Title:           seed.Title,
 			Status:          seed.Status,
 			DescriptionLong: seed.DescriptionLong,
-			TooltipsID:      seed.TooltipsID,
 			UnitID:          seed.UnitID,
 			CreatedBy:       parseUUID(seed.CreatedBy),
 		}

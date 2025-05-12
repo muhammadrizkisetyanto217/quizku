@@ -39,8 +39,6 @@ func ReadingsRoute(app *fiber.App, db *gorm.DB) {
 
 	// 🧠 Tooltips integration (GET semua, boleh user biasa)
 	readingRoutes.Get("/:id/with-tooltips", readingCtrl.GetReadingWithTooltips)
-	readingRoutes.Get("/:id/tooltips", readingCtrl.GetOnlyReadingTooltips)
-	readingRoutes.Get("/:id/convert", readingCtrl.ConvertReadingWithTooltipsId)
 
 	// 📘 User Reading Routes (semua user login boleh akses)
 	userReadingCtrl := readingController.NewUserReadingController(db)

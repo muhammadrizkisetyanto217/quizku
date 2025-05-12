@@ -48,7 +48,7 @@ func (ctrl *UserUnitController) GetByUserID(c *fiber.Ctx) error {
 	})
 }
 
-func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevelsAndUserID(c *fiber.Ctx) error {
+func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error {
 	// 🔐 Ambil user_id dari JWT
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
@@ -78,7 +78,7 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevelsAndUserID(c *fiber.C
 		})
 	}
 
-	// Step 1: Ambil user_theme (optional, bisa digunakan untuk progress)
+	// Step 1: Ambil user_theme
 	var userTheme themesOrLevelsModel.UserThemesOrLevelsModel
 	if err := ctrl.DB.Where("user_id = ? AND themes_or_levels_id = ?", userID, themesID).
 		First(&userTheme).Error; err != nil {
@@ -90,6 +90,7 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevelsAndUserID(c *fiber.C
 	// Step 2: Ambil semua units berdasarkan themes_or_levels_id
 	var units []userModel.UnitModel
 	if err := ctrl.DB.
+		Preload("SectionQuizzes").
 		Preload("SectionQuizzes.Quizzes").
 		Where("themes_or_level_id = ?", themesID).
 		Find(&units).Error; err != nil {
@@ -114,7 +115,7 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevelsAndUserID(c *fiber.C
 		})
 	}
 
-	// Step 4: Ambil SectionProgress per unit secara manual
+	// Step 4: Ambil SectionProgress per unit
 	for i := range userUnits {
 		if len(userUnits[i].TotalSectionQuizzes) > 0 {
 			var sectionProgress []userSectionQuizzesModel.UserSectionQuizzesModel

@@ -5,7 +5,7 @@
         "materials_quizzes": "Langkah-langkah berwudhu sesuai urutan dan sunnah.",
         "icon_url": "https://example.com/icons/wudhu-1.png",
         "unit_id": 1,
-        "created_by": "fd6ed037-2317-4f5e-af8d-80ee896dbb28",
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
         "total_quizzes": []
     },
     {
@@ -14,7 +14,7 @@
         "materials_quizzes": "Quiz tentang niat, bacaan, dan doa setelah wudhu.",
         "icon_url": "https://example.com/icons/wudhu-2.png",
         "unit_id": 1,
-        "created_by": "fd6ed037-2317-4f5e-af8d-80ee896dbb28",
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
         "total_quizzes": []
     },
     {
@@ -23,7 +23,7 @@
         "materials_quizzes": "Hal-hal yang membatalkan wudhu dan solusinya.",
         "icon_url": "https://example.com/icons/wudhu-break.png",
         "unit_id": 1,
-        "created_by": "fd6ed037-2317-4f5e-af8d-80ee896dbb28",
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
         "total_quizzes": []
     },
     {
@@ -32,7 +32,7 @@
         "materials_quizzes": "Langkah tayamum dan niatnya.",
         "icon_url": "https://example.com/icons/tayamum-1.png",
         "unit_id": 2,
-        "created_by": "fd6ed037-2317-4f5e-af8d-80ee896dbb28",
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
         "total_quizzes": []
     },
     {
@@ -41,7 +41,43 @@
         "materials_quizzes": "Quiz tentang niat, bacaan, dan doa setelah tayamum.",
         "icon_url": "https://example.com/icons/tayamum-2.png",
         "unit_id": 2,
-        "created_by": "fd6ed037-2317-4f5e-af8d-80ee896dbb28",
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
+        "total_quizzes": []
+    },
+    {
+        "name_section_quizzes": "Pengantar Fiqh dan Thaharah",
+        "status": "active",
+        "materials_quizzes": "Pengenalan konsep fiqh dan pentingnya bersuci dalam Islam.",
+        "icon_url": "https://example.com/icons/fiqh-1.png",
+        "unit_id": 3,
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
+        "total_quizzes": []
+    },
+    {
+        "name_section_quizzes": "Jenis Najis dan Cara Mensucikannya",
+        "status": "active",
+        "materials_quizzes": "Menjelaskan macam-macam najis dan cara membersihkannya.",
+        "icon_url": "https://example.com/icons/fiqh-2.png",
+        "unit_id": 3,
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
+        "total_quizzes": []
+    },
+    {
+        "name_section_quizzes": "Aqidah dalam Kehidupan Sehari-hari",
+        "status": "active",
+        "materials_quizzes": "Penerapan nilai-nilai aqidah dalam perilaku sehari-hari.",
+        "icon_url": "https://example.com/icons/aqidah-life.png",
+        "unit_id": 4,
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
+        "total_quizzes": []
+    },
+    {
+        "name_section_quizzes": "Kesalahan Umum dalam Pemahaman Aqidah",
+        "status": "active",
+        "materials_quizzes": "Membedah kekeliruan umum dalam keyakinan umat Islam.",
+        "icon_url": "https://example.com/icons/aqidah-error.png",
+        "unit_id": 4,
+        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de",
         "total_quizzes": []
     }
 ]

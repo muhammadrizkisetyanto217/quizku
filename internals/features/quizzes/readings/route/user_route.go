@@ -17,8 +17,7 @@ func ReadingUserRoutes(api fiber.Router, db *gorm.DB) {
 
 	// Tooltips & Konversi
 	readingRoutes.Get("/:id/with-tooltips", readingCtrl.GetReadingWithTooltips)
-	readingRoutes.Get("/:id/tooltips", readingCtrl.GetOnlyReadingTooltips)
-	readingRoutes.Get("/:id/convert", readingCtrl.ConvertReadingWithTooltipsId)
+	
 
 	userReadingRoutes := api.Group("/user-readings")
 	userReadingRoutes.Post("/", userReadingCtrl.CreateUserReading)

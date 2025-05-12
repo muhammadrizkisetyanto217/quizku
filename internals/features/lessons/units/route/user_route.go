@@ -23,6 +23,6 @@ func UnitUserRoutes(api fiber.Router, db *gorm.DB) {
 
 	userUnitRoutes := api.Group("/user-units")
 	userUnitRoutes.Get("/:user_id", userUnitCtrl.GetByUserID)
-	userUnitRoutes.Get("/themes-or-levels/:themes_or_levels_id", userUnitCtrl.GetUserUnitsByThemesOrLevelsAndUserID)
+	userUnitRoutes.Get("/themes-or-levels/:themes_or_levels_id", userUnitCtrl.GetUserUnitsByThemesOrLevels)
 }
    

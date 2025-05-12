@@ -21,7 +21,7 @@ import (
 	// questions "quizku/internals/seeds/quizzes/questions"
 	quizzes "quizku/internals/seeds/quizzes/quizzes"
 	// reading "quizku/internals/seeds/quizzes/readings"
-	section_quizzes "quizku/internals/seeds/quizzes/section_quizzes"
+	// section_quizzes "quizku/internals/seeds/quizzes/section_quizzes"
 
 	// level "quizku/internals/seeds/progress/levels"
 	// rank "quizku/internals/seeds/progress/ranks"
@@ -56,7 +56,7 @@ func RunAllSeeds(db *gorm.DB) {
 	// evaluations.SeedEvaluationsFromJSON(db, "internals/seeds/quizzes/evaluations/data_evaluations.json")
 	// exams.SeedExamsFromJSON(db, "internals/seeds/quizzes/exams/data_exams.json")
 	// questions.SeedQuestionsFromJSON(db, "internals/seeds/quizzes/questions/data_questions.json")
-	section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
+	// section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
 	quizzes.SeedQuizzesFromJSON(db, "internals/seeds/quizzes/quizzes/data_quizzes.json")
 	// reading.SeedReadingsFromJSON(db, "internals/seeds/quizzes/readings/data_readings.json")
 

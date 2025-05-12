@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -123,46 +122,9 @@ func (rc *ReadingController) GetReadingWithTooltips(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Reading not found"})
 	}
 
-	// Fetch Tooltips
-	var tooltips []tooltipModel.Tooltip
-	if len(reading.TooltipsID) > 0 {
-		if err := rc.DB.Where("id = ANY(?)", pq.Array(reading.TooltipsID)).Find(&tooltips).Error; err != nil {
-			log.Println("[ERROR] Failed to fetch tooltips:", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch tooltips"})
-		}
-	}
-
 	log.Printf("[SUCCESS] Retrieved reading with ID: %s\n", id)
 	return c.JSON(fiber.Map{
-		"reading":  reading,
-		"tooltips": tooltips,
-	})
-}
-
-// Get a onlyReading by ID with Tooltips
-func (rc *ReadingController) GetOnlyReadingTooltips(c *fiber.Ctx) error {
-	id := c.Params("id")
-	log.Printf("[INFO] Fetching reading with ID: %s\n", id)
-
-	var reading readingModel.ReadingModel
-	if err := rc.DB.First(&reading, id).Error; err != nil {
-		log.Println("[ERROR] Reading not found:", err)
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Reading not found"})
-	}
-
-	// Fetch Tooltips
-	var tooltips []tooltipModel.Tooltip
-	if len(reading.TooltipsID) > 0 {
-		if err := rc.DB.Where("id = ANY(?)", pq.Array(reading.TooltipsID)).Find(&tooltips).Error; err != nil {
-			log.Println("[ERROR] Failed to fetch tooltips:", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch tooltips"})
-		}
-	}
-
-	log.Printf("[SUCCESS] Retrieved reading with ID: %s\n", id)
-	return c.JSON(fiber.Map{
-		// "reading":  reading,
-		"tooltips": tooltips,
+		"reading": reading,
 	})
 }
 
@@ -184,62 +146,4 @@ func (rc *ReadingController) MarkKeywords(text string, tooltips []tooltipModel.T
 
 	log.Printf("[DEBUG] Modified text: %s\n", text)
 	return text
-}
-
-// **📌 Get Reading by ID dengan Tooltips yang Ditandai dan Update ke Database**
-func (rc *ReadingController) ConvertReadingWithTooltipsId(c *fiber.Ctx) error {
-	id := c.Params("id")
-	log.Printf("[INFO] Fetching reading with ID: %s\n", id)
-
-	// **📌 Ambil Data Reading**
-	var reading readingModel.ReadingModel
-	if err := rc.DB.First(&reading, id).Error; err != nil {
-		log.Println("[ERROR] Reading not found:", err)
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Reading not found"})
-	}
-
-	// **📌 Ambil Tooltips yang Sesuai**
-	var tooltips []tooltipModel.Tooltip
-	if len(reading.TooltipsID) > 0 {
-		query := rc.DB.Where("id = ANY(?)", pq.Array(reading.TooltipsID))
-		if err := query.Find(&tooltips).Error; err != nil {
-			log.Println("[ERROR] Failed to fetch tooltips:", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch tooltips"})
-		}
-	}
-
-	// **📌 Tandai Keyword dalam Title & Description (HINDARI DUPLIKASI)**
-	markedTitle := rc.MarkKeywords(reading.Title, tooltips)
-	markedDescription := rc.MarkKeywords(reading.DescriptionLong, tooltips)
-
-	// **📌 Hanya update jika ada perubahan**
-	if markedTitle != reading.Title || markedDescription != reading.DescriptionLong {
-		if err := rc.DB.Model(&reading).Updates(map[string]interface{}{
-			"title":            markedTitle,
-			"description_long": markedDescription,
-		}).Error; err != nil {
-			log.Println("[ERROR] Failed to update reading:", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update reading"})
-		}
-		log.Printf("[SUCCESS] Updated reading with ID: %s\n", id)
-	} else {
-		log.Printf("[INFO] No changes detected, skipping update for ID: %s\n", id)
-	}
-
-	// **📌 Kembalikan Response**
-	return c.JSON(fiber.Map{
-		"reading": fiber.Map{
-			"id":               reading.ID,
-			"title":            markedTitle,
-			"status":           reading.Status,
-			"description_long": markedDescription,
-			"tooltips_id":      reading.TooltipsID,
-			"created_at":       reading.CreatedAt,
-			"updated_at":       reading.UpdatedAt,
-			"deleted_at":       reading.DeletedAt,
-			"unit_id":          reading.UnitID,
-			"created_by":       reading.CreatedBy,
-		},
-		"tooltips": tooltips,
-	})
 }

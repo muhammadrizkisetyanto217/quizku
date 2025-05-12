@@ -74,9 +74,9 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 
 	// Simpan data user_subcategory
 	input := subcategoryModel.UserSubcategoryModel{
-		UserID:              userID,
-		SubcategoryID:       int(body.SubcategoryID),
-		CreatedAt:           time.Now(),
+		UserID:        userID,
+		SubcategoryID: int(body.SubcategoryID),
+		CreatedAt:     time.Now(),
 	}
 	if err := tx.Create(&input).Error; err != nil {
 		tx.Rollback()
@@ -362,7 +362,7 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 					SubcategoriesID:  uint(theme.SubcategoriesID),
 					GradeResult:      userTheme.GradeResult,
 					CompleteUnit:     datatypes.JSON(rawJSON),
-					HasProgressTheme: userTheme.GradeResult > 0 || string(rawJSON) != "null",
+					HasProgressTheme: userTheme.GradeResult > 0 || (userTheme.CompleteUnit != nil && len(userTheme.CompleteUnit) > 0),
 				})
 				if userTheme.GradeResult > 0 {
 					totalGrade += userTheme.GradeResult
@@ -395,9 +395,8 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 					}
 					return nil
 				}(),
-				ThemesOrLevels: themes,
+				ThemesOrLevels:         themes,
 				HasProgressSubcategory: us.ID != 0,
-
 			})
 		}
 
