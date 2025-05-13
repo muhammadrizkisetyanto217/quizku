@@ -37,7 +37,20 @@ func (u *UnitModel) AfterSave(tx *gorm.DB) error {
 }
 
 func (u *UnitModel) AfterDelete(tx *gorm.DB) error {
-	return SyncTotalUnits(tx, u.ThemesOrLevelID)
+	log.Printf("[HOOK] AfterDelete triggered for UnitID: %d", u.ID)
+
+	var themesOrLevelID uint
+	if err := tx.Unscoped().
+		Model(&UnitModel{}).
+		Select("themes_or_level_id").
+		Where("id = ?", u.ID).
+		Take(&themesOrLevelID).Error; err != nil {
+		log.Println("[ERROR] Failed to fetch themes_or_level_id after delete:", err)
+		return err
+	}
+
+	log.Printf("[HOOK] Fetched themes_or_level_id: %d for deleted UnitID: %d", themesOrLevelID, u.ID)
+	return SyncTotalUnits(tx, themesOrLevelID)
 }
 
 func SyncTotalUnits(db *gorm.DB, themesOrLevelID uint) error {

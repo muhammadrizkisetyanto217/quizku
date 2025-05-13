@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS user_unit (
     attempt_reading INTEGER DEFAULT 0 NOT NULL,
     attempt_evaluation JSONB NOT NULL DEFAULT '{}'::jsonb,
     complete_section_quizzes JSONB NOT NULL DEFAULT '{}'::jsonb,
-    total_section_quizzes INTEGER[] NOT NULL DEFAULT '{}',
     grade_quiz INTEGER NOT NULL DEFAULT 0 CHECK (grade_quiz BETWEEN 0 AND 100),
     grade_exam INTEGER NOT NULL DEFAULT 0 CHECK (grade_exam BETWEEN 0 AND 100),
     grade_result INTEGER NOT NULL DEFAULT 0 CHECK (grade_result BETWEEN 0 AND 100),

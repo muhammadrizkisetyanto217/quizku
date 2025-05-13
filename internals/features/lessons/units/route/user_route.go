@@ -2,6 +2,7 @@ package route
 
 import (
 	unitController "quizku/internals/features/lessons/units/controller"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -25,4 +26,3 @@ func UnitUserRoutes(api fiber.Router, db *gorm.DB) {
 	userUnitRoutes.Get("/:user_id", userUnitCtrl.GetByUserID)
 	userUnitRoutes.Get("/themes-or-levels/:themes_or_levels_id", userUnitCtrl.GetUserUnitsByThemesOrLevels)
 }
-   

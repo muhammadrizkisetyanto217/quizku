@@ -186,7 +186,16 @@ func (tc *ThemeOrLevelController) DeleteThemeOrLevel(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Deleting theme or level with ID:", id)
 
-	if err := tc.DB.Delete(&model.ThemesOrLevelsModel{}, id).Error; err != nil {
+	// Ambil data lengkap dulu, bukan langsung delete kosong
+	var theme model.ThemesOrLevelsModel
+	if err := tc.DB.First(&theme, id).Error; err != nil {
+		log.Println("[ERROR] Theme or level not found:", err)
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Theme or level not found",
+		})
+	}
+
+	if err := tc.DB.Delete(&theme).Error; err != nil {
 		log.Println("[ERROR] Failed to delete theme or level:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Failed to delete theme or level",

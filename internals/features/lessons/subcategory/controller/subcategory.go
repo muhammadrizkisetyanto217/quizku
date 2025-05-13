@@ -72,7 +72,6 @@ func (sc *SubcategoryController) GetSubcategoriesByCategory(c *fiber.Ctx) error 
 	})
 }
 
-// CreateSubcategory menangani pembuatan satu atau banyak subkategori
 // CreateSubcategory menangani pembuatan satu atau banyak subkategori dengan validasi
 func (sc *SubcategoryController) CreateSubcategory(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create subcategory")
@@ -178,7 +177,15 @@ func (sc *SubcategoryController) DeleteSubcategory(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Deleting subcategory with ID:", id)
 
-	if err := sc.DB.Delete(&model.SubcategoryModel{}, id).Error; err != nil {
+	var subcategory model.SubcategoryModel
+	if err := sc.DB.First(&subcategory, id).Error; err != nil {
+		log.Println("[ERROR] Subcategory not found:", err)
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Subcategory not found",
+		})
+	}
+
+	if err := sc.DB.Delete(&subcategory).Error; err != nil {
 		log.Println("[ERROR] Error deleting subcategory:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Failed to delete subcategory",

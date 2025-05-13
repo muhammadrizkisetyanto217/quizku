@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS user_section_quizzes (
     user_id UUID NOT NULL,
     section_quizzes_id INTEGER NOT NULL,
     complete_quiz JSONB NOT NULL DEFAULT '{}'::jsonb,
-    total_quiz INTEGER[] NOT NULL DEFAULT '{}',
     grade_result INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

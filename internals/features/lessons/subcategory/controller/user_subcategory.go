@@ -9,6 +9,7 @@ import (
 	subcategoryModel "quizku/internals/features/lessons/subcategory/model"
 	themesModel "quizku/internals/features/lessons/themes_or_levels/model"
 	unitModel "quizku/internals/features/lessons/units/model"
+	"quizku/internals/features/quizzes/quizzes/model"
 	sectionQuizzesModel "quizku/internals/features/quizzes/quizzes/model"
 
 	"time"
@@ -134,6 +135,7 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 	// Siapkan userUnits
 	var userUnits []unitModel.UserUnitModel
 	for _, unit := range units {
+		// Ambil section quiz IDs untuk unit ini
 		var sectionQuizIDs []int64
 		if err := tx.Model(&sectionQuizzesModel.SectionQuizzesModel{}).
 			Where("unit_id = ?", unit.ID).
@@ -145,18 +147,20 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 			})
 		}
 
+		// **Tidak perlu mendeklarasikan totalSectionQuizzes di sini**
+		// Ambil langsung dari `unit.TotalSectionQuizzes`
 		userUnits = append(userUnits, unitModel.UserUnitModel{
 			UserID:                 userID,
 			UnitID:                 unit.ID,
 			AttemptReading:         0,
 			AttemptEvaluation:      datatypes.JSON([]byte(`{"attempt":0,"grade_evaluation":0}`)),
 			CompleteSectionQuizzes: datatypes.JSON([]byte(`[]`)),
-			TotalSectionQuizzes:    pq.Int64Array(sectionQuizIDs),
 			GradeExam:              0,
 			IsPassed:               false,
 			GradeResult:            0,
 			CreatedAt:              now,
 			UpdatedAt:              now,
+			SectionProgress:        []model.UserSectionQuizzesModel{}, // Pastikan ini adalah model yang benar
 		})
 	}
 

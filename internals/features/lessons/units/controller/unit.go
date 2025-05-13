@@ -187,7 +187,15 @@ func (uc *UnitController) DeleteUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Deleting unit with ID:", id)
 
-	if err := uc.DB.Delete(&model.UnitModel{}, id).Error; err != nil {
+	var unit model.UnitModel
+	if err := uc.DB.First(&unit, id).Error; err != nil {
+		log.Println("[ERROR] Unit not found:", err)
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Unit not found",
+		})
+	}
+
+	if err := uc.DB.Delete(&unit).Error; err != nil {
 		log.Println("[ERROR] Failed to delete unit:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete unit",

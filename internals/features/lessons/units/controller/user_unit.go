@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -117,14 +118,25 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 
 	// Step 4: Ambil SectionProgress per unit
 	for i := range userUnits {
-		if len(userUnits[i].TotalSectionQuizzes) > 0 {
-			var sectionProgress []userSectionQuizzesModel.UserSectionQuizzesModel
+		// Ambil `TotalSectionQuizzes` langsung dari `unit.SectionQuizzes`
+		var sectionQuizIDs []uint // Mengubah tipe menjadi uint, karena sectionQuiz.ID adalah uint
+		for _, sectionQuiz := range units[i].SectionQuizzes {
+			sectionQuizIDs = append(sectionQuizIDs, sectionQuiz.ID)
+		}
+
+		// Ambil SectionProgress berdasarkan section_quizzes_id dari `sectionQuizIDs`
+		var sectionProgress []userSectionQuizzesModel.UserSectionQuizzesModel
+		if len(sectionQuizIDs) > 0 {
 			if err := ctrl.DB.
 				Where("user_id = ?", userUnits[i].UserID).
-				Where("section_quizzes_id IN ?", userUnits[i].TotalSectionQuizzes).
-				Find(&sectionProgress).Error; err == nil {
-				userUnits[i].SectionProgress = sectionProgress
+				Where("section_quizzes_id IN ?", sectionQuizIDs).
+				Find(&sectionProgress).Error; err != nil {
+				log.Printf("[ERROR] Gagal ambil section_quizzes untuk user_id %v: %v", userUnits[i].UserID, err)
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": fmt.Sprintf("Gagal mengambil section_quizzes untuk user_id %v", userUnits[i].UserID),
+				})
 			}
+			userUnits[i].SectionProgress = sectionProgress
 		}
 	}
 
