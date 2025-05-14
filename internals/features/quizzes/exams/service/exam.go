@@ -28,17 +28,20 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return fmt.Errorf("nilai grade tidak valid: %d", grade)
 	}
 
+	// Ambil unit_id dari exam
 	var unitID uint
 	if err := db.Table("exams").Select("unit_id").Where("id = ?", examID).Scan(&unitID).Error; err != nil || unitID == 0 {
 		log.Println("[ERROR] Gagal ambil unit_id dari exam_id:", examID)
 		return err
 	}
 
+	// Ambil user_unit
 	var userUnit userUnitModel.UserUnitModel
 	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
 		return err
 	}
 
+	// Hitung bonus dari reading dan evaluation
 	activityBonus := 0
 	if userUnit.AttemptReading > 0 {
 		activityBonus += 5
@@ -73,6 +76,7 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return err
 	}
 
+	// Proses update themes dan subcategory jika lulus
 	if gradeResult > 65 {
 		var themesID uint
 		if err := db.Table("units").Select("themes_or_level_id").Where("id = ?", unitID).Scan(&themesID).Error; err != nil || themesID == 0 {
@@ -101,86 +105,82 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 			}
 		}
 
+		total := 0
+		for _, id := range expectedUnitIDs {
+			rawVal := userTheme.CompleteUnit[fmt.Sprintf("%d", id)]
+			strVal := fmt.Sprintf("%v", rawVal)
+			if g, err := strconv.Atoi(strVal); err == nil {
+				total += g
+			}
+		}
+		avg := 0
+		if len(expectedUnitIDs) > 0 {
+			avg = total / len(expectedUnitIDs)
+		}
+
+		updateFields := map[string]interface{}{
+			"complete_unit": userTheme.CompleteUnit,
+		}
 		if matchCount == len(expectedUnitIDs) && len(expectedUnitIDs) > 0 {
-			total := 0
-			for _, id := range expectedUnitIDs {
-				if val, ok := userTheme.CompleteUnit[fmt.Sprintf("%d", id)].(string); ok {
-					if g, err := strconv.Atoi(val); err == nil {
-						total += g
-					}
-				}
-			}
-			avg := total / len(expectedUnitIDs)
-			userTheme.GradeResult = avg
-			if err := db.Model(&userTheme).Updates(map[string]interface{}{
-				"complete_unit": userTheme.CompleteUnit,
-				"grade_result":  avg,
-			}).Error; err != nil {
-				return err
-			}
+			updateFields["grade_result"] = avg
+		}
+		if err := db.Model(&userTheme).Updates(updateFields).Error; err != nil {
+			return err
+		}
 
-			var subcategoryID int
-			if err := db.Table("themes_or_levels").Select("subcategories_id").Where("id = ?", themesID).Scan(&subcategoryID).Error; err != nil {
-				return err
-			}
+		// Update ke user_subcategory
+		var subcategoryID int
+		if err := db.Table("themes_or_levels").Select("subcategories_id").Where("id = ?", themesID).Scan(&subcategoryID).Error; err != nil {
+			return err
+		}
 
-			var userSub userSubcategoryModel.UserSubcategoryModel
-			if err := db.Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).First(&userSub).Error; err != nil {
-				return err
-			}
+		var userSub userSubcategoryModel.UserSubcategoryModel
+		if err := db.Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).First(&userSub).Error; err != nil {
+			return err
+		}
+		if userSub.CompleteThemesOrLevels == nil {
+			userSub.CompleteThemesOrLevels = datatypes.JSONMap{}
+		}
+		userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", themesID)] = fmt.Sprintf("%d", avg)
 
-			if userSub.CompleteThemesOrLevels == nil {
-				userSub.CompleteThemesOrLevels = datatypes.JSONMap{}
-			}
-			userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", themesID)] = fmt.Sprintf("%d", avg)
+		var raw string
+		if err := db.Table("subcategories").Select("total_themes_or_levels").Where("id = ?", subcategoryID).Scan(&raw).Error; err != nil {
+			return err
+		}
+		var totalThemeIDs pq.Int64Array
+		if err := totalThemeIDs.Scan(raw); err != nil {
+			log.Println("[ERROR] Gagal parsing total_themes_or_levels:", err)
+			return err
+		}
 
-			var raw string
-			if err := db.Table("subcategories").
-				Select("total_themes_or_levels").
-				Where("id = ?", subcategoryID).
-				Scan(&raw).Error; err != nil {
-				return err
+		matchTheme := 0
+		for _, id := range totalThemeIDs {
+			if _, ok := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)]; ok {
+				matchTheme++
 			}
+		}
 
-			var totalThemeIDs pq.Int64Array
-			if err := totalThemeIDs.Scan(raw); err != nil {
-				log.Println("[ERROR] Gagal parsing total_themes_or_levels:", err)
-				return err
+		totalSub := 0
+		for _, id := range totalThemeIDs {
+			rawVal := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)]
+			strVal := fmt.Sprintf("%v", rawVal)
+			if g, err := strconv.Atoi(strVal); err == nil {
+				totalSub += g
 			}
+		}
+		avgSub := 0
+		if len(totalThemeIDs) > 0 {
+			avgSub = totalSub / len(totalThemeIDs)
+		}
 
-			matchTheme := 0
-			for _, id := range totalThemeIDs {
-				if _, ok := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)]; ok {
-					matchTheme++
-				}
-			}
-
-			if matchTheme == len(totalThemeIDs) && len(totalThemeIDs) > 0 {
-				total := 0
-				for _, id := range totalThemeIDs {
-					if val, ok := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)].(string); ok {
-						if g, err := strconv.Atoi(val); err == nil {
-							total += g
-						}
-					}
-				}
-				avg := total / len(totalThemeIDs)
-				userSub.GradeResult = avg
-				if err := db.Model(&userSub).Updates(map[string]interface{}{
-					"complete_themes_or_levels": userSub.CompleteThemesOrLevels,
-					"grade_result":              avg,
-				}).Error; err != nil {
-					return err
-				}
-			} else {
-				if err := db.Model(&userSub).Update("complete_themes_or_levels", userSub.CompleteThemesOrLevels).Error; err != nil {
-					return err
-				}
-			}
-		} else {
-			if err := db.Model(&userTheme).Update("complete_unit", userTheme.CompleteUnit).Error; err != nil {
-				return err
-			}
+		updateSubFields := map[string]interface{}{
+			"complete_themes_or_levels": userSub.CompleteThemesOrLevels,
+		}
+		if matchTheme == len(totalThemeIDs) && len(totalThemeIDs) > 0 {
+			updateSubFields["grade_result"] = avgSub
+		}
+		if err := db.Model(&userSub).Updates(updateSubFields).Error; err != nil {
+			return err
 		}
 	}
 

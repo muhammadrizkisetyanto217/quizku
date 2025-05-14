@@ -3,10 +3,10 @@ package controller
 import (
 	"log"
 	UserReadingModel "quizku/internals/features/quizzes/readings/model"
+	readingModel "quizku/internals/features/quizzes/readings/model"
 	"quizku/internals/features/quizzes/readings/service"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -24,40 +24,42 @@ func NewUserReadingController(db *gorm.DB) *UserReadingController {
 
 // POST /user-readings
 func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
-	// ✅ Ambil user_id dari JWT (string UUID)
+	// ✅ Ambil user_id dari JWT
 	userIDStr, ok := c.Locals("user_id").(string)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
-
 	userUUID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		log.Println("[ERROR] Invalid UUID format:", err)
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
-	// ✅ Parse body tanpa user_id
+	// ✅ Parse body
 	type InputBody struct {
-		ReadingID uint `json:"reading_id" validate:"required"`
-		UnitID    uint `json:"unit_id" validate:"required"`
+		ReadingID uint `json:"reading_id"`
 	}
 	var body InputBody
 	if err := c.BodyParser(&body); err != nil {
 		log.Println("[ERROR] Failed to parse body:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
+	if body.ReadingID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "reading_id is required"})
+	}
 
-	// ✅ Validasi
-	validate := validator.New()
-	if err := validate.Struct(body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Missing required fields"})
+	// ✅ Ambil unit_id dari reading
+	var reading readingModel.ReadingModel
+	if err := ctrl.DB.Select("id, unit_id").First(&reading, body.ReadingID).Error; err != nil {
+		log.Println("[ERROR] Reading not found:", err)
+		return c.Status(404).JSON(fiber.Map{"error": "Reading not found"})
 	}
 
 	// ✅ Siapkan data
 	input := UserReadingModel.UserReading{
 		UserID:    userUUID,
 		ReadingID: body.ReadingID,
-		UnitID:    body.UnitID,
+		UnitID:    reading.UnitID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

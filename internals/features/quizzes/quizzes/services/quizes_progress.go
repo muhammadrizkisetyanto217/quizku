@@ -10,7 +10,6 @@ import (
 	quizzesModel "quizku/internals/features/quizzes/quizzes/model"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -43,73 +42,71 @@ func UpdateUserSectionIfQuizCompleted(
 		log.Println("[ERROR] Failed to fetch quizzes for section:", err)
 		return err
 	}
-	totalQuizIDs := pq.Int64Array{}
+	var totalQuizIDs []uint
 	for _, quiz := range allQuizzes {
-		totalQuizIDs = append(totalQuizIDs, int64(quiz.ID))
+		totalQuizIDs = append(totalQuizIDs, uint(quiz.ID))
 	}
 
-	// 2. Ambil data user_section
+	// 2. Ambil atau buat user_section
 	var userSection quizzesModel.UserSectionQuizzesModel
 	err := db.Where("user_id = ? AND section_quizzes_id = ?", userID, sectionID).First(&userSection).Error
-	newProgress := []QuizProgress{{ID: quizID, Attempt: attempt, Score: percentageGrade}}
+
+	var progressList []QuizProgress
+	newProgress := QuizProgress{
+		ID:      quizID,
+		Attempt: attempt,
+		Score:   percentageGrade,
+	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		progressJSON, _ := json.Marshal(newProgress)
+		progressList = []QuizProgress{newProgress}
+		jsonData, _ := json.Marshal(progressList)
 		userSection = quizzesModel.UserSectionQuizzesModel{
 			UserID:           userID,
 			SectionQuizzesID: sectionID,
-			CompleteQuiz:     datatypes.JSON(progressJSON),
+			CompleteQuiz:     datatypes.JSON(jsonData),
+			GradeResult:      0,
 		}
 		log.Println("[SERVICE] Creating new UserSectionQuizzesModel")
 		return db.Create(&userSection).Error
 	}
 
 	// 3. Update progress existing
-	var progressList []QuizProgress
-	if err := json.Unmarshal(userSection.CompleteQuiz, &progressList); err != nil {
-		log.Println("[ERROR] Failed to parse existing complete_quiz:", err)
-		return err
+	if len(userSection.CompleteQuiz) > 0 {
+		if err := json.Unmarshal(userSection.CompleteQuiz, &progressList); err != nil {
+			log.Println("[ERROR] Failed to parse existing complete_quiz:", err)
+			progressList = []QuizProgress{}
+		}
 	}
 
-	found := false
+	updated := false
 	for i, p := range progressList {
 		if p.ID == quizID {
 			if attempt > p.Attempt {
 				progressList[i].Attempt = attempt
+				updated = true
 			}
 			if percentageGrade > p.Score {
 				progressList[i].Score = percentageGrade
+				updated = true
 			}
-			found = true
 			break
 		}
 	}
-	if !found {
-		progressList = append(progressList, QuizProgress{
-			ID:      quizID,
-			Attempt: attempt,
-			Score:   percentageGrade,
-		})
+	if !updated {
+		progressList = append(progressList, newProgress)
 	}
 
 	// 4. Cek apakah semua quiz sudah dikerjakan
-	completedQuizIDs := map[uint]bool{}
+	completedQuizIDs := make(map[uint]bool)
 	totalScore := 0
 	for _, p := range progressList {
 		completedQuizIDs[p.ID] = true
 		totalScore += p.Score
 	}
 
-	// Step 5: Hitung grade jika semua quiz sudah selesai
-	// Ambil TotalSectionQuizzes langsung dari SectionQuizzes
-	var sectionQuizzes []quizzesModel.SectionQuizzesModel
-	if err := db.Where("id IN ?", totalQuizIDs).Find(&sectionQuizzes).Error; err != nil {
-		log.Printf("[ERROR] Gagal ambil section quizzes terkait: %v", err)
-		return err
-	}
-
-	// Periksa apakah semua quiz sudah dikerjakan
-	if len(completedQuizIDs) == len(totalQuizIDs) && len(progressList) > 0 {
+	// 5. Hitung nilai rata-rata jika semua quiz selesai
+	if len(completedQuizIDs) == len(totalQuizIDs) && len(totalQuizIDs) > 0 {
 		userSection.GradeResult = totalScore / len(progressList)
 		log.Println("[SERVICE] Semua quiz selesai - GradeResult:", userSection.GradeResult)
 	} else {
@@ -117,7 +114,7 @@ func UpdateUserSectionIfQuizCompleted(
 		log.Println("[SERVICE] Quiz belum selesai semua, GradeResult diset ke 0")
 	}
 
-	// Update progress dan total quiz
+	// 6. Simpan kembali
 	newJSON, _ := json.Marshal(progressList)
 	userSection.CompleteQuiz = datatypes.JSON(newJSON)
 
@@ -133,14 +130,7 @@ func UpdateUserUnitIfSectionCompleted(
 ) error {
 	log.Println("[SERVICE] UpdateUserUnitIfSectionCompleted - userID:", userID, "unitID:", unitID, "sectionID:", sectionID)
 
-	// 1. Type untuk menyimpan data quiz yang sudah diselesaikan
-	type QuizCompletion struct {
-		ID      int `json:"id"`
-		Score   int `json:"score"`
-		Attempt int `json:"attempt"`
-	}
-
-	// 2. Ambil data UserSectionQuizzes
+	// 1. Cek apakah section sudah memiliki progress
 	var userSection quizzesModel.UserSectionQuizzesModel
 	if err := db.Where("user_id = ? AND section_quizzes_id = ?", userID, sectionID).
 		First(&userSection).Error; err != nil {
@@ -148,70 +138,60 @@ func UpdateUserUnitIfSectionCompleted(
 		return nil
 	}
 
-	// Ambil TotalQuizIDs (section quizzes) terkait dengan section
-	var sectionQuizzes []quizzesModel.SectionQuizzesModel
-	if err := db.Where("unit_id = ?", unitID).Preload("Quizzes").Find(&sectionQuizzes).Error; err != nil {
-		log.Println("[ERROR] Failed to fetch section quizzes:", err)
+	// 2. Ambil quiz ID hanya dari section yang sedang dicek
+	var currentSection quizzesModel.SectionQuizzesModel
+	if err := db.Preload("Quizzes").Where("id = ?", sectionID).First(&currentSection).Error; err != nil {
+		log.Printf("[ERROR] Gagal ambil section ID %d: %v", sectionID, err)
 		return err
 	}
-
-	// Mendapatkan ID semua quizzes dari section
-	totalQuizIDs := pq.Int64Array{}
-	for _, sq := range sectionQuizzes {
-		for _, quiz := range sq.Quizzes {
-			totalQuizIDs = append(totalQuizIDs, int64(quiz.ID))
-		}
+	totalQuizIDs := map[int]struct{}{}
+	for _, quiz := range currentSection.Quizzes {
+		totalQuizIDs[int(quiz.ID)] = struct{}{}
 	}
 
-	// Decode complete_quiz untuk mendapatkan quiz yang sudah dikerjakan
-	var completedQuizData []QuizCompletion
+	// 3. Decode quiz yang telah diselesaikan dari user_section
+	var completedQuizData []struct {
+		ID      int `json:"id"`
+		Score   int `json:"score"`
+		Attempt int `json:"attempt"`
+	}
 	if err := json.Unmarshal(userSection.CompleteQuiz, &completedQuizData); err != nil {
 		log.Printf("[ERROR] Gagal decode complete_quiz: %v", err)
 		return err
 	}
-
-	// Tandai quiz yang sudah dikerjakan
 	completedIDs := map[int]bool{}
 	for _, q := range completedQuizData {
 		completedIDs[q.ID] = true
 	}
 
-	// Periksa apakah semua quiz selesai
-	for _, id := range totalQuizIDs {
-		if !completedIDs[int(id)] {
+	// 4. Cek apakah semua quiz dari section telah dikerjakan
+	for id := range totalQuizIDs {
+		if !completedIDs[id] {
 			log.Printf("[INFO] Section %d belum lengkap, quiz ID %d belum dikerjakan", sectionID, id)
 			return nil
 		}
 	}
 
-	// 3. Ambil data user_unit
+	// 5. Ambil data user_unit
 	var userUnit userUnitModel.UserUnitModel
-	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).
-		First(&userUnit).Error; err != nil {
+	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
 		log.Printf("[ERROR] Gagal ambil user_unit: %v", err)
 		return err
 	}
 
-	// 4. Ambil CompleteSectionQuizzes dan update jika section baru selesai
+	// 6. Update complete_section_quizzes jika belum tercatat
 	var completeSectionIDs []int64
 	if len(userUnit.CompleteSectionQuizzes) > 0 {
-		if err := json.Unmarshal(userUnit.CompleteSectionQuizzes, &completeSectionIDs); err != nil {
-			log.Printf("[ERROR] Gagal decode complete_section_quizzes: %v", err)
-			return err
-		}
+		_ = json.Unmarshal(userUnit.CompleteSectionQuizzes, &completeSectionIDs)
 	}
-
-	// Tambahkan sectionID ke CompleteSectionQuizzes jika belum ada
-	found := false
+	alreadyExists := false
 	for _, sid := range completeSectionIDs {
 		if uint(sid) == sectionID {
-			found = true
+			alreadyExists = true
 			break
 		}
 	}
-
-	// Jika section belum ada di CompleteSectionQuizzes, tambahkan
-	if !found {
+	if !alreadyExists {
 		completeSectionIDs = append(completeSectionIDs, int64(sectionID))
 		updatedJSON, err := json.Marshal(completeSectionIDs)
 		if err != nil {
@@ -222,14 +202,13 @@ func UpdateUserUnitIfSectionCompleted(
 		userUnit.UpdatedAt = time.Now()
 	}
 
-	// 5. Hitung grade jika semua section selesai
+	// 7. Hitung Grade jika semua section telah selesai
 	var unit userUnitModel.UnitModel
 	if err := db.Where("id = ?", unitID).First(&unit).Error; err != nil {
 		log.Printf("[ERROR] Gagal ambil unit: %v", err)
 		return err
 	}
 
-	// Hitung grade hanya jika semua section selesai
 	if len(unit.TotalSectionQuizzes) > 0 && len(completeSectionIDs) == len(unit.TotalSectionQuizzes) {
 		total := 0
 		count := 0
@@ -243,9 +222,7 @@ func UpdateUserUnitIfSectionCompleted(
 			total += usq.GradeResult
 			count++
 		}
-
 		if count > 0 {
-			// Hitung GradeQuiz dan GradeResult
 			userUnit.GradeQuiz = total / count
 			userUnit.GradeResult = (userUnit.GradeQuiz + userUnit.GradeExam + getGradeEvaluation(userUnit)) / 3
 			userUnit.IsPassed = userUnit.GradeResult >= 70
@@ -253,7 +230,6 @@ func UpdateUserUnitIfSectionCompleted(
 		}
 	}
 
-	// Step 6: Simpan perubahan userUnit
 	return db.Save(&userUnit).Error
 }
 

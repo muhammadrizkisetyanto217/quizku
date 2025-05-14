@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"quizku/internals/features/quizzes/exams/model"
+	examModel "quizku/internals/features/quizzes/exams/model"
 	"quizku/internals/features/quizzes/exams/service"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -40,11 +40,10 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Struct input body tanpa user_id
+	// ✅ Struct input body (tanpa unit_id)
 	type InputBody struct {
-		ExamID          uint    `json:"exam_id" validate:"required"`
-		UnitID          uint    `json:"unit_id" validate:"required"`
-		PercentageGrade float64 `json:"percentage_grade" validate:"required"`
+		ExamID          uint    `json:"exam_id"`
+		PercentageGrade float64 `json:"percentage_grade"`
 		TimeDuration    int     `json:"time_duration"`
 		Point           int     `json:"point"`
 	}
@@ -57,12 +56,19 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Validasi
-	validate := validator.New()
-	if err := validate.Struct(body); err != nil {
+	// ✅ Validasi manual
+	if body.ExamID == 0 || body.PercentageGrade == 0 {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"message": "Missing or invalid fields",
-			"error":   err.Error(),
+			"message": "exam_id and percentage_grade are required",
+		})
+	}
+
+	// ✅ Ambil unit_id dari exam
+	var exam examModel.ExamModel
+	if err := c.DB.Select("id, unit_id").First(&exam, body.ExamID).Error; err != nil {
+		log.Println("[ERROR] Exam not found:", err)
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "Exam not found",
 		})
 	}
 
@@ -80,7 +86,7 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 	}
 
 	if err == nil {
-		// ✅ Sudah ada → update attempt dan nilai jika lebih tinggi
+		// ✅ Sudah ada → update
 		existing.Attempt += 1
 		if body.PercentageGrade > float64(existing.PercentageGrade) {
 			existing.PercentageGrade = int(body.PercentageGrade)
@@ -97,8 +103,6 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		}
 
 		_ = service.AddPointFromExam(c.DB, existing.UserID, existing.ExamID, existing.Attempt)
-
-		// ✅ Tambahkan pencatatan aktivitas harian
 		_ = activityService.UpdateOrInsertDailyActivity(c.DB, existing.UserID)
 
 		return ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -111,7 +115,7 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 	newExam := model.UserExamModel{
 		UserID:          userUUID,
 		ExamID:          body.ExamID,
-		UnitID:          body.UnitID,
+		UnitID:          exam.UnitID,
 		Attempt:         1,
 		PercentageGrade: int(body.PercentageGrade),
 		TimeDuration:    body.TimeDuration,
@@ -128,8 +132,6 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 	}
 
 	_ = service.AddPointFromExam(c.DB, newExam.UserID, newExam.ExamID, newExam.Attempt)
-
-	// ✅ Tambahkan pencatatan aktivitas harian
 	_ = activityService.UpdateOrInsertDailyActivity(c.DB, newExam.UserID)
 
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 
 	categoryModel "quizku/internals/features/lessons/categories/model"
 	subcategoryModel "quizku/internals/features/lessons/subcategory/model"
@@ -218,8 +219,8 @@ func (ctrl *UserSubcategoryController) GetByUserId(c *fiber.Ctx) error {
 	})
 }
 
+// ✅ Refactored: grade_result & is_passed hanya diubah oleh service exam
 func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) error {
-	// 🔐 Ambil user_id dari token yang diset middleware AuthMiddleware
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized - user_id not found in token"})
@@ -235,13 +236,11 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized - invalid user_id UUID"})
 	}
 
-	// 🎯 Ambil difficulty_id dari path
 	difficultyID := c.Params("difficulty_id")
 	if difficultyID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "difficulty_id wajib diisi"})
 	}
 
-	// Step 1: Ambil semua kategori + subkategori + themes
 	var categories []categoryModel.CategoryModel
 	if err := ctrl.DB.
 		Where("difficulty_id = ?", difficultyID).
@@ -252,38 +251,24 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil kategori"})
 	}
 
-	// 🔽 Tambahkan log debug setelah query ini
-	log.Println("[DEBUG] Jumlah kategori:", len(categories))
-	for _, cat := range categories {
-		log.Println("[DEBUG] Kategori:", cat.Name)
-		log.Println("  Jumlah Subkategori:", len(cat.Subcategories))
-		for _, sub := range cat.Subcategories {
-			log.Println("  - Subkategori:", sub.Name)
-			log.Println("    Jumlah Theme:", len(sub.ThemesOrLevels))
-		}
-	}
-
-	// Step 2: Ambil progres user_subcategory
 	var userSubcat []subcategoryModel.UserSubcategoryModel
 	if err := ctrl.DB.Where("user_id = ?", userID).Find(&userSubcat).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil progress user_subcategory"})
 	}
-	userSubcatMap := map[uint]subcategoryModel.UserSubcategoryModel{}
+	userSubcatMap := make(map[int]subcategoryModel.UserSubcategoryModel)
 	for _, us := range userSubcat {
-		userSubcatMap[uint(us.SubcategoryID)] = us
+		userSubcatMap[us.SubcategoryID] = us
 	}
 
-	// Step 3: Ambil progres user_themes_or_levels
 	var userThemes []themesModel.UserThemesOrLevelsModel
 	if err := ctrl.DB.Where("user_id = ?", userID).Find(&userThemes).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil progress user_themes_or_levels"})
 	}
-	userThemeMap := map[uint]themesModel.UserThemesOrLevelsModel{}
+	userThemeMap := make(map[uint]themesModel.UserThemesOrLevelsModel)
 	for _, ut := range userThemes {
 		userThemeMap[ut.ThemesOrLevelsID] = ut
 	}
 
-	// Step 4: Build response akhir
 	type ThemeWithProgress struct {
 		ID               uint           `json:"id"`
 		Name             string         `json:"name"`
@@ -313,9 +298,9 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		UpdatedAt              *time.Time          `json:"updated_at"`
 		CategoriesID           uint                `json:"categories_id"`
 		GradeResult            int                 `json:"grade_result"`
-		CompleteThemesOrLevels any                 `json:"complete_themes_or_levels"`
+		CompleteThemesOrLevels datatypes.JSONMap   `json:"complete_themes_or_levels"`
 		UserSubcategoryID      uint                `json:"user_subcategory_id"`
-		UserID                 *uuid.UUID          `json:"user_id,omitempty"`
+		UserID                 uuid.UUID           `json:"user_id"`
 		ThemesOrLevels         []ThemeWithProgress `json:"themes_or_levels"`
 		HasProgressSubcategory bool                `json:"has_progress_subcategory"`
 	}
@@ -343,15 +328,43 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		var subcatWithProgress []SubcategoryWithProgress
 
 		for _, sub := range cat.Subcategories {
-			us, ok := userSubcatMap[sub.ID]
-			if !ok {
-				us = subcategoryModel.UserSubcategoryModel{}
+			us, hasProgress := userSubcatMap[int(sub.ID)]
+			if !hasProgress {
+				us = subcategoryModel.UserSubcategoryModel{
+					UserID:                 userID,
+					SubcategoryID:          int(sub.ID),
+					CompleteThemesOrLevels: datatypes.JSONMap{},
+					GradeResult:            0,
+				}
 			}
 
-			var themes []ThemeWithProgress
+			themes := []ThemeWithProgress{}
+			completedThemes := datatypes.JSONMap{}
+
 			for _, theme := range sub.ThemesOrLevels {
 				userTheme := userThemeMap[theme.ID]
 				rawJSON, _ := json.Marshal(userTheme.CompleteUnit)
+
+				if len(theme.TotalUnit) > 0 && len(userTheme.CompleteUnit) == len(theme.TotalUnit) {
+					sumUnit := 0
+					count := 0
+					for _, v := range userTheme.CompleteUnit {
+						vStr, ok := v.(string)
+						if !ok {
+							continue
+						}
+						grade, err := strconv.Atoi(vStr)
+						if err != nil {
+							continue
+						}
+						sumUnit += grade
+						count++
+					}
+					if count > 0 {
+						avg := sumUnit / count
+						completedThemes[fmt.Sprint(theme.ID)] = fmt.Sprintf("%d", avg)
+					}
+				}
 
 				themes = append(themes, ThemeWithProgress{
 					ID:               theme.ID,
@@ -361,6 +374,7 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 					DescriptionLong:  theme.DescriptionLong,
 					TotalUnit:        theme.TotalUnit,
 					ImageURL:         theme.ImageURL,
+					// UpdateNews:       theme.UpdateNews,
 					CreatedAt:        theme.CreatedAt,
 					UpdatedAt:        theme.UpdatedAt,
 					SubcategoriesID:  uint(theme.SubcategoriesID),
@@ -368,39 +382,45 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 					CompleteUnit:     datatypes.JSON(rawJSON),
 					HasProgressTheme: userTheme.GradeResult > 0 || (userTheme.CompleteUnit != nil && len(userTheme.CompleteUnit) > 0),
 				})
+
 				if userTheme.GradeResult > 0 {
 					totalGrade += userTheme.GradeResult
 					totalCount++
 				}
-
 			}
 
-			if us.GradeResult > 0 {
-				totalGrade += us.GradeResult
-				totalCount++
+			us.CompleteThemesOrLevels = completedThemes
+			// Hitung rata-rata dari theme yang memiliki GradeResult
+			sumGrade := 0
+			countGrade := 0
+			for _, t := range themes {
+				if t.GradeResult > 0 {
+					sumGrade += t.GradeResult
+					countGrade++
+				}
+			}
+
+			if countGrade > 0 {
+				us.GradeResult = sumGrade / countGrade
 			}
 
 			subcatWithProgress = append(subcatWithProgress, SubcategoryWithProgress{
-				ID:                     sub.ID,
-				Name:                   sub.Name,
-				Status:                 sub.Status,
-				DescriptionLong:        sub.DescriptionLong,
-				TotalThemesOrLevels:    sub.TotalThemesOrLevels,
-				ImageURL:               sub.ImageURL,
+				ID:                  sub.ID,
+				Name:                sub.Name,
+				Status:              sub.Status,
+				DescriptionLong:     sub.DescriptionLong,
+				TotalThemesOrLevels: sub.TotalThemesOrLevels,
+				ImageURL:            sub.ImageURL,
+				// UpdateNews:             sub.UpdateNews,
 				CreatedAt:              sub.CreatedAt,
 				UpdatedAt:              sub.UpdatedAt,
 				CategoriesID:           sub.CategoriesID,
 				GradeResult:            us.GradeResult,
 				CompleteThemesOrLevels: us.CompleteThemesOrLevels,
 				UserSubcategoryID:      us.ID,
-				UserID: func() *uuid.UUID {
-					if us.ID != 0 {
-						return &us.UserID
-					}
-					return nil
-				}(),
+				UserID:                 userID,
 				ThemesOrLevels:         themes,
-				HasProgressSubcategory: us.ID != 0,
+				HasProgressSubcategory: hasProgress,
 			})
 		}
 
@@ -412,8 +432,9 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 			DescriptionLong:    cat.DescriptionLong,
 			TotalSubcategories: cat.TotalSubcategories,
 			ImageURL:           cat.ImageURL,
-			DifficultyID:       cat.DifficultyID,
-			CreatedAt:          cat.CreatedAt,
+			// UpdateNews:         cat.UpdateNews,
+			DifficultyID: cat.DifficultyID,
+			CreatedAt:    cat.CreatedAt,
 			// UpdatedAt:          cat.UpdatedAt,
 			Subcategories: subcatWithProgress,
 		})
