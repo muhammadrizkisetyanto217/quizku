@@ -274,7 +274,10 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 	}
 	userThemeMap := make(map[uint]themesModel.UserThemesOrLevelsModel)
 	for _, ut := range userThemes {
-		userThemeMap[ut.ThemesOrLevelsID] = ut
+		existing, ok := userThemeMap[ut.ThemesOrLevelsID]
+		if !ok || ut.UpdatedAt.After(existing.UpdatedAt) {
+			userThemeMap[ut.ThemesOrLevelsID] = ut
+		}
 	}
 
 	type ThemeWithProgress struct {
@@ -359,8 +362,11 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 
 			themes := []ThemeWithProgress{}
 			for _, theme := range sub.ThemesOrLevels {
-				userTheme := userThemeMap[theme.ID]
-				rawJSON, _ := json.Marshal(userTheme.CompleteUnit)
+				ut, ok := userThemeMap[theme.ID]
+				if !ok {
+					continue
+				}
+				rawJSON, _ := json.Marshal(ut.CompleteUnit)
 
 				themes = append(themes, ThemeWithProgress{
 					ID:               theme.ID,
@@ -373,13 +379,13 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 					CreatedAt:        theme.CreatedAt,
 					UpdatedAt:        theme.UpdatedAt,
 					SubcategoriesID:  uint(theme.SubcategoriesID),
-					GradeResult:      userTheme.GradeResult,
+					GradeResult:      ut.GradeResult,
 					CompleteUnit:     datatypes.JSON(rawJSON),
-					HasProgressTheme: userTheme.GradeResult > 0 || (userTheme.CompleteUnit != nil && len(userTheme.CompleteUnit) > 0),
+					HasProgressTheme: ut.GradeResult > 0 || (ut.CompleteUnit != nil && len(ut.CompleteUnit) > 0),
 				})
 
-				if userTheme.GradeResult > 0 {
-					totalGrade += userTheme.GradeResult
+				if ut.GradeResult > 0 {
+					totalGrade += ut.GradeResult
 					totalCount++
 				}
 			}
@@ -391,7 +397,6 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 				DescriptionLong:        sub.DescriptionLong,
 				TotalThemesOrLevels:    sub.TotalThemesOrLevels,
 				ImageURL:               sub.ImageURL,
-				// UpdateNews:             sub.UpdateNews,
 				CreatedAt:              sub.CreatedAt,
 				UpdatedAt:              sub.UpdatedAt,
 				CategoriesID:           sub.CategoriesID,
@@ -414,10 +419,8 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 			DescriptionLong:    cat.DescriptionLong,
 			TotalSubcategories: cat.TotalSubcategories,
 			ImageURL:           cat.ImageURL,
-			// UpdateNews:         cat.UpdateNews,
 			DifficultyID:       cat.DifficultyID,
 			CreatedAt:          cat.CreatedAt,
-			// UpdatedAt:          cat.UpdatedAt,
 			Subcategories:      subcatWithProgress,
 		})
 	}

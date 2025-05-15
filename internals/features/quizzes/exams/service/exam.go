@@ -12,7 +12,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	// issuedcertificateservice "quizku/internals/features/certificates/issued_certificates/service"
+	issuedcertificateservice "quizku/internals/features/certificates/issued_certificates/service"
 	userSubcategoryModel "quizku/internals/features/lessons/subcategory/model"
 	userThemeModel "quizku/internals/features/lessons/themes_or_levels/model"
 	userUnitModel "quizku/internals/features/lessons/units/model"
@@ -29,17 +29,20 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return fmt.Errorf("nilai grade tidak valid: %d", grade)
 	}
 
+	// Ambil unit dari exam
 	var unitID uint
 	if err := db.Table("exams").Select("unit_id").Where("id = ?", examID).Scan(&unitID).Error; err != nil || unitID == 0 {
 		log.Println("[ERROR] Gagal ambil unit_id dari exam_id:", examID)
 		return err
 	}
 
+	// Ambil userUnit
 	var userUnit userUnitModel.UserUnitModel
 	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
 		return err
 	}
 
+	// Hitung bonus aktifitas
 	activityBonus := 0
 	if userUnit.AttemptReading > 0 {
 		activityBonus += 5
@@ -52,7 +55,10 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 	}
 	var totalSections, completedSections int64
 	_ = db.Table("section_quizzes").Where("unit_id = ?", unitID).Count(&totalSections).Error
-	_ = db.Table("user_section_quizzes").Joins("JOIN section_quizzes ON user_section_quizzes.section_quizzes_id = section_quizzes.id").Where("user_section_quizzes.user_id = ? AND section_quizzes.unit_id = ?", userID, unitID).Count(&completedSections).Error
+	_ = db.Table("user_section_quizzes").
+		Joins("JOIN section_quizzes ON user_section_quizzes.section_quizzes_id = section_quizzes.id").
+		Where("user_section_quizzes.user_id = ? AND section_quizzes.unit_id = ?", userID, unitID).
+		Count(&completedSections).Error
 	if totalSections > 0 && totalSections == completedSections {
 		activityBonus += 30
 	}
@@ -74,117 +80,126 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return err
 	}
 
-	if gradeResult > 65 {
-		var themesID uint
-		if err := db.Table("units").Select("themes_or_level_id").Where("id = ?", unitID).Scan(&themesID).Error; err != nil || themesID == 0 {
-			return err
-		}
+	if gradeResult <= 65 {
+		return nil
+	}
 
-		var userTheme userThemeModel.UserThemesOrLevelsModel
-		if err := db.Where("user_id = ? AND themes_or_levels_id = ?", userID, themesID).First(&userTheme).Error; err != nil {
-			return err
-		}
+	// Ambil theme dan userTheme
+	var themesID uint
+	if err := db.Table("units").Select("themes_or_level_id").Where("id = ?", unitID).Scan(&themesID).Error; err != nil || themesID == 0 {
+		return err
+	}
 
-		if userTheme.CompleteUnit == nil {
-			userTheme.CompleteUnit = datatypes.JSONMap{}
-		}
-		userTheme.CompleteUnit[fmt.Sprintf("%d", unitID)] = fmt.Sprintf("%d", gradeResult)
+	var userTheme userThemeModel.UserThemesOrLevelsModel
+	if err := db.Where("user_id = ? AND themes_or_levels_id = ?", userID, themesID).First(&userTheme).Error; err != nil {
+		return err
+	}
+	if userTheme.CompleteUnit == nil {
+		userTheme.CompleteUnit = datatypes.JSONMap{}
+	}
+	userTheme.CompleteUnit[fmt.Sprintf("%d", unitID)] = fmt.Sprintf("%d", gradeResult)
 
-		var expectedUnitIDs []int64
-		if err := db.Table("units").Where("themes_or_level_id = ?", themesID).Pluck("id", &expectedUnitIDs).Error; err != nil {
-			return err
-		}
-
-		matchCount := 0
-		for _, id := range expectedUnitIDs {
-			if _, ok := userTheme.CompleteUnit[fmt.Sprintf("%d", id)]; ok {
-				matchCount++
-			}
-		}
-
-		total := 0
-		for _, id := range expectedUnitIDs {
-			rawVal := userTheme.CompleteUnit[fmt.Sprintf("%d", id)]
-			strVal := fmt.Sprintf("%v", rawVal)
-			if g, err := strconv.Atoi(strVal); err == nil {
+	// Hitung rata-rata dari complete_unit
+	var expectedUnitIDs []int64
+	if err := db.Table("units").Where("themes_or_level_id = ?", themesID).Pluck("id", &expectedUnitIDs).Error; err != nil {
+		return err
+	}
+	matchCount := 0
+	total := 0
+	for _, id := range expectedUnitIDs {
+		if val, ok := userTheme.CompleteUnit[fmt.Sprintf("%d", id)]; ok {
+			matchCount++
+			if g, err := strconv.Atoi(fmt.Sprintf("%v", val)); err == nil {
 				total += g
 			}
 		}
-		avg := 0
-		if len(expectedUnitIDs) > 0 {
-			avg = total / len(expectedUnitIDs)
-		}
+	}
+	avg := 0
+	if len(expectedUnitIDs) > 0 {
+		avg = total / len(expectedUnitIDs)
+	}
 
-		updateFields := map[string]interface{}{
-			"complete_unit": userTheme.CompleteUnit,
-		}
-		if matchCount == len(expectedUnitIDs) && len(expectedUnitIDs) > 0 {
-			updateFields["grade_result"] = avg
-		}
-		if err := db.Model(&userTheme).Updates(updateFields).Error; err != nil {
-			return err
-		}
+	updateFields := map[string]interface{}{
+		"complete_unit": userTheme.CompleteUnit,
+	}
+	if matchCount == len(expectedUnitIDs) && len(expectedUnitIDs) > 0 {
+		updateFields["grade_result"] = avg
+	}
+	if err := db.Model(&userTheme).Updates(updateFields).Error; err != nil {
+		return err
+	}
 
-		var subcategoryID int
-		if err := db.Table("themes_or_levels").Select("subcategories_id").Where("id = ?", themesID).Scan(&subcategoryID).Error; err != nil {
-			return err
-		}
+	// Ambil userSub dan total_theme
+	var subcategoryID int
+	if err := db.Table("themes_or_levels").Select("subcategories_id").Where("id = ?", themesID).Scan(&subcategoryID).Error; err != nil {
+		return err
+	}
+	var userSub userSubcategoryModel.UserSubcategoryModel
+	if err := db.Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).First(&userSub).Error; err != nil {
+		return err
+	}
+	if userSub.CompleteThemesOrLevels == nil {
+		userSub.CompleteThemesOrLevels = datatypes.JSONMap{}
+	}
+	userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", themesID)] = fmt.Sprintf("%d", avg)
 
-		var userSub userSubcategoryModel.UserSubcategoryModel
-		if err := db.Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).First(&userSub).Error; err != nil {
-			return err
-		}
-		if userSub.CompleteThemesOrLevels == nil {
-			userSub.CompleteThemesOrLevels = datatypes.JSONMap{}
-		}
-		userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", themesID)] = fmt.Sprintf("%d", avg)
+	var raw string
+	if err := db.Table("subcategories").Select("total_themes_or_levels").Where("id = ?", subcategoryID).Scan(&raw).Error; err != nil {
+		return err
+	}
+	var totalThemeIDs pq.Int64Array
+	if err := totalThemeIDs.Scan(raw); err != nil {
+		log.Println("[ERROR] Gagal parsing total_themes_or_levels:", err)
+		return err
+	}
 
-		var raw string
-		if err := db.Table("subcategories").Select("total_themes_or_levels").Where("id = ?", subcategoryID).Scan(&raw).Error; err != nil {
-			return err
-		}
-		var totalThemeIDs pq.Int64Array
-		if err := totalThemeIDs.Scan(raw); err != nil {
-			log.Println("[ERROR] Gagal parsing total_themes_or_levels:", err)
-			return err
-		}
-
-		matchTheme := 0
-		for _, id := range totalThemeIDs {
-			if _, ok := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)]; ok {
-				matchTheme++
-			}
-		}
-
-		totalSub := 0
-		for _, id := range totalThemeIDs {
-			rawVal := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)]
-			strVal := fmt.Sprintf("%v", rawVal)
-			if g, err := strconv.Atoi(strVal); err == nil {
+	matchTheme := 0
+	totalSub := 0
+	for _, id := range totalThemeIDs {
+		if val, ok := userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", id)]; ok {
+			matchTheme++
+			if g, err := strconv.Atoi(fmt.Sprintf("%v", val)); err == nil {
 				totalSub += g
 			}
 		}
-		avgSub := 0
-		if len(totalThemeIDs) > 0 {
-			avgSub = totalSub / len(totalThemeIDs)
-		}
+	}
+	avgSub := 0
+	if len(totalThemeIDs) > 0 {
+		avgSub = totalSub / len(totalThemeIDs)
+	}
 
-		updateSubFields := map[string]interface{}{
-			"complete_themes_or_levels": userSub.CompleteThemesOrLevels,
-		}
+	var issuedVersion int
+	row := db.Table("certificate_versions").
+		Where("subcategory_id = ?", subcategoryID).
+		Select("version_number").
+		Order("version_number DESC").
+		Limit(1).
+		Row()
+	if err := row.Scan(&issuedVersion); err != nil {
+		log.Printf("[INFO] Tidak ditemukan versi sertifikat untuk subkategori ID %d, current_version tidak akan diupdate", subcategoryID)
+		issuedVersion = 0
+	} else {
+		log.Printf("[DEBUG] Versi sertifikat ditemukan: %d untuk subkategori ID %d", issuedVersion, subcategoryID)
+	}
+
+	updateSubFields := map[string]interface{}{
+		"complete_themes_or_levels": userSub.CompleteThemesOrLevels,
+	}
+	if issuedVersion > 0 {
 		if matchTheme == len(totalThemeIDs) && len(totalThemeIDs) > 0 {
 			updateSubFields["grade_result"] = avgSub
+			updateSubFields["current_version"] = issuedVersion
+			if err := issuedcertificateservice.CreateOrUpdateIssuedCertificate(db, userID, subcategoryID, issuedVersion); err != nil {
+				log.Println("[WARNING] Gagal membuat/memperbarui sertifikat:", err)
+			}
+		} else if userSub.GradeResult > 0 && userSub.CurrentVersion < issuedVersion {
+			log.Printf("[INFO] Update current_version karena sudah lulus dan ada versi baru: %d -> %d", userSub.CurrentVersion, issuedVersion)
+			updateSubFields["current_version"] = issuedVersion
 		}
-		if err := db.Model(&userSub).Updates(updateSubFields).Error; err != nil {
-			return err
-		}
+	}
 
-		// if matchTheme == len(totalThemeIDs) && len(totalThemeIDs) > 0 {
-		// 	if err := issuedcertificateservice.CreateIssuedCertificateIfEligible(db, userID, subcategoryID); err != nil {
-		// 		return err
-		// 	}
-		// }
-
+	if err := db.Model(&userSub).Updates(updateSubFields).Error; err != nil {
+		return err
 	}
 
 	return nil

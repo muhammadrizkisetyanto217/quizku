@@ -1,61 +1,50 @@
 package service
 
-// import (
-// 	"fmt"
-// 	"log"
-// 	"time"
+import (
+	"fmt"
+	"time"
 
-// 	model "quizku/internals/features/certificates/issued_certificates/model"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
-// 	"github.com/google/uuid"
-// 	"gorm.io/gorm"
-// )
+func CreateOrUpdateIssuedCertificate(
+	db *gorm.DB,
+	userID uuid.UUID,
+	subcategoryID int,
+	issuedVersion int, // tetap diterima untuk keperluan eksternal
+) error {
+	var existingID uint
+	err := db.Table("issued_certificates").
+		Select("id").
+		Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).
+		Scan(&existingID).Error
+	if err != nil {
+		return err
+	}
 
-// func CreateIssuedCertificateIfEligible(
-// 	db *gorm.DB,
-// 	userID uuid.UUID,
-// 	subcategoryID int,
-// ) error {
-// 	var certVersion struct {
-// 		ID     uint
-// 		Number int
-// 	}
-// 	err := db.Table("certificate_versions").
-// 		Select("id, version_number").
-// 		Where("subcategory_id = ?", subcategoryID).
-// 		Order("version_number DESC").
-// 		Limit(1).
-// 		Scan(&certVersion).Error
-// 	if err != nil {
-// 		return err
-// 	}
+	now := time.Now()
 
-// 	var exists int64
-// 	db.Table("issued_certificates").
-// 		Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).
-// 		Count(&exists)
-// 	if exists > 0 {
-// 		return nil
-// 	}
+	if existingID > 0 {
+		// Update existing (tanpa version info)
+		return db.Table("issued_certificates").
+			Where("id = ?", existingID).
+			Updates(map[string]interface{}{
+				"is_up_to_date": true,
+				"issued_at":     now,
+				"updated_at":    now,
+			}).Error
+	}
 
-// 	slug := fmt.Sprintf("cert-%s-%d", userID.String(), time.Now().Unix())
-// 	issued := model.IssuedCertificateModel{
-// 		UserID:               userID,
-// 		SubcategoryID:        uint(subcategoryID),
-// 		CertificateVersionID: certVersion.ID,
-// 		VersionIssued:        certVersion.Number,
-// 		VersionCurrent:       certVersion.Number,
-// 		IsUpToDate:           true,
-// 		SlugURL:              slug,
-// 		IssuedAt:             time.Now(),
-// 		CreatedAt:            time.Now(),
-// 		UpdatedAt:            time.Now(),
-// 	}
-
-// 	if err := db.Create(&issued).Error; err != nil {
-// 		log.Println("[ERROR] Gagal menyimpan issued certificate:", err)
-// 		return err
-// 	}
-
-// 	return nil
-// }
+	// Create new
+	slug := fmt.Sprintf("cert-%s-%d", userID.String(), now.Unix())
+	return db.Table("issued_certificates").Create(map[string]interface{}{
+		"user_id":        userID,
+		"subcategory_id": subcategoryID,
+		"is_up_to_date":  true,
+		"slug_url":       slug,
+		"issued_at":      now,
+		"created_at":     now,
+		"updated_at":     now,
+	}).Error
+}

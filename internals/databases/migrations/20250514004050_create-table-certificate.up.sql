@@ -1,10 +1,9 @@
 -- SQL untuk tabel issued_certificates
+-- DROP TABLE IF EXISTS issued_certificates CASCADE;
 CREATE TABLE issued_certificates (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
-    subcategory_id INTEGER NOT NULL,
-    certificate_version_id INTEGER NOT NULL,
-    version_current INTEGER NOT NULL,
+    subcategory_id INTEGER NOT NULL REFERENCES subcategories(id) ON DELETE CASCADE,
     is_up_to_date BOOLEAN NOT NULL DEFAULT true,
     slug_url TEXT UNIQUE NOT NULL,
     issued_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
