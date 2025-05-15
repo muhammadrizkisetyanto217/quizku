@@ -33,4 +33,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 
 	log.Println("[INFO] Setting up UtilsRoutes...")
 	routeDetails.UtilsRoutes(app, db)
+
+	log.Println("[INFO] Setting up CertificateRoutes...")
+	routeDetails.CertificateRoutes(app, db)
 } 

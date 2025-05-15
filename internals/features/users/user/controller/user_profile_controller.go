@@ -2,6 +2,7 @@ package controller
 
 import (
 	"log"
+	"time"
 
 	"quizku/internals/features/users/user/model"
 	helper "quizku/internals/helpers"
@@ -88,21 +89,29 @@ func (upc *UsersProfileController) UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")
 	log.Println("[INFO] Updating user profile with user_id:", userID)
 
+	if userID == nil {
+		return helper.Error(c, fiber.StatusUnauthorized, "Unauthorized - user_id missing")
+	}
+
 	var profile model.UsersProfileModel
 	if err := upc.DB.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		log.Println("[ERROR] User profile not found:", err)
 		return helper.Error(c, fiber.StatusNotFound, "User profile not found")
 	}
 
-	// Ambil data baru dari body
-	if err := c.BodyParser(&profile); err != nil {
+	var input map[string]interface{}
+	if err := c.BodyParser(&input); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return helper.Error(c, fiber.StatusBadRequest, "Invalid request format")
 	}
 
-	profile.UserID = userID.(uuid.UUID) // Pastikan user_id tetap konsisten
+	// Jangan izinkan user_id diganti
+	delete(input, "user_id")
 
-	if err := upc.DB.Save(&profile).Error; err != nil {
+	// Tambahkan updated_at manual jika kamu pakai timestamp
+	input["updated_at"] = time.Now()
+
+	if err := upc.DB.Model(&profile).Updates(input).Error; err != nil {
 		log.Println("[ERROR] Failed to update user profile:", err)
 		return helper.Error(c, fiber.StatusInternalServerError, "Failed to update user profile")
 	}

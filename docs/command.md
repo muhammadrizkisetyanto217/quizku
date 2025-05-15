@@ -9,8 +9,6 @@ Masukan number untuk mengarahkan mau berapa banyak file yang di up/down. Misal 1
 **UP**
 migrate -path internals/databases/migrations -database "postgresql://postgres.iqtqixqqsubcjbqdmgsw:Wedangjahe217@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" up
 
-
-
 **DOWN**
 migrate -path internals/databases/migrations -database "postgresql://postgres.iqtqixqqsubcjbqdmgsw:Wedangjahe217@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" down
 

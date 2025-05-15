@@ -12,6 +12,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
+	// issuedcertificateservice "quizku/internals/features/certificates/issued_certificates/service"
 	userSubcategoryModel "quizku/internals/features/lessons/subcategory/model"
 	userThemeModel "quizku/internals/features/lessons/themes_or_levels/model"
 	userUnitModel "quizku/internals/features/lessons/units/model"
@@ -28,20 +29,17 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return fmt.Errorf("nilai grade tidak valid: %d", grade)
 	}
 
-	// Ambil unit_id dari exam
 	var unitID uint
 	if err := db.Table("exams").Select("unit_id").Where("id = ?", examID).Scan(&unitID).Error; err != nil || unitID == 0 {
 		log.Println("[ERROR] Gagal ambil unit_id dari exam_id:", examID)
 		return err
 	}
 
-	// Ambil user_unit
 	var userUnit userUnitModel.UserUnitModel
 	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
 		return err
 	}
 
-	// Hitung bonus dari reading dan evaluation
 	activityBonus := 0
 	if userUnit.AttemptReading > 0 {
 		activityBonus += 5
@@ -76,7 +74,6 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return err
 	}
 
-	// Proses update themes dan subcategory jika lulus
 	if gradeResult > 65 {
 		var themesID uint
 		if err := db.Table("units").Select("themes_or_level_id").Where("id = ?", unitID).Scan(&themesID).Error; err != nil || themesID == 0 {
@@ -128,7 +125,6 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 			return err
 		}
 
-		// Update ke user_subcategory
 		var subcategoryID int
 		if err := db.Table("themes_or_levels").Select("subcategories_id").Where("id = ?", themesID).Scan(&subcategoryID).Error; err != nil {
 			return err
@@ -182,6 +178,13 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		if err := db.Model(&userSub).Updates(updateSubFields).Error; err != nil {
 			return err
 		}
+
+		// if matchTheme == len(totalThemeIDs) && len(totalThemeIDs) > 0 {
+		// 	if err := issuedcertificateservice.CreateIssuedCertificateIfEligible(db, userID, subcategoryID); err != nil {
+		// 		return err
+		// 	}
+		// }
+
 	}
 
 	return nil
