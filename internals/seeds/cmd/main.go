@@ -29,6 +29,11 @@ import (
 	users "quizku/internals/seeds/users/auth"
 	userProfiles "quizku/internals/seeds/users/users"
 	tooltips "quizku/internals/seeds/utils/tooltips"
+	survey "quizku/internals/seeds/users/surveys/survey_questions"
+	user_survey "quizku/internals/seeds/users/surveys/user_surveys"
+	test_exam "quizku/internals/seeds/users/test-exams/test_exams"
+	user_test_exam "quizku/internals/seeds/users/test-exams/user_test_exams"
+
 )
 
 func main() {
@@ -70,6 +75,13 @@ func main() {
 		rank.SeedRanksRequirementsFromJSON(db, "internals/seeds/progress/ranks/data_ranks_requirements.json")
 	case "utils":
 		tooltips.SeedTooltipsFromJSON(db, "internals/seeds/utils/tooltips/data_tooltips.json")
+
+	case "survey_test_exam":
+		survey.SeedSurveyQuestionsFromJSON(db, "internals/seeds/users/surveys/survey_questions/data_survey_questions.json")
+		user_survey.SeedUserSurveysFromJSON(db, "internals/seeds/users/surveys/user_surveys/data_user_surveys.json")
+		test_exam.SeedTestExamsFromJSON(db, "internals/seeds/users/test-exams/test_exams/data_test_exams.json")
+		user_test_exam.SeedUserTestExamsFromJSON(db, "internals/seeds/users/test-exams/user_test_exams/data_user_test_exams.json")
+
 	default:
 		log.Fatalf("❌ Argumen '%s' tidak dikenali", os.Args[1])
 	}

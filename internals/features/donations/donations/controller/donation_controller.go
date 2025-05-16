@@ -49,16 +49,17 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 	// 🧾 Generate order ID unik
 	orderID := fmt.Sprintf("DONATION-%d", time.Now().UnixNano())
 
-	// 🧩 Bangun entitas donasi
+	// 🧹 Bangun entitas donasi
 	donation := model.Donation{
-		UserID:  userUUID,
-		Amount:  body.Amount,
-		Message: body.Message,
-		Status:  "pending",
-		OrderID: orderID,
+		DonationUserID:         &userUUID,
+		DonationAmount:         body.Amount,
+		DonationMessage:        body.Message,
+		DonationStatus:         "pending",
+		DonationOrderID:        orderID,
+		DonationPaymentGateway: "midtrans",
 	}
 
-	// 💾 Simpan donasi ke database
+	// 📂 Simpan donasi ke database
 	if err := ctrl.DB.Create(&donation).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal menyimpan donasi",
@@ -73,14 +74,14 @@ func (ctrl *DonationController) CreateDonation(c *fiber.Ctx) error {
 		})
 	}
 
-	// 💾 Update payment token ke database
-	donation.PaymentToken = token
+	// 📂 Update payment token ke database
+	donation.DonationPaymentToken = token
 	ctrl.DB.Save(&donation)
 
 	// ✅ Kirim response sukses
 	return c.JSON(fiber.Map{
 		"message":    "Donasi berhasil dibuat",
-		"order_id":   donation.OrderID,
+		"order_id":   donation.DonationOrderID,
 		"snap_token": token,
 	})
 }
@@ -95,7 +96,7 @@ func (ctrl *DonationController) HandleMidtransNotification(c *fiber.Ctx) error {
 		})
 	}
 
-	// 🧩 Ambil koneksi DB dari context
+	// 🧹 Ambil koneksi DB dari context
 	db := c.Locals("db").(*gorm.DB)
 
 	// 🔁 Proses webhook menggunakan service
@@ -138,7 +139,7 @@ func (ctrl *DonationController) GetDonationsByUserID(c *fiber.Ctx) error {
 	// 🔍 Ambil semua donasi milik user ini
 	var donations []model.Donation
 	if err := ctrl.DB.
-		Where("user_id = ?", userID).
+		Where("donation_user_id = ?", userID).
 		Order("created_at desc").
 		Find(&donations).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

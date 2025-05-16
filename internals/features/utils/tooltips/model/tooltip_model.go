@@ -3,15 +3,15 @@ package model
 import "time"
 
 type Tooltip struct {
-	ID               uint      `gorm:"primaryKey" json:"id"`
-	Keyword          string    `gorm:"unique;not null" json:"keyword"`
-	DescriptionShort string    `gorm:"type:varchar(200);not null" json:"description_short"`
-	DescriptionLong  string    `gorm:"type:text;not null" json:"description_long"`
-	CreatedAt        time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt        time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	TooltipID               uint      `gorm:"column:tooltip_id;primaryKey" json:"tooltip_id"`                                       // ID unik
+	TooltipKeyword          string    `gorm:"column:tooltip_keyword;type:text;not null;unique" json:"tooltip_keyword"`              // Kata kunci tooltip
+	TooltipDescriptionShort string    `gorm:"column:tooltip_description_short;type:text;not null" json:"tooltip_description_short"` // Deskripsi ringkas
+	TooltipDescriptionLong  string    `gorm:"column:tooltip_description_long;type:text;not null" json:"tooltip_description_long"`   // Deskripsi panjang
+	CreatedAt               time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`                                   // Waktu dibuat
+	UpdatedAt               time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`                                   // Waktu update terakhir
 }
 
-// TableName memastikan nama tabel sesuai dengan skema database
+// TableName memastikan nama tabel konsisten
 func (Tooltip) TableName() string {
 	return "tooltips"
 }

@@ -7,16 +7,18 @@ import (
 )
 
 type DonationQuestionModel struct {
-	ID             uint           `gorm:"primaryKey" json:"id"`
-	DonationID     uint           `gorm:"not null" json:"donation_id"`
-	QuestionID     uint           `gorm:"not null" json:"question_id"`
-	UserProgressID *uint          `gorm:"type:int" json:"user_progress_id"` // nullable
-	UserMessage    string         `gorm:"type:text" json:"user_message"`
-	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	DonationQuestionID             uint   `gorm:"column:donation_question_id;primaryKey" json:"donation_question_id"`                    // ID unik
+	DonationQuestionDonationID     uint   `gorm:"column:donation_question_donation_id;not null" json:"donation_question_donation_id"`    // FK ke donations
+	DonationQuestionQuestionID     uint   `gorm:"column:donation_question_question_id;not null" json:"donation_question_question_id"`    // FK ke questions
+	DonationQuestionUserProgressID *uint  `gorm:"column:donation_question_user_progress_id" json:"donation_question_user_progress_id"`   // FK ke user_progress (nullable)
+	DonationQuestionUserMessage    string `gorm:"column:donation_question_user_message;type:text" json:"donation_question_user_message"` // Optional pesan user
+
+	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`  // Timestamp dibuat
+	UpdatedAt time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`  // Timestamp update
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"` // Soft delete opsional
 }
 
+// TableName memastikan nama tabel sesuai
 func (DonationQuestionModel) TableName() string {
 	return "donation_questions"
 }

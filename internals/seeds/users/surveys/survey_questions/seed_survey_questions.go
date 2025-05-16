@@ -10,9 +10,9 @@ import (
 )
 
 type SurveyQuestionSeed struct {
-	QuestionText   string   `json:"question_text"`
-	QuestionAnswer []string `json:"question_answer"`
-	OrderIndex     int      `json:"order_index"`
+	SurveyQuestionText       string   `json:"survey_question_text"`
+	SurveyQuestionAnswer     []string `json:"survey_question_answer"`
+	SurveyQuestionOrderIndex int      `json:"survey_question_order_index"`
 }
 
 func SeedSurveyQuestionsFromJSON(db *gorm.DB, filePath string) {
@@ -28,11 +28,10 @@ func SeedSurveyQuestionsFromJSON(db *gorm.DB, filePath string) {
 		log.Fatalf("❌ Gagal decode JSON: %v", err)
 	}
 
-	// Ambil semua question_text yang sudah ada
+	// Ambil semua survey_question_text yang sudah ada
 	var existingQuestions []string
 	if err := db.Model(&model.SurveyQuestion{}).
-		Select("question_text").
-		Find(&existingQuestions).Error; err != nil {
+		Pluck("survey_question_text", &existingQuestions).Error; err != nil {
 		log.Fatalf("❌ Gagal ambil data existing: %v", err)
 	}
 
@@ -41,18 +40,17 @@ func SeedSurveyQuestionsFromJSON(db *gorm.DB, filePath string) {
 		existingMap[q] = true
 	}
 
-	// Filter data baru
 	var newQuestions []model.SurveyQuestion
 	for _, s := range seeds {
-		if existingMap[s.QuestionText] {
-			log.Printf("ℹ️ Pertanyaan '%s' sudah ada, dilewati.", s.QuestionText)
+		if existingMap[s.SurveyQuestionText] {
+			log.Printf("ℹ️ Pertanyaan '%s' sudah ada, dilewati.", s.SurveyQuestionText)
 			continue
 		}
 
 		newQuestions = append(newQuestions, model.SurveyQuestion{
-			SurveyQuestionText:   s.QuestionText,
-			SurveyQuestionAnswer: s.QuestionAnswer,
-			SurveyQuestionOrderIndex:     s.OrderIndex,
+			SurveyQuestionText:       s.SurveyQuestionText,
+			SurveyQuestionAnswer:     s.SurveyQuestionAnswer,
+			SurveyQuestionOrderIndex: s.SurveyQuestionOrderIndex,
 		})
 	}
 

@@ -7,14 +7,13 @@ import (
 )
 
 type QuestionMistakeModel struct {
-	ID           uint      `gorm:"primaryKey" json:"id"`
-	UserID       uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`           // Relasi ke tabel users
-	SourceTypeID int       `gorm:"not null" json:"source_type_id"`              // 1 = Quiz, 2 = Evaluation, 3 = Exam
-	QuestionID   uint      `gorm:"not null" json:"question_id"`                 // ID dari question
-	CreatedAt    time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"` // Timestamp otomatis
+	QuestionMistakeID           uint      `gorm:"column:question_mistake_id;primaryKey" json:"question_mistake_id"`
+	QuestionMistakeUserID       uuid.UUID `gorm:"column:question_mistake_user_id;type:uuid;not null" json:"question_mistake_user_id"`
+	QuestionMistakeSourceTypeID int       `gorm:"column:question_mistake_source_type_id;not null" json:"question_mistake_source_type_id"`
+	QuestionMistakeQuestionID   uint      `gorm:"column:question_mistake_question_id;not null" json:"question_mistake_question_id"`
+	CreatedAt                   time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 }
 
-// TableName untuk mapping ke tabel database
 func (QuestionMistakeModel) TableName() string {
 	return "question_mistakes"
 }

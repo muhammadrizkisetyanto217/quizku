@@ -1,8 +1,8 @@
 package model
 
-// ✅ Struct untuk request-nya
+// Request body untuk membuat question link
 type QuestionLinkRequest struct {
-	QuestionID int `json:"question_id"`
-	TargetType int `json:"target_type"` // 1=quiz, 2=exam, ...
-	TargetID   int `json:"target_id"`
+	QuestionLinkQuestionID int `json:"question_link_question_id"`
+	QuestionLinkTargetType int `json:"question_link_target_type"` // 1=quiz, 2=evaluation, ...
+	QuestionLinkTargetID   int `json:"question_link_target_id"`
 }

@@ -2,9 +2,10 @@ package controller
 
 import (
 	"fmt"
-	"quizku/internals/features/utils/tooltips/model"
 	"regexp"
 	"strings"
+
+	"quizku/internals/features/utils/tooltips/model"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -18,6 +19,7 @@ func NewTooltipInjectController(db *gorm.DB) *TooltipInjectController {
 	return &TooltipInjectController{DB: db}
 }
 
+// Endpoint utama: menerima teks dan inject ID tooltip ke dalamnya
 func (tc *TooltipInjectController) InjectTooltipIDs(c *fiber.Ctx) error {
 	var req struct {
 		Text string `json:"text"`
@@ -26,7 +28,7 @@ func (tc *TooltipInjectController) InjectTooltipIDs(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil || strings.TrimSpace(req.Text) == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status": false,
-			"error":  "Invalid request body or empty text",
+			"error":  "Teks tidak boleh kosong atau format request tidak valid",
 		})
 	}
 
@@ -40,8 +42,9 @@ func (tc *TooltipInjectController) InjectTooltipIDs(c *fiber.Ctx) error {
 	})
 }
 
-// Fungsi utama mengganti keyword[] menjadi keyword[ID] jika ditemukan di DB
+// Ganti kata kunci[] menjadi kata kunci[ID] jika ditemukan di database
 func (tc *TooltipInjectController) replaceWithTooltipIDs(text string) string {
+	// Cari pola kata[ ] (misalnya: halal[], syariah[])
 	re := regexp.MustCompile(`\b(\w+)\[\]`)
 	matches := re.FindAllStringSubmatch(text, -1)
 
@@ -55,9 +58,9 @@ func (tc *TooltipInjectController) replaceWithTooltipIDs(text string) string {
 		seen[keyword] = true
 
 		var tooltip model.Tooltip
-		if err := tc.DB.Where("keyword = ?", keyword).First(&tooltip).Error; err == nil {
+		if err := tc.DB.Where("tooltip_keyword = ?", keyword).First(&tooltip).Error; err == nil {
 			from := keyword + "[]"
-			to := keyword + "[" + fmt.Sprintf("%d", tooltip.ID) + "]"
+			to := fmt.Sprintf("%s[%d]", keyword, tooltip.TooltipID)
 			text = strings.Replace(text, from, to, 1)
 		}
 	}

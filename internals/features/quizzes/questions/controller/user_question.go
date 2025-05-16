@@ -84,11 +84,14 @@ func (ctrl *UserQuestionController) Create(c *fiber.Ctx) error {
 
 // ✅ GET /api/user_questions/user/:user_id
 // Mengambil semua data `user_questions` berdasarkan `user_id` (UUID)
+// ✅ GET /api/user_questions/user/:user_id
 func (ctrl *UserQuestionController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
-	var results []userQuestionModel.UserQuestionModel
 
-	if err := ctrl.DB.Where("user_id = ?", userID).Find(&results).Error; err != nil {
+	var results []userQuestionModel.UserQuestionModel
+	if err := ctrl.DB.
+		Where("user_question_user_id = ?", userID).
+		Find(&results).Error; err != nil {
 		log.Println("[ERROR] Failed to fetch user_questions by user_id:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch user questions",
@@ -100,24 +103,25 @@ func (ctrl *UserQuestionController) GetByUserID(c *fiber.Ctx) error {
 		"data":    results,
 	})
 }
+
 // ✅ GET /api/user_questions/user/:user_id/question/:question_id
 // Mengambil data `user_question` berdasarkan kombinasi user_id dan question_id.
 // Cocok untuk menampilkan apakah user sudah pernah menjawab pertanyaan tertentu.
+// ✅ GET /api/user_questions/user/:user_id/question/:question_id
 func (ctrl *UserQuestionController) GetByUserIDAndQuestionID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	questionID := c.Params("question_id")
 
 	var result userQuestionModel.UserQuestionModel
-
-	// 🔍 Cari data berdasarkan user_id dan question_id
-	if err := ctrl.DB.Where("user_id = ? AND question_id = ?", userID, questionID).First(&result).Error; err != nil {
+	if err := ctrl.DB.
+		Where("user_question_user_id = ? AND user_question_question_id = ?", userID, questionID).
+		First(&result).Error; err != nil {
 		log.Println("[ERROR] User question not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User question not found",
 		})
 	}
 
-	// ✅ Return data jika ditemukan
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User question fetched successfully",
 		"data":    result,

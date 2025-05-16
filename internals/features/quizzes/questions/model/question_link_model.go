@@ -26,22 +26,21 @@ var TargetTypeNameToInt = map[string]int{
 }
 
 type QuestionLink struct {
-	ID         int       `gorm:"primaryKey" json:"id"`
-	QuestionID int       `gorm:"not null" json:"question_id"`
-	TargetType int       `gorm:"not null;check:target_type IN (1,2,3,4)" json:"target_type"`
-	TargetID   int       `gorm:"not null" json:"target_id"`
-	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
+	QuestionLinkID         int       `gorm:"column:question_link_id;primaryKey" json:"question_link_id"`
+	QuestionLinkQuestionID int       `gorm:"column:question_link_question_id;not null" json:"question_link_question_id"`
+	QuestionLinkTargetType int       `gorm:"column:question_link_target_type;not null;check:question_link_target_type IN (1,2,3,4)" json:"question_link_target_type"`
+	QuestionLinkTargetID   int       `gorm:"column:question_link_target_id;not null" json:"question_link_target_id"`
+	CreatedAt              time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 }
 
-// Method untuk mapping angka ke nama (opsional)
+// Opsional: Helper untuk menampilkan nama tipe
 func (q *QuestionLink) TargetTypeName() string {
-	if name, ok := TargetTypeMap[q.TargetType]; ok {
+	if name, ok := TargetTypeMap[q.QuestionLinkTargetType]; ok {
 		return name
 	}
 	return "unknown"
 }
 
-// ⬅️ Ini yang kamu minta
 func (QuestionLink) TableName() string {
 	return "question_links"
 }

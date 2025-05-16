@@ -44,8 +44,8 @@ func (ctrl *DonationQuestionController) GetByID(c *fiber.Ctx) error {
 	// 🔍 Inisialisasi struct untuk hasil query
 	var item model.DonationQuestionModel
 
-	// 🔄 Query data berdasarkan primary key
-	if err := ctrl.DB.First(&item, id).Error; err != nil {
+	// 🔄 Query data berdasarkan kolom primary key eksplisit
+	if err := ctrl.DB.First(&item, "donation_question_id = ?", id).Error; err != nil {
 		// ❌ Jika data tidak ditemukan, log dan kirim error 404
 		log.Println("[ERROR] Donation question not found:", err)
 		return c.Status(404).JSON(fiber.Map{
@@ -65,10 +65,10 @@ func (ctrl *DonationQuestionController) GetByDonationID(c *fiber.Ctx) error {
 	// 🔍 Query semua soal yang terkait dengan donation_id
 	var items []model.DonationQuestionModel
 	if err := ctrl.DB.
-		Where("donation_id = ?", donationID).
+		Where("donation_question_donation_id = ?", donationID).
 		Find(&items).Error; err != nil {
 		// ❌ Jika gagal query, log error dan kirim respons 500
-		log.Println("[ERROR] Failed to fetch donation questions by donation_id:", err)
+		log.Println("[ERROR] Failed to fetch donation questions by donation_question_donation_id:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Failed to fetch by donation ID",
 		})
@@ -143,20 +143,17 @@ func (ctrl *DonationQuestionController) Update(c *fiber.Ctx) error {
 	})
 }
 
-// ✅ DELETE donation_question by ID
+// ✅ DELETE donation_question by ID// ✅ DELETE donation_question by ID
 func (ctrl *DonationQuestionController) Delete(c *fiber.Ctx) error {
-	// 🔹 Ambil ID dari parameter URL
 	id := c.Params("id")
 
-	// 🗑️ Hapus berdasarkan ID langsung (tanpa fetch dulu)
-	if err := ctrl.DB.Delete(&model.DonationQuestionModel{}, id).Error; err != nil {
+	if err := ctrl.DB.Delete(&model.DonationQuestionModel{}, "donation_question_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete donation question:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Failed to delete donation question",
 		})
 	}
 
-	// ✅ Kirim pesan sukses
 	return c.JSON(fiber.Map{
 		"message": "Donation question deleted successfully",
 	})

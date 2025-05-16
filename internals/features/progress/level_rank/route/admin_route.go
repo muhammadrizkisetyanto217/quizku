@@ -10,17 +10,12 @@ import (
 	authMiddleware "quizku/internals/middlewares/auth"
 )
 
-func LevelRequirementRoute(app *fiber.App, db *gorm.DB) {
-	api := app.Group("/api", authMiddleware.AuthMiddleware(db))
-
+func LevelRequirementAdminRoute(router fiber.Router, db *gorm.DB) {
 	levelCtrl := levelController.NewLevelRequirementController(db)
 	rankCtrl := levelController.NewRankRequirementController(db)
 
-	// 🎯 Level Routes
-	levelRoutes := api.Group("/level-requirements")
-	levelRoutes.Get("/", levelCtrl.GetAll)
-	levelRoutes.Get("/:id", levelCtrl.GetByID)
-
+	// 🎯 Level Routes (Admin/Teacher only)
+	levelRoutes := router.Group("/level-requirements")
 	levelRoutes.Post("/", authMiddleware.OnlyRolesSlice(
 		constants.RoleErrorTeacher("menambahkan level"),
 		constants.TeacherAndAbove,
@@ -36,11 +31,8 @@ func LevelRequirementRoute(app *fiber.App, db *gorm.DB) {
 		constants.TeacherAndAbove,
 	), levelCtrl.Delete)
 
-	// 🏆 Rank Routes
-	rankRoutes := api.Group("/rank-requirements")
-	rankRoutes.Get("/", rankCtrl.GetAll)
-	rankRoutes.Get("/:id", rankCtrl.GetByID)
-
+	// 🏆 Rank Routes (Admin/Teacher only)
+	rankRoutes := router.Group("/rank-requirements")
 	rankRoutes.Post("/", authMiddleware.OnlyRolesSlice(
 		constants.RoleErrorTeacher("menambahkan rank"),
 		constants.TeacherAndAbove,

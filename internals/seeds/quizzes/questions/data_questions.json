@@ -1,197 +1,197 @@
 [
     {
         "question_text": "Apa yang pertama kali dilakukan sebelum berwudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Membasuh wajah",
             "Membasuh tangan",
             "Membaca niat",
             "Menyapu kepala"
         ],
-        "question_correct": "Membaca niat",
-        "paragraph_help": "Sebelum memulai wudhu, niat adalah hal penting yang harus diucapkan dalam hati.",
-        "explain_question": "Niat adalah awal dari setiap ibadah termasuk wudhu.",
-        "answer_text": "Membaca niat"
+        "question_correct_answer": "Membaca niat",
+        "question_help_paragraph": "Sebelum memulai wudhu, niat adalah hal penting yang harus diucapkan dalam hati.",
+        "question_explanation": "Niat adalah awal dari setiap ibadah termasuk wudhu.",
+        "question_answer_text": "Membaca niat"
     },
     {
         "question_text": "Apa yang dibasuh pertama kali setelah niat?",
-        "question_answer": [
+        "question_answer_choices": [
             "Kaki",
             "Wajah",
             "Tangan",
             "Kepala"
         ],
-        "question_correct": "Wajah",
-        "paragraph_help": "Setelah niat, urutan pertama dalam wudhu adalah membasuh wajah.",
-        "explain_question": "Wajah dibasuh dari atas dahi hingga dagu dan dari telinga ke telinga.",
-        "answer_text": "Wajah"
+        "question_correct_answer": "Wajah",
+        "question_help_paragraph": "Setelah niat, urutan pertama dalam wudhu adalah membasuh wajah.",
+        "question_explanation": "Wajah dibasuh dari atas dahi hingga dagu dan dari telinga ke telinga.",
+        "question_answer_text": "Wajah"
     },
     {
         "question_text": "Berapa kali membasuh setiap anggota wudhu menurut sunnah?",
-        "question_answer": [
+        "question_answer_choices": [
             "1 kali",
             "2 kali",
             "3 kali",
             "Sebanyak mungkin"
         ],
-        "question_correct": "3 kali",
-        "paragraph_help": "Nabi Muhammad SAW membasuh setiap anggota wudhu sebanyak 3 kali.",
-        "explain_question": "Ini adalah bagian dari kesempurnaan wudhu.",
-        "answer_text": "3 kali"
+        "question_correct_answer": "3 kali",
+        "question_help_paragraph": "Nabi Muhammad SAW membasuh setiap anggota wudhu sebanyak 3 kali.",
+        "question_explanation": "Ini adalah bagian dari kesempurnaan wudhu.",
+        "question_answer_text": "3 kali"
     },
     {
         "question_text": "Apa yang dilakukan setelah membasuh kedua tangan dalam wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Menyapu kepala",
             "Membasuh kaki",
             "Membilas mulut",
             "Membasuh wajah"
         ],
-        "question_correct": "Menyapu kepala",
-        "paragraph_help": "Setelah membasuh tangan kanan dan kiri, langkah berikutnya adalah menyapu kepala.",
-        "explain_question": "Menyapu kepala cukup satu kali saja dengan tangan basah.",
-        "answer_text": "Menyapu kepala"
+        "question_correct_answer": "Menyapu kepala",
+        "question_help_paragraph": "Setelah membasuh tangan kanan dan kiri, langkah berikutnya adalah menyapu kepala.",
+        "question_explanation": "Menyapu kepala cukup satu kali saja dengan tangan basah.",
+        "question_answer_text": "Menyapu kepala"
     },
     {
         "question_text": "Apa hukum mencuci mulut dan hidung saat wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Wajib",
             "Makruh",
             "Sunnah",
             "Tidak diperbolehkan"
         ],
-        "question_correct": "Sunnah",
-        "paragraph_help": "Meskipun tidak wajib, mencuci mulut dan hidung adalah sunnah yang diajarkan Rasulullah SAW.",
-        "explain_question": "Ini termasuk dalam kesempurnaan wudhu.",
-        "answer_text": "Sunnah"
+        "question_correct_answer": "Sunnah",
+        "question_help_paragraph": "Meskipun tidak wajib, mencuci mulut dan hidung adalah sunnah yang diajarkan Rasulullah SAW.",
+        "question_explanation": "Ini termasuk dalam kesempurnaan wudhu.",
+        "question_answer_text": "Sunnah"
     },
     {
         "question_text": "Apa langkah terakhir dalam wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Menyapu kepala",
             "Membasuh telinga",
             "Membasuh kaki",
             "Berdoa"
         ],
-        "question_correct": "Membasuh kaki",
-        "paragraph_help": "Setelah menyapu kepala, langkah terakhir adalah membasuh kaki kanan dan kiri.",
-        "explain_question": "Kaki dibasuh hingga mata kaki sebanyak 3 kali.",
-        "answer_text": "Membasuh kaki"
+        "question_correct_answer": "Membasuh kaki",
+        "question_help_paragraph": "Setelah menyapu kepala, langkah terakhir adalah membasuh kaki kanan dan kiri.",
+        "question_explanation": "Kaki dibasuh hingga mata kaki sebanyak 3 kali.",
+        "question_answer_text": "Membasuh kaki"
     },
     {
         "question_text": "Apa manfaat dari menjaga wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Menjadi sehat",
             "Memudahkan rezeki",
             "Menghapus dosa kecil",
             "Menambah umur"
         ],
-        "question_correct": "Menghapus dosa kecil",
-        "paragraph_help": "Wudhu menghapus dosa-dosa kecil sebagaimana disebutkan dalam hadits shahih.",
-        "explain_question": "Air wudhu menjadi penghapus dosa di setiap anggota badan.",
-        "answer_text": "Menghapus dosa kecil"
+        "question_correct_answer": "Menghapus dosa kecil",
+        "question_help_paragraph": "Wudhu menghapus dosa-dosa kecil sebagaimana disebutkan dalam hadits shahih.",
+        "question_explanation": "Air wudhu menjadi penghapus dosa di setiap anggota badan.",
+        "question_answer_text": "Menghapus dosa kecil"
     },
     {
         "question_text": "Bagaimana posisi membasuh tangan dalam wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Dari lengan ke telapak",
             "Dari jari ke siku",
             "Dari siku ke jari",
             "Dari bahu ke tangan"
         ],
-        "question_correct": "Dari jari ke siku",
-        "paragraph_help": "Tangan dibasuh dari ujung jari hingga siku sesuai tuntunan Nabi.",
-        "explain_question": "Dilakukan sebanyak 3 kali.",
-        "answer_text": "Dari jari ke siku"
+        "question_correct_answer": "Dari jari ke siku",
+        "question_help_paragraph": "Tangan dibasuh dari ujung jari hingga siku sesuai tuntunan Nabi.",
+        "question_explanation": "Dilakukan sebanyak 3 kali.",
+        "question_answer_text": "Dari jari ke siku"
     },
     {
         "question_text": "Apakah sah wudhu tanpa niat?",
-        "question_answer": [
+        "question_answer_choices": [
             "Sah",
             "Makruh",
             "Tidak sah",
             "Diperbolehkan"
         ],
-        "question_correct": "Tidak sah",
-        "paragraph_help": "Setiap amal harus didasari niat.",
-        "explain_question": "Tanpa niat, ibadah tidak bernilai.",
-        "answer_text": "Tidak sah"
+        "question_correct_answer": "Tidak sah",
+        "question_help_paragraph": "Setiap amal harus didasari niat.",
+        "question_explanation": "Tanpa niat, ibadah tidak bernilai.",
+        "question_answer_text": "Tidak sah"
     },
     {
         "question_text": "Apa yang membatalkan wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Tidur terlentang",
             "Bersin",
             "Meludah",
             "Bersujud"
         ],
-        "question_correct": "Tidur terlentang",
-        "paragraph_help": "Tidur dengan posisi terlentang dapat membatalkan wudhu.",
-        "explain_question": "Karena bisa jadi menyebabkan keluarnya sesuatu tanpa disadari.",
-        "answer_text": "Tidur terlentang"
+        "question_correct_answer": "Tidur terlentang",
+        "question_help_paragraph": "Tidur dengan posisi terlentang dapat membatalkan wudhu.",
+        "question_explanation": "Karena bisa jadi menyebabkan keluarnya sesuatu tanpa disadari.",
+        "question_answer_text": "Tidur terlentang"
     },
     {
         "question_text": "Apakah wanita haid wajib berwudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Ya",
             "Tidak",
             "Hanya saat sholat",
             "Jika ingin membaca Al-Qur’an"
         ],
-        "question_correct": "Tidak",
-        "paragraph_help": "Wanita haid tidak berkewajiban sholat sehingga tidak perlu wudhu.",
-        "explain_question": "Namun tetap boleh menjaga kebersihan diri.",
-        "answer_text": "Tidak"
+        "question_correct_answer": "Tidak",
+        "question_help_paragraph": "Wanita haid tidak berkewajiban sholat sehingga tidak perlu wudhu.",
+        "question_explanation": "Namun tetap boleh menjaga kebersihan diri.",
+        "question_answer_text": "Tidak"
     },
     {
         "question_text": "Apakah boleh berbicara saat wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Boleh",
             "Makruh",
             "Dilarang",
             "Batal wudhunya"
         ],
-        "question_correct": "Makruh",
-        "paragraph_help": "Berbicara saat wudhu tidak membatalkan wudhu tapi sebaiknya dihindari.",
-        "explain_question": "Wudhu adalah ibadah, sebaiknya dilakukan dengan khusyu’.",
-        "answer_text": "Makruh"
+        "question_correct_answer": "Makruh",
+        "question_help_paragraph": "Berbicara saat wudhu tidak membatalkan wudhu tapi sebaiknya dihindari.",
+        "question_explanation": "Wudhu adalah ibadah, sebaiknya dilakukan dengan khusyu’.",
+        "question_answer_text": "Makruh"
     },
     {
         "question_text": "Apakah doa setelah wudhu ada dalilnya?",
-        "question_answer": [
+        "question_answer_choices": [
             "Tidak ada",
             "Ada",
             "Hanya sunnah",
             "Tidak wajib"
         ],
-        "question_correct": "Ada",
-        "paragraph_help": "Doa setelah wudhu merupakan sunnah yang diajarkan Nabi Muhammad SAW.",
-        "explain_question": "Membaca doa ini menambah pahala dan keberkahan.",
-        "answer_text": "Ada"
+        "question_correct_answer": "Ada",
+        "question_help_paragraph": "Doa setelah wudhu merupakan sunnah yang diajarkan Nabi Muhammad SAW.",
+        "question_explanation": "Membaca doa ini menambah pahala dan keberkahan.",
+        "question_answer_text": "Ada"
     },
     {
         "question_text": "Apa hukum mendahulukan kiri sebelum kanan dalam wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "Wajib",
             "Sunnah",
             "Tidak sah",
             "Menyelisihi sunnah"
         ],
-        "question_correct": "Menyelisihi sunnah",
-        "paragraph_help": "Rasulullah SAW memulai dari kanan dalam berwudhu.",
-        "explain_question": "Kanan didahulukan dalam hal-hal yang baik.",
-        "answer_text": "Menyelisihi sunnah"
+        "question_correct_answer": "Menyelisihi sunnah",
+        "question_help_paragraph": "Rasulullah SAW memulai dari kanan dalam berwudhu.",
+        "question_explanation": "Kanan didahulukan dalam hal-hal yang baik.",
+        "question_answer_text": "Menyelisihi sunnah"
     },
     {
         "question_text": "Berapa kali Nabi SAW biasa menyapu kepala saat wudhu?",
-        "question_answer": [
+        "question_answer_choices": [
             "1 kali",
             "2 kali",
             "3 kali",
             "Sebanyak mungkin"
         ],
-        "question_correct": "1 kali",
-        "paragraph_help": "Dalam hadits disebutkan Nabi menyapu kepala satu kali dengan tangan yang dibasahi.",
-        "explain_question": "Menyapu kepala tidak harus dibasuh seperti anggota lainnya.",
-        "answer_text": "1 kali"
+        "question_correct_answer": "1 kali",
+        "question_help_paragraph": "Dalam hadits disebutkan Nabi menyapu kepala satu kali dengan tangan yang dibasahi.",
+        "question_explanation": "Menyapu kepala tidak harus dibasuh seperti anggota lainnya.",
+        "question_answer_text": "1 kali"
     }
 ]

@@ -186,8 +186,8 @@ func (rc *ReadingController) MarkKeywords(text string, tooltips []tooltipModel.T
 	log.Printf("[DEBUG] Original text: %s\n", text)
 
 	for _, tooltip := range tooltips {
-		keyword := tooltip.Keyword
-		keywordID := strconv.Itoa(int(tooltip.ID))
+		keyword := tooltip.TooltipKeyword
+		keywordID := strconv.Itoa(int(tooltip.TooltipID))
 
 		// Regex case-insensitive tapi preserve original match
 		re := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(keyword) + `\b`)

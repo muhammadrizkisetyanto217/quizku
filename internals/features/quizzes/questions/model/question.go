@@ -9,17 +9,17 @@ import (
 )
 
 type QuestionModel struct {
-	ID              uint           `gorm:"primaryKey" json:"id"`
-	QuestionText    string         `gorm:"type:text;not null" json:"question_text"`
-	QuestionAnswer  pq.StringArray `gorm:"type:text[];not null" json:"question_answer"`
-	QuestionCorrect string         `gorm:"type:varchar(50);not null" json:"question_correct"`
-	ParagraphHelp   string         `gorm:"type:text;not null" json:"paragraph_help"`
-	ExplainQuestion string         `gorm:"type:text;not null" json:"explain_question"`
-	AnswerText      string         `gorm:"type:text;not null" json:"answer_text"`
-	Status          string         `gorm:"type:varchar(10);not null;default:'pending'" json:"status"`
-	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	QuestionID            uint           `gorm:"column:question_id;primaryKey" json:"question_id"`
+	QuestionText          string         `gorm:"column:question_text;type:text;not null" json:"question_text"`                              // Isi pertanyaan
+	QuestionAnswerChoices pq.StringArray `gorm:"column:question_answer_choices;type:text[];not null" json:"question_answer_choices"`        // Pilihan jawaban
+	QuestionCorrectAnswer string         `gorm:"column:question_correct_answer;type:varchar(50);not null" json:"question_correct_answer"`   // Jawaban benar
+	QuestionHelpParagraph string         `gorm:"column:question_help_paragraph;type:text;not null" json:"question_help_paragraph"`          // Paragraf bantuan jika ada
+	QuestionExplanation   string         `gorm:"column:question_explanation;type:text;not null" json:"question_explanation"`                // Penjelasan mengapa jawaban benar
+	QuestionAnswerText    string         `gorm:"column:question_answer_text;type:text;not null" json:"question_answer_text"`                // Ringkasan teks jawaban
+	QuestionStatus        string         `gorm:"column:question_status;type:varchar(10);not null;default:'pending'" json:"question_status"` // pending, active, archived
+	CreatedAt             time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt             time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
+	DeletedAt             gorm.DeletedAt `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"`
 }
 
 func (QuestionModel) TableName() string {
@@ -27,29 +27,29 @@ func (QuestionModel) TableName() string {
 }
 
 // ✅ Fungsi dinamis untuk update total_question ke quizzes/evaluations/exams
-func SyncTotalQuestions(db *gorm.DB, sourceTypeID int, sourceID int) error {
-	log.Printf("[SERVICE] SyncTotalQuestions - source_type_id: %d, source_id: %d\n", sourceTypeID, sourceID)
+func SyncTotalQuestions(db *gorm.DB, targetType int, targetID int) error {
+	log.Printf("[SERVICE] SyncTotalQuestions - target_type: %d, target_id: %d\n", targetType, targetID)
 
 	var tableName string
-	switch sourceTypeID {
-	case 1:
+	switch targetType {
+	case TargetTypeQuiz:
 		tableName = "quizzes"
-	case 2:
+	case TargetTypeEvaluation:
 		tableName = "evaluations"
-	case 3:
+	case TargetTypeExam:
 		tableName = "exams"
 	default:
-		log.Println("[WARNING] Unknown source_type_id:", sourceTypeID)
+		log.Println("[WARNING] Unknown target_type:", targetType)
 		return nil
 	}
 
 	return db.Exec(`
 		UPDATE `+tableName+`
 		SET total_question = (
-			SELECT ARRAY_AGG(id ORDER BY id)
-			FROM questions
-			WHERE source_type_id = ? AND source_id = ? AND deleted_at IS NULL
+			SELECT COUNT(*)
+			FROM question_links
+			WHERE question_link_target_type = ? AND question_link_target_id = ?
 		)
 		WHERE id = ?
-	`, sourceTypeID, sourceID, sourceID).Error
+	`, targetType, targetID, targetID).Error
 }

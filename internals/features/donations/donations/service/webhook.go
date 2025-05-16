@@ -3,61 +3,67 @@ package service
 import (
 	"fmt"
 	"log"
-	"quizku/internals/features/donations/donations/model"
-	donationQuestionModel "quizku/internals/features/donations/donation_questions/model"
 	"time"
 
 	"gorm.io/gorm"
+
+	donationQuestionModel "quizku/internals/features/donations/donation_questions/model"
+	donationModel "quizku/internals/features/donations/donations/model"
 )
 
 // HandleDonationStatusWebhook dipanggil saat menerima notifikasi dari Midtrans
-
 func HandleDonationStatusWebhook(db *gorm.DB, body map[string]interface{}) error {
 	orderID, ok1 := body["order_id"].(string)
 	status, ok2 := body["transaction_status"].(string)
 
 	if !ok1 || !ok2 {
-		log.Println("[ERROR] Payload tidak lengkap:", body)
+		log.Println("[ERROR] Payload webhook tidak lengkap:", body)
 		return fmt.Errorf("invalid payload")
 	}
 
 	log.Println("📄 Order ID:", orderID)
 	log.Println("📌 Transaction Status:", status)
 
-	var donation model.Donation
-	if err := db.Where("order_id = ?", orderID).First(&donation).Error; err != nil {
+	// Ambil donasi berdasarkan order_id
+	var donation donationModel.Donation
+	if err := db.Where("donation_order_id = ?", orderID).First(&donation).Error; err != nil {
 		log.Println("[ERROR] Donasi tidak ditemukan:", err)
 		return fmt.Errorf("donation with order_id %s not found", orderID)
 	}
 
-	// Update status donasi
+	// Proses perubahan status donasi
 	switch status {
 	case "capture", "settlement":
 		now := time.Now()
-		donation.Status = "paid"
-		donation.PaidAt = &now
+		donation.DonationStatus = "paid"
+		donation.DonationPaidAt = &now
 
-		// Tambahkan entri ke donation_questions
-		totalSoal := int(donation.Amount) / 5000
+		// Hitung jumlah soal berdasarkan jumlah donasi
+		totalSoal := donation.DonationAmount / 5000
 		for i := 0; i < totalSoal; i++ {
 			soal := donationQuestionModel.DonationQuestionModel{
-				DonationID:  donation.ID,
-				QuestionID:  0,                // default dulu, nanti bisa diisi real ID soal kalau ada
-				UserMessage: donation.Message, // optional, bisa juga kosong
+				DonationQuestionDonationID:  donation.DonationID,
+				DonationQuestionQuestionID:  0, // default, bisa diisi nanti
+				DonationQuestionUserMessage: donation.DonationMessage,
 			}
 			if err := db.Create(&soal).Error; err != nil {
-				log.Println("[ERROR] Gagal buat donation_question:", err)
-				// Lanjut ke soal berikutnya, jangan return
+				log.Printf("[ERROR] Gagal membuat donation_question (%d/%d): %v", i+1, totalSoal, err)
 			}
 		}
 
 	case "expire":
-		donation.Status = "expired"
+		donation.DonationStatus = "expired"
 	case "cancel":
-		donation.Status = "canceled"
+		donation.DonationStatus = "canceled"
 	default:
-		log.Println("Status tidak diproses:", status)
+		log.Println("[INFO] Status tidak diproses:", status)
 	}
 
-	return db.Save(&donation).Error
+	// Simpan update status donasi ke database
+	if err := db.Save(&donation).Error; err != nil {
+		log.Println("[ERROR] Gagal menyimpan status donasi:", err)
+		return err
+	}
+
+	return nil
 }

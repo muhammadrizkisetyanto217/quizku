@@ -11,13 +11,13 @@ import (
 )
 
 type UserSurveySeed struct {
-	UserID           uuid.UUID `json:"user_id"`
-	SurveyQuestionID int       `json:"survey_question_id"`
-	UserAnswer       string    `json:"user_answer"`
+	UserSurveyUserID     uuid.UUID `json:"user_survey_user_id"`
+	UserSurveyQuestionID int       `json:"user_survey_question_id"`
+	UserSurveyAnswer     string    `json:"user_survey_answer"`
 }
 
 func SeedUserSurveysFromJSON(db *gorm.DB, filePath string) {
-	log.Println("📥 Membaca file user survey:", filePath)
+	log.Println("📥 Membaca file user_survey:", filePath)
 
 	file, err := os.ReadFile(filePath)
 	if err != nil {
@@ -32,9 +32,9 @@ func SeedUserSurveysFromJSON(db *gorm.DB, filePath string) {
 	var userSurveys []model.UserSurvey
 	for _, s := range seeds {
 		userSurveys = append(userSurveys, model.UserSurvey{
-			UserSurveyUserID:           s.UserID,
-			UserSurveyQuestionID: s.SurveyQuestionID,
-			UserSurveyAnswer:       s.UserAnswer,
+			UserSurveyUserID:     s.UserSurveyUserID,
+			UserSurveyQuestionID: s.UserSurveyQuestionID,
+			UserSurveyAnswer:     s.UserSurveyAnswer,
 		})
 	}
 

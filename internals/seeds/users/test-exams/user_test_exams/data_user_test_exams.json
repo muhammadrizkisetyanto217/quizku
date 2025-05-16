@@ -1,0 +1,14 @@
+[
+    {
+        "user_test_exam_user_id": "0e27c4eb-73c8-45c9-9909-d9ed92173e28",
+        "user_test_exam_test_exam_id": 3,
+        "user_test_exam_percentage_grade": 85,
+        "user_test_exam_time_duration": 1200
+    },
+    {
+        "user_test_exam_user_id": "0e27c4eb-73c8-45c9-9909-d9ed92173e28",
+        "user_test_exam_test_exam_id": 4,
+        "user_test_exam_percentage_grade": 92,
+        "user_test_exam_time_duration": 950
+    }
+]

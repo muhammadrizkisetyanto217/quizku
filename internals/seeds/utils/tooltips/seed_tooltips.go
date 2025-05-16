@@ -10,9 +10,9 @@ import (
 )
 
 type TooltipSeed struct {
-	Keyword          string `json:"keyword"`
-	DescriptionShort string `json:"description_short"`
-	DescriptionLong  string `json:"description_long"`
+	TooltipKeyword          string `json:"tooltip_keyword"`
+	TooltipDescriptionShort string `json:"tooltip_description_short"`
+	TooltipDescriptionLong  string `json:"tooltip_description_long"`
 }
 
 func SeedTooltipsFromJSON(db *gorm.DB, filePath string) {
@@ -30,21 +30,21 @@ func SeedTooltipsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, seed := range seeds {
 		var existing model.Tooltip
-		if err := db.Where("keyword = ?", seed.Keyword).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Tooltip '%s' sudah ada, lewati...", seed.Keyword)
+		if err := db.Where("tooltip_keyword = ?", seed.TooltipKeyword).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Tooltip '%s' sudah ada, lewati...", seed.TooltipKeyword)
 			continue
 		}
 
 		tooltip := model.Tooltip{
-			Keyword:          seed.Keyword,
-			DescriptionShort: seed.DescriptionShort,
-			DescriptionLong:  seed.DescriptionLong,
+			TooltipKeyword:          seed.TooltipKeyword,
+			TooltipDescriptionShort: seed.TooltipDescriptionShort,
+			TooltipDescriptionLong:  seed.TooltipDescriptionLong,
 		}
 
 		if err := db.Create(&tooltip).Error; err != nil {
-			log.Printf("❌ Gagal insert '%s': %v", seed.Keyword, err)
+			log.Printf("❌ Gagal insert '%s': %v", seed.TooltipKeyword, err)
 		} else {
-			log.Printf("✅ Berhasil insert '%s'", seed.Keyword)
+			log.Printf("✅ Berhasil insert '%s'", seed.TooltipKeyword)
 		}
 	}
 }

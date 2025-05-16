@@ -51,7 +51,7 @@ func (qqc *QuizzesQuestionController) GetQuestion(c *fiber.Ctx) error {
 	log.Printf("[INFO] Fetching quiz question by ID: %s\n", id)
 
 	var question questionModel.QuestionModel
-	if err := qqc.DB.First(&question, id).Error; err != nil {
+	if err := qqc.DB.First(&question, "question_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Quiz question not found:", err)
 		return c.Status(404).JSON(fiber.Map{
 			"status":  false,
@@ -76,7 +76,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 
 	var links []model.QuestionLink
 	if err := qqc.DB.
-		Where("target_type = ? AND target_id = ?", model.TargetTypeQuiz, quizID).
+		Where("question_link_target_type = ? AND question_link_target_id = ?", model.TargetTypeQuiz, quizID).
 		Find(&links).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch question links for quiz_id %s: %v\n", quizID, err)
 		return c.Status(500).JSON(fiber.Map{
@@ -85,13 +85,12 @@ func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ekstrak semua question_id dari link
+	// Ekstrak semua question_link_question_id dari link
 	var questionIDs []int
 	for _, link := range links {
-		questionIDs = append(questionIDs, link.QuestionID)
+		questionIDs = append(questionIDs, link.QuestionLinkQuestionID)
 	}
 
-	// Cek jika tidak ada soal terkait
 	if len(questionIDs) == 0 {
 		log.Printf("[INFO] No questions linked to quiz_id %s\n", quizID)
 		return c.JSON(fiber.Map{
@@ -102,10 +101,9 @@ func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil semua soal berdasarkan ID yang sudah di-link
 	var questions []questionModel.QuestionModel
 	if err := qqc.DB.
-		Where("id IN ?", questionIDs).
+		Where("question_id IN ?", questionIDs).
 		Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
@@ -132,7 +130,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 
 	var links []model.QuestionLink
 	if err := qqc.DB.
-		Where("target_type = ? AND target_id = ?", model.TargetTypeEvaluation, evaluationID).
+		Where("question_link_target_type = ? AND question_link_target_id = ?", model.TargetTypeEvaluation, evaluationID).
 		Find(&links).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch question links for evaluation_id %s: %v\n", evaluationID, err)
 		return c.Status(500).JSON(fiber.Map{
@@ -143,7 +141,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 
 	var questionIDs []int
 	for _, link := range links {
-		questionIDs = append(questionIDs, link.QuestionID)
+		questionIDs = append(questionIDs, link.QuestionLinkQuestionID)
 	}
 
 	if len(questionIDs) == 0 {
@@ -157,7 +155,9 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 	}
 
 	var questions []questionModel.QuestionModel
-	if err := qqc.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
+	if err := qqc.DB.
+		Where("question_id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -182,7 +182,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 
 	var links []model.QuestionLink
 	if err := qqc.DB.
-		Where("target_type = ? AND target_id = ?", model.TargetTypeExam, examID).
+		Where("question_link_target_type = ? AND question_link_target_id = ?", model.TargetTypeExam, examID).
 		Find(&links).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch question links for exam_id %s: %v\n", examID, err)
 		return c.Status(500).JSON(fiber.Map{
@@ -193,7 +193,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 
 	var questionIDs []int
 	for _, link := range links {
-		questionIDs = append(questionIDs, link.QuestionID)
+		questionIDs = append(questionIDs, link.QuestionLinkQuestionID)
 	}
 
 	if len(questionIDs) == 0 {
@@ -207,7 +207,9 @@ func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 	}
 
 	var questions []questionModel.QuestionModel
-	if err := qqc.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
+	if err := qqc.DB.
+		Where("question_id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -232,7 +234,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 
 	var links []model.QuestionLink
 	if err := qqc.DB.
-		Where("target_type = ? AND target_id = ?", model.TargetTypeTest, testID).
+		Where("question_link_target_type = ? AND question_link_target_id = ?", model.TargetTypeTest, testID).
 		Find(&links).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch question links for test_id %s: %v\n", testID, err)
 		return c.Status(500).JSON(fiber.Map{
@@ -243,7 +245,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 
 	var questionIDs []int
 	for _, link := range links {
-		questionIDs = append(questionIDs, link.QuestionID)
+		questionIDs = append(questionIDs, link.QuestionLinkQuestionID)
 	}
 
 	if len(questionIDs) == 0 {
@@ -257,7 +259,9 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 	}
 
 	var questions []questionModel.QuestionModel
-	if err := qqc.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
+	if err := qqc.DB.
+		Where("question_id IN ?", questionIDs).
+		Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -280,63 +284,85 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create question(s)")
 
+	type QuestionWithLink struct {
+		questionModel.QuestionModel
+		TargetType int `json:"target_type"`
+		TargetID   int `json:"target_id"`
+	}
+
 	var (
-		single   questionModel.QuestionModel   // Untuk input tunggal
-		multiple []questionModel.QuestionModel // Untuk input array
+		single   QuestionWithLink
+		multiple []QuestionWithLink
 	)
 
 	raw := c.Body()
 	if len(raw) > 0 && raw[0] == '[' {
-		// 🔄 Input berupa array JSON
+		// Input array
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Printf("[ERROR] Failed to parse array of questions: %v", err)
-			return c.Status(400).JSON(fiber.Map{
-				"error": "Invalid JSON array",
-			})
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON array"})
 		}
 
 		if len(multiple) == 0 {
-			log.Println("[ERROR] Empty question array")
-			return c.Status(400).JSON(fiber.Map{
-				"error": "Array of questions is empty",
-			})
+			return c.Status(400).JSON(fiber.Map{"error": "Array of questions is empty"})
 		}
 
-		// 💾 Simpan pertanyaan batch ke database
-		if err := qqc.DB.Create(&multiple).Error; err != nil {
+		var questions []questionModel.QuestionModel
+		for _, q := range multiple {
+			questions = append(questions, q.QuestionModel)
+		}
+
+		if err := qqc.DB.Create(&questions).Error; err != nil {
 			log.Printf("[ERROR] Failed to insert questions: %v", err)
-			return c.Status(500).JSON(fiber.Map{
-				"error": "Failed to create questions",
-			})
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to create questions"})
 		}
 
-		log.Printf("[SUCCESS] Inserted %d questions", len(multiple))
+		// Insert question_links
+		for i, q := range multiple {
+			link := model.QuestionLink{
+				QuestionLinkQuestionID: int(questions[i].QuestionID),
+				QuestionLinkTargetType: q.TargetType,
+				QuestionLinkTargetID:   q.TargetID,
+			}
+
+			if err := qqc.DB.Create(&link).Error; err != nil {
+				log.Printf("[WARNING] Created question but failed to link question_id %d: %v", questions[i].QuestionID, err)
+			}
+		}
+
+		log.Printf("[SUCCESS] Inserted %d questions and links", len(questions))
 		return c.Status(201).JSON(fiber.Map{
-			"message": "Multiple questions created successfully",
-			"data":    multiple,
+			"message": "Multiple questions created and linked successfully",
+			"data":    questions,
 		})
 	}
 
-	// 🧾 Jika input berupa satu objek JSON
+	// Input tunggal
 	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Failed to parse single question: %v", err)
-		return c.Status(400).JSON(fiber.Map{
-			"error": "Invalid request format",
-		})
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request format"})
 	}
 
-	// 💾 Simpan satu pertanyaan ke database
-	if err := qqc.DB.Create(&single).Error; err != nil {
+	if err := qqc.DB.Create(&single.QuestionModel).Error; err != nil {
 		log.Printf("[ERROR] Failed to create quiz question: %v", err)
-		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to create question",
-		})
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create question"})
 	}
 
-	log.Printf("[SUCCESS] Question created with ID: %d", single.ID)
+	// Auto-create question_link
+	link := model.QuestionLink{
+		QuestionLinkQuestionID: int(single.QuestionID),
+		QuestionLinkTargetType: single.TargetType,
+		QuestionLinkTargetID:   single.TargetID,
+	}
+
+	if err := qqc.DB.Create(&link).Error; err != nil {
+		log.Printf("[WARNING] Created question but failed to link question_id %d: %v", single.QuestionID, err)
+	}
+
+	log.Printf("[SUCCESS] Question created with ID: %d and linked", single.QuestionID)
 	return c.Status(201).JSON(fiber.Map{
-		"message": "Question created successfully",
-		"data":    single,
+		"message": "Question created and linked successfully",
+		"data":    single.QuestionModel,
 	})
 }
 
@@ -349,7 +375,7 @@ func (qqc *QuizzesQuestionController) UpdateQuestion(c *fiber.Ctx) error {
 
 	// 🔍 Cari pertanyaan berdasarkan ID
 	var question questionModel.QuestionModel
-	if err := qqc.DB.First(&question, id).Error; err != nil {
+	if err := qqc.DB.First(&question, "question_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Quiz question not found:", err)
 		return c.Status(404).JSON(fiber.Map{
 			"status":  false,
@@ -366,8 +392,8 @@ func (qqc *QuizzesQuestionController) UpdateQuestion(c *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Konversi QuestionAnswer agar sesuai dengan tipe GORM pq.StringArray
-	question.QuestionAnswer = pq.StringArray(question.QuestionAnswer)
+	// ✅ Pastikan tipe array-nya sesuai
+	question.QuestionAnswerChoices = pq.StringArray(question.QuestionAnswerChoices)
 
 	// 💾 Simpan perubahan
 	if err := qqc.DB.Save(&question).Error; err != nil {
@@ -392,8 +418,19 @@ func (qqc *QuizzesQuestionController) DeleteQuestion(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting quiz question with ID: %s\n", id)
 
-	// 🗑️ Hapus pertanyaan berdasarkan ID
-	if err := qqc.DB.Delete(&questionModel.QuestionModel{}, id).Error; err != nil {
+	// Hapus question_links terlebih dahulu
+	if err := qqc.DB.
+		Where("question_link_question_id = ?", id).
+		Delete(&model.QuestionLink{}).Error; err != nil {
+		log.Println("[ERROR] Failed to delete question links:", err)
+		return c.Status(500).JSON(fiber.Map{
+			"status":  false,
+			"message": "Failed to delete related question links",
+		})
+	}
+
+	// Hapus pertanyaan
+	if err := qqc.DB.Delete(&questionModel.QuestionModel{}, "question_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete quiz question:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -401,9 +438,9 @@ func (qqc *QuizzesQuestionController) DeleteQuestion(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("[SUCCESS] Quiz question with ID %s deleted\n", id)
+	log.Printf("[SUCCESS] Quiz question with ID %s and its links deleted\n", id)
 	return c.JSON(fiber.Map{
 		"status":  true,
-		"message": fmt.Sprintf("Quiz question with ID %s deleted successfully", id),
+		"message": fmt.Sprintf("Quiz question with ID %s and its links deleted successfully", id),
 	})
 }
