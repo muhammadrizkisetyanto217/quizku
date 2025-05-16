@@ -17,14 +17,17 @@ func NewUnitController(db *gorm.DB) *UnitController {
 	return &UnitController{DB: db}
 }
 
-// GET all units
+// 🟢 GET /api/units
+// Mengambil semua unit yang tersedia di database, lengkap dengan relasi ke SectionQuizzes dan Quizzes.
+// Biasanya digunakan untuk halaman admin, pembelajaran, atau struktur modul.
 func (uc *UnitController) GetUnits(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all units")
 	var units []model.UnitModel
 
+	// Preload relasi ke section_quizzes dan quizzes di dalamnya
 	if err := uc.DB.
 		Preload("SectionQuizzes").
-		Preload("SectionQuizzes.Quizzes"). // ✅ Preload ke quizzes
+		Preload("SectionQuizzes.Quizzes"). // ✅ Preload nested relasi
 		Find(&units).Error; err != nil {
 
 		log.Println("[ERROR] Failed to fetch units:", err)
@@ -41,12 +44,16 @@ func (uc *UnitController) GetUnits(c *fiber.Ctx) error {
 	})
 }
 
-// GET single unit by ID
+// 🟢 GET /api/units/:id
+// Mengambil satu unit berdasarkan ID-nya, lengkap dengan section_quizzes.
+// Cocok digunakan saat membuka halaman detail unit.
 func (uc *UnitController) GetUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Fetching unit with ID:", id)
 
 	var unit model.UnitModel
+
+	// Preload SectionQuizzes saja (tidak sampai ke quizzes)
 	if err := uc.DB.Preload("SectionQuizzes").First(&unit, id).Error; err != nil {
 		log.Println("[ERROR] Unit not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Unit not found"})
@@ -59,12 +66,16 @@ func (uc *UnitController) GetUnit(c *fiber.Ctx) error {
 	})
 }
 
-// GET units by themes_or_level_id
+// 🟢 GET /api/units/themes-or-levels/:themesOrLevelId
+// Mengambil semua unit berdasarkan themes_or_level_id.
+// Cocok untuk menampilkan semua unit di dalam 1 tema atau level materi.
 func (uc *UnitController) GetUnitByThemesOrLevels(c *fiber.Ctx) error {
 	themesOrLevelID := c.Params("themesOrLevelId")
 	log.Printf("[INFO] Fetching units with themes_or_level_id: %s\n", themesOrLevelID)
 
 	var units []model.UnitModel
+
+	// Ambil semua unit berdasarkan foreign key themes_or_level_id
 	if err := uc.DB.Preload("SectionQuizzes").
 		Where("themes_or_level_id = ?", themesOrLevelID).
 		Find(&units).Error; err != nil {
@@ -80,7 +91,11 @@ func (uc *UnitController) GetUnitByThemesOrLevels(c *fiber.Ctx) error {
 	})
 }
 
-// CreateUnit menangani input satu atau banyak unit
+// 🟡 POST /api/units
+// Membuat satu atau banyak unit sekaligus.
+// - Jika body berisi array JSON → batch insert (banyak unit).
+// - Jika body berisi objek JSON tunggal → insert satu unit.
+// Field wajib: themes_or_level_id dan name.
 func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create unit")
 
@@ -89,9 +104,9 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 		multiple []model.UnitModel
 	)
 
-	raw := c.Body() // Ambil raw body
+	raw := c.Body() // Ambil raw body untuk deteksi apakah array
 	if len(raw) > 0 && raw[0] == '[' {
-		// Dipastikan ini array
+		// 🧩 Jika bentuknya array JSON
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Printf("[ERROR] Failed to parse unit array: %v", err)
 			return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON array"})
@@ -102,7 +117,7 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 			return c.Status(400).JSON(fiber.Map{"error": "Array of units is empty"})
 		}
 
-		// Validasi setiap item
+		// Validasi setiap unit (wajib: themes_or_level_id dan name)
 		for i, unit := range multiple {
 			if unit.ThemesOrLevelID == 0 || unit.Name == "" {
 				log.Printf("[ERROR] Invalid unit at index %d: %+v\n", i, unit)
@@ -114,7 +129,7 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 			}
 		}
 
-		// Insert batch
+		// Simpan batch
 		if err := uc.DB.Create(&multiple).Error; err != nil {
 			log.Printf("[ERROR] Failed to insert multiple units: %v", err)
 			return c.Status(500).JSON(fiber.Map{"error": "Failed to create units"})
@@ -127,7 +142,7 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 		})
 	}
 
-	// Fallback: parse single object
+	// 📦 Jika bentuknya objek tunggal
 	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Failed to parse single unit input: %v", err)
 		return c.Status(400).JSON(fiber.Map{
@@ -137,10 +152,12 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 
 	log.Printf("[DEBUG] Parsed single unit: %+v\n", single)
 
+	// Validasi wajib
 	if single.ThemesOrLevelID == 0 || single.Name == "" {
 		return c.Status(400).JSON(fiber.Map{"error": "themes_or_level_id and name are required"})
 	}
 
+	// Simpan ke database
 	if err := uc.DB.Create(&single).Error; err != nil {
 		log.Printf("[ERROR] Failed to insert unit: %v", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create unit"})
@@ -153,23 +170,29 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 	})
 }
 
-// UPDATE unit
+// 🟠 PUT /api/units/:id
+// Mengupdate unit berdasarkan ID.
+// Field yang diupdate fleksibel karena menerima map[string]interface{} dari body.
 func (uc *UnitController) UpdateUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Updating unit with ID:", id)
 
 	var unit model.UnitModel
+
+	// Cek apakah unit dengan ID tersebut ada
 	if err := uc.DB.First(&unit, id).Error; err != nil {
 		log.Println("[ERROR] Unit not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Unit not found"})
 	}
 
+	// Parsing data update ke bentuk map agar fleksibel
 	var requestData map[string]interface{}
 	if err := c.BodyParser(&requestData); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
+	// Lakukan update hanya pada field yang dikirim
 	if err := uc.DB.Model(&unit).Updates(requestData).Error; err != nil {
 		log.Println("[ERROR] Failed to update unit:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update unit"})
@@ -182,12 +205,16 @@ func (uc *UnitController) UpdateUnit(c *fiber.Ctx) error {
 	})
 }
 
-// DELETE unit
+// 🔴 DELETE /api/units/:id
+// Menghapus unit berdasarkan ID.
+// Menggunakan soft delete jika model menggunakan gorm.Model dengan DeletedAt.
 func (uc *UnitController) DeleteUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Deleting unit with ID:", id)
 
 	var unit model.UnitModel
+
+	// Cek apakah unit ada
 	if err := uc.DB.First(&unit, id).Error; err != nil {
 		log.Println("[ERROR] Unit not found:", err)
 		return c.Status(404).JSON(fiber.Map{
@@ -195,6 +222,7 @@ func (uc *UnitController) DeleteUnit(c *fiber.Ctx) error {
 		})
 	}
 
+	// Lakukan delete
 	if err := uc.DB.Delete(&unit).Error; err != nil {
 		log.Println("[ERROR] Failed to delete unit:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

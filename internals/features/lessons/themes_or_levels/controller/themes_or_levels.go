@@ -9,14 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// ThemeOrLevelController menangani seluruh proses CRUD untuk themes atau levels (materi pelajaran)
 type ThemeOrLevelController struct {
 	DB *gorm.DB
 }
 
+// NewThemeOrLevelController membuat instance baru controller untuk themes_or_levels
 func NewThemeOrLevelController(db *gorm.DB) *ThemeOrLevelController {
 	return &ThemeOrLevelController{DB: db}
 }
 
+// 🟢 GET /themes-or-levels
+// Mengambil semua data themes_or_levels yang tersedia di database
 func (tc *ThemeOrLevelController) GetThemeOrLevels(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all themes or levels")
 	var themesOrLevels []model.ThemesOrLevelsModel
@@ -34,6 +38,8 @@ func (tc *ThemeOrLevelController) GetThemeOrLevels(c *fiber.Ctx) error {
 	})
 }
 
+// 🟢 GET /themes-or-levels/:id
+// Mengambil satu data theme/level berdasarkan ID-nya
 func (tc *ThemeOrLevelController) GetThemeOrLevelById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Fetching theme or level with ID:", id)
@@ -51,6 +57,8 @@ func (tc *ThemeOrLevelController) GetThemeOrLevelById(c *fiber.Ctx) error {
 	})
 }
 
+// 🟢 GET /themes-or-levels/subcategory/:subcategory_id
+// Mengambil semua themes/levels yang terkait dengan satu subkategori tertentu
 func (tc *ThemeOrLevelController) GetThemesOrLevelsBySubcategory(c *fiber.Ctx) error {
 	subcategoryID := c.Params("subcategory_id")
 	log.Printf("[INFO] Fetching themes or levels for subcategory ID: %s\n", subcategoryID)
@@ -69,6 +77,8 @@ func (tc *ThemeOrLevelController) GetThemesOrLevelsBySubcategory(c *fiber.Ctx) e
 	})
 }
 
+// 🟢 POST /themes-or-levels
+// Menambahkan satu atau beberapa themes/levels sekaligus
 func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create theme or level")
 
@@ -79,7 +89,7 @@ func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 	if err := c.BodyParser(&multiple); err == nil && len(multiple) > 0 {
 		log.Printf("[DEBUG] Parsed %d themes/levels as array\n", len(multiple))
 
-		// ✅ Validasi setiap item
+		// ✅ Validasi tiap item array
 		for i, item := range multiple {
 			if item.Name == "" || item.Status == "" || item.DescriptionShort == "" || item.DescriptionLong == "" || item.SubcategoriesID == 0 {
 				return c.Status(400).JSON(fiber.Map{
@@ -87,8 +97,6 @@ func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 					"index": i,
 				})
 			}
-
-			// Validasi status dan subcategories_id
 			if !isValidStatus(item.Status) {
 				return c.Status(400).JSON(fiber.Map{
 					"error": "Invalid status in array. Allowed: active, pending, archived",
@@ -104,7 +112,6 @@ func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 			}
 		}
 
-		// ✅ Simpan
 		if err := tc.DB.Create(&multiple).Error; err != nil {
 			log.Printf("[ERROR] Failed to insert multiple themes/levels: %v\n", err)
 			return c.Status(500).JSON(fiber.Map{"error": "Failed to create themes or levels"})
@@ -117,14 +124,13 @@ func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 		})
 	}
 
-	// 🔁 Coba parse satuan
+	// 🔁 Jika bukan array, parse sebagai objek tunggal
 	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Failed to parse single theme/level: %v\n", err)
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 	log.Printf("[DEBUG] Parsed single theme/level: %+v\n", single)
 
-	// ✅ Validasi
 	if single.Name == "" || single.Status == "" || single.DescriptionShort == "" || single.DescriptionLong == "" || single.SubcategoriesID == 0 {
 		return c.Status(400).JSON(fiber.Map{"error": "All fields are required (name, status, description_short, description_long, subcategories_id)"})
 	}
@@ -136,7 +142,6 @@ func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid subcategories_id. The referenced subcategory does not exist"})
 	}
 
-	// ✅ Simpan
 	if err := tc.DB.Create(&single).Error; err != nil {
 		log.Printf("[ERROR] Failed to insert single theme/level: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create theme or level"})
@@ -149,12 +154,14 @@ func (tc *ThemeOrLevelController) CreateThemeOrLevel(c *fiber.Ctx) error {
 	})
 }
 
-// Validasi status yang diperbolehkan
+// isValidStatus memastikan status hanya berisi nilai yang diizinkan
 func isValidStatus(status string) bool {
 	validStatuses := map[string]bool{"active": true, "pending": true, "archived": true}
 	return validStatuses[status]
 }
 
+// 🟡 PUT /themes-or-levels/:id
+// Memperbarui data theme/level berdasarkan ID
 func (tc *ThemeOrLevelController) UpdateThemeOrLevel(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Updating theme or level with ID:", id)
@@ -182,11 +189,12 @@ func (tc *ThemeOrLevelController) UpdateThemeOrLevel(c *fiber.Ctx) error {
 	})
 }
 
+// 🔴 DELETE /themes-or-levels/:id
+// Menghapus data theme/level berdasarkan ID
 func (tc *ThemeOrLevelController) DeleteThemeOrLevel(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Deleting theme or level with ID:", id)
 
-	// Ambil data lengkap dulu, bukan langsung delete kosong
 	var theme model.ThemesOrLevelsModel
 	if err := tc.DB.First(&theme, id).Error; err != nil {
 		log.Println("[ERROR] Theme or level not found:", err)

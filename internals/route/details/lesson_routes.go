@@ -3,7 +3,7 @@ package details
 import (
 	categoriesRoute "quizku/internals/features/lessons/categories/route"
 	difficultiesRoute "quizku/internals/features/lessons/difficulty/route"
-	subcategoriesRoute "quizku/internals/features/lessons/subcategory/route"
+	subcategoriesRoute "quizku/internals/features/lessons/subcategories/route"
 	themesOrLevelsRoute "quizku/internals/features/lessons/themes_or_levels/route"
 	unitsRoute "quizku/internals/features/lessons/units/route"
 

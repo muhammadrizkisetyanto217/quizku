@@ -18,11 +18,13 @@ func NewQuizController(db *gorm.DB) *QuizController {
 	return &QuizController{DB: db}
 }
 
-// GET all quizzes
+// ✅ GET /api/quizzes
+// Mengambil semua data kuis yang tersedia dalam sistem.
 func (qc *QuizController) GetQuizzes(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all quizzes")
 	var quizList []model.QuizModel
 
+	// Ambil semua data kuis dari tabel quizzes
 	if err := qc.DB.Find(&quizList).Error; err != nil {
 		log.Println("[ERROR] Failed to fetch quizzes:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch quizzes"})
@@ -36,12 +38,15 @@ func (qc *QuizController) GetQuizzes(c *fiber.Ctx) error {
 	})
 }
 
-// GET quiz by ID
+// ✅ GET /api/quizzes/:id
+// Mengambil data kuis berdasarkan ID tertentu.
 func (qc *QuizController) GetQuiz(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Fetching quiz with ID: %s\n", id)
 
 	var quiz model.QuizModel
+
+	// Cari quiz berdasarkan primary key ID
 	if err := qc.DB.First(&quiz, id).Error; err != nil {
 		log.Println("[ERROR] Quiz not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Quiz not found"})
@@ -53,12 +58,15 @@ func (qc *QuizController) GetQuiz(c *fiber.Ctx) error {
 	})
 }
 
-// GET quizzes by section ID
+// ✅ GET /api/quizzes/section/:sectionId
+// Mengambil semua kuis yang terkait dengan suatu section_quizzes tertentu.
 func (qc *QuizController) GetQuizzesBySection(c *fiber.Ctx) error {
 	sectionID := c.Params("sectionId")
 	log.Printf("[INFO] Fetching quizzes for section_id: %s\n", sectionID)
 
 	var quizzesBySection []model.QuizModel
+
+	// Join dengan tabel section_quizzes agar hanya ambil kuis berdasarkan section_quizzes.id
 	if err := qc.DB.
 		Joins("JOIN section_quizzes ON quizzes.section_quizzes_id = section_quizzes.id").
 		Where("section_quizzes.id = ?", sectionID).
@@ -75,7 +83,8 @@ func (qc *QuizController) GetQuizzesBySection(c *fiber.Ctx) error {
 	})
 }
 
-// POST create quiz
+// ✅ POST /api/quizzes
+// Membuat data kuis, bisa berupa satu kuis atau batch kuis sekaligus.
 func (qc *QuizController) CreateQuiz(c *fiber.Ctx) error {
 	log.Println("[INFO] Creating quiz (single or multiple)")
 
@@ -84,7 +93,7 @@ func (qc *QuizController) CreateQuiz(c *fiber.Ctx) error {
 
 	raw := c.Body()
 	if len(raw) > 0 && raw[0] == '[' {
-		// Handle jika input berupa array
+		// 🔹 Jika input berupa array kuis
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Println("[ERROR] Failed to parse quizzes array:", err)
 			return c.Status(400).JSON(fiber.Map{"error": "Invalid array request"})
@@ -107,7 +116,7 @@ func (qc *QuizController) CreateQuiz(c *fiber.Ctx) error {
 		})
 	}
 
-	// Handle jika input berupa objek tunggal
+	// 🔹 Jika input berupa satu objek kuis
 	if err := c.BodyParser(&single); err != nil {
 		log.Println("[ERROR] Failed to parse single quiz:", err)
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request format (expected object or array)"})
@@ -124,8 +133,8 @@ func (qc *QuizController) CreateQuiz(c *fiber.Ctx) error {
 		"data":    single,
 	})
 }
-
-// PUT update quiz
+// ✅ PUT /api/quizzes/:id
+// Mengupdate data kuis berdasarkan ID. Field dapat diperbarui sebagian (partial update).
 func (qc *QuizController) UpdateQuiz(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Updating quiz with ID: %s\n", id)
@@ -142,6 +151,7 @@ func (qc *QuizController) UpdateQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
+	// 🔸 Update hanya field yang dikirim di request body
 	if err := qc.DB.Model(&quiz).Updates(requestData).Error; err != nil {
 		log.Println("[ERROR] Failed to update quiz:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update quiz"})
@@ -153,8 +163,8 @@ func (qc *QuizController) UpdateQuiz(c *fiber.Ctx) error {
 		"data":    quiz,
 	})
 }
-
-// DELETE quiz
+// ✅ DELETE /api/quizzes/:id
+// Menghapus data kuis berdasarkan ID.
 func (qc *QuizController) DeleteQuiz(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting quiz with ID: %s\n", id)
@@ -171,3 +181,4 @@ func (qc *QuizController) DeleteQuiz(c *fiber.Ctx) error {
 		"message": fmt.Sprintf("Quiz with ID %s deleted successfully", id),
 	})
 }
+

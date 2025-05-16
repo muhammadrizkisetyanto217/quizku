@@ -22,8 +22,15 @@ func NewUserEvaluationController(db *gorm.DB) *UserEvaluationController {
 	return &UserEvaluationController{DB: db}
 }
 
-// POST /api/user_evaluations3
+// 🟡 POST /api/user_evaluations3
+// Menyimpan hasil pengerjaan evaluasi oleh user (attempt).
+// Fungsi ini otomatis:
+// - Mengisi attempt ke-n (berdasarkan data sebelumnya),
+// - Mengupdate progress di user_unit,
+// - Menambahkan poin ke user_point_log,
+// - Mencatat aktivitas harian user.
 func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
+	// 🔐 Ambil user_id dari token (middleware auth)
 	userIDStr, ok := c.Locals("user_id").(string)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -34,11 +41,12 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
+	// 📦 Struktur input body
 	type InputBody struct {
-		EvaluationID    uint `json:"evaluation_id"`
-		PercentageGrade int  `json:"percentage_grade"`
-		TimeDuration    int  `json:"time_duration"`
-		Point           int  `json:"point"`
+		EvaluationID    uint `json:"evaluation_id"`    // ID evaluasi yang dikerjakan
+		PercentageGrade int  `json:"percentage_grade"` // Nilai persentase
+		TimeDuration    int  `json:"time_duration"`    // Lama waktu pengerjaan (detik)
+		Point           int  `json:"point"`            // Poin yang didapatkan dari evaluasi ini
 	}
 	var body InputBody
 	if err := c.BodyParser(&body); err != nil {
@@ -51,12 +59,14 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 		})
 	}
 
+	// 🔎 Ambil evaluasi dan unit_id-nya
 	var evaluation evaluationModel.EvaluationModel
 	if err := ctrl.DB.Select("id, unit_id").First(&evaluation, body.EvaluationID).Error; err != nil {
 		log.Println("[ERROR] Evaluation not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Evaluation not found"})
 	}
 
+	// 🔁 Cek attempt terakhir user untuk evaluasi ini
 	var latestAttempt int
 	err = ctrl.DB.Table("user_evaluations").
 		Select("COALESCE(MAX(attempt), 0)").
@@ -67,6 +77,7 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
+	// 📤 Siapkan data untuk disimpan
 	input := userEvaluationModel.UserEvaluationModel{
 		UserID:          userUUID,
 		EvaluationID:    body.EvaluationID,
@@ -79,20 +90,16 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 		UpdatedAt:       time.Now(),
 	}
 
+	// 💾 Simpan ke DB
 	if err := ctrl.DB.Create(&input).Error; err != nil {
 		log.Println("[ERROR] Failed to create user evaluation:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user evaluation"})
 	}
 
-	if err := service.UpdateUserUnitFromEvaluation(ctrl.DB, input.UserID, input.UnitID, input.PercentageGrade); err != nil {
-		log.Println("[ERROR] Gagal update user_unit:", err)
-	}
-	if err := service.AddPointFromEvaluation(ctrl.DB, input.UserID, input.EvaluationID, input.Attempt); err != nil {
-		log.Println("[ERROR] Gagal menambahkan poin:", err)
-	}
-	if err := activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserID); err != nil {
-		log.Println("[ERROR] Gagal mencatat aktivitas harian:", err)
-	}
+	// ⛏️ Update progress & poin
+	_ = service.UpdateUserUnitFromEvaluation(ctrl.DB, input.UserID, input.UnitID, input.PercentageGrade)
+	_ = service.AddPointFromEvaluation(ctrl.DB, input.UserID, input.EvaluationID, input.Attempt)
+	_ = activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserID)
 
 	log.Printf("[SUCCESS] UserEvaluation created: user_id=%s, evaluation_id=%d, attempt=%d\n",
 		input.UserID.String(), input.EvaluationID, input.Attempt)
@@ -103,11 +110,13 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 	})
 }
 
-// GET /api/user_evaluations/:user_id
+// 🟢 GET /api/user_evaluations/:user_id
+// Mengambil seluruh data evaluasi yang sudah pernah dikerjakan oleh user berdasarkan user_id.
 func (ctrl *UserEvaluationController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	var evaluations []userEvaluationModel.UserEvaluationModel
 
+	// Ambil seluruh log evaluasi milik user
 	if err := ctrl.DB.Where("user_id = ?", userID).Find(&evaluations).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get evaluations"})
 	}

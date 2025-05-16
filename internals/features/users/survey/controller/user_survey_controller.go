@@ -18,7 +18,7 @@ func NewUserSurveyController(db *gorm.DB) *UserSurveyController {
 	return &UserSurveyController{DB: db}
 }
 
-// 📩 POST /user-surveys (jawaban user)
+// 📩 SubmitSurveyAnswers menyimpan jawaban survei yang dikirim oleh user.
 func (ctrl *UserSurveyController) SubmitSurveyAnswers(c *fiber.Ctx) error {
 	userIDStr, ok := c.Locals("user_id").(string)
 	if !ok {

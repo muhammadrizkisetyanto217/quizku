@@ -1,7 +1,7 @@
 package route
 
 import (
-	subcategoryController "quizku/internals/features/lessons/subcategory/controller"
+	subcategoryController "quizku/internals/features/lessons/subcategories/controller"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"

@@ -23,8 +23,27 @@ func NewUserReadingController(db *gorm.DB) *UserReadingController {
 }
 
 // POST /user-readings
+// Fungsi ini menangani pencatatan aktivitas membaca oleh user.
+// Endpoint ini memerlukan autentikasi JWT dan akan:
+// - Menyimpan data pembacaan (user_id, reading_id, unit_id, attempt, timestamp)
+// - Mengupdate progres user_unit terkait
+// - Menambahkan poin sesuai attempt dan reading
+// - Mencatat aktivitas harian (daily streak)
+//
+// Request Body:
+//
+//	{
+//	  "reading_id": 12
+//	}
+//
+// Response (201):
+//
+//	{
+//	  "message": "User reading created successfully",
+//	  "data": { ...UserReading }
+//	}
 func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
-	// ✅ Ambil user_id dari JWT
+	// ✅ Ambil user_id dari JWT token
 	userIDStr, ok := c.Locals("user_id").(string)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -35,7 +54,7 @@ func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
-	// ✅ Parse body
+	// ✅ Parse body dan validasi isi minimal (reading_id wajib)
 	type InputBody struct {
 		ReadingID uint `json:"reading_id"`
 	}
@@ -48,14 +67,14 @@ func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "reading_id is required"})
 	}
 
-	// ✅ Ambil unit_id dari reading
+	// ✅ Ambil data reading terkait untuk mendapatkan unit_id-nya
 	var reading readingModel.ReadingModel
 	if err := ctrl.DB.Select("id, unit_id").First(&reading, body.ReadingID).Error; err != nil {
 		log.Println("[ERROR] Reading not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Reading not found"})
 	}
 
-	// ✅ Siapkan data
+	// ✅ Inisialisasi data yang akan disimpan
 	input := UserReadingModel.UserReading{
 		UserID:    userUUID,
 		ReadingID: body.ReadingID,
@@ -64,7 +83,7 @@ func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
 		UpdatedAt: time.Now(),
 	}
 
-	// ✅ Hitung attempt ke-n
+	// ✅ Hitung attempt ke-n (increment berdasarkan attempt terakhir)
 	var latestAttempt int
 	err = ctrl.DB.Table("user_readings").
 		Select("COALESCE(MAX(attempt), 0)").
@@ -76,25 +95,28 @@ func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
 	}
 	input.Attempt = latestAttempt + 1
 
-	// ✅ Simpan ke DB
+	// ✅ Simpan entri ke database
 	if err := ctrl.DB.Create(&input).Error; err != nil {
 		log.Println("[ERROR] Failed to create user reading:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user reading"})
 	}
 
-	// ✅ Update progres & poin
+	// ✅ Update progress pada user_unit (jika seluruh bacaan di unit selesai)
 	if err := service.UpdateUserUnitFromReading(ctrl.DB, input.UserID, input.UnitID); err != nil {
 		log.Println("[ERROR] Gagal update user_unit:", err)
 	}
+
+	// ✅ Tambahkan poin dari reading berdasarkan attempt
 	if err := service.AddPointFromReading(ctrl.DB, input.UserID, input.ReadingID, input.Attempt); err != nil {
 		log.Println("[ERROR] Gagal menambahkan poin:", err)
 	}
 
-	// ✅ Tambahkan aktivitas harian
+	// ✅ Update aktivitas harian user (daily streak)
 	if err := activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserID); err != nil {
 		log.Println("[ERROR] Gagal mencatat aktivitas harian:", err)
 	}
 
+	// ✅ Kembalikan response sukses
 	log.Printf("[SUCCESS] UserReading created: user_id=%s, reading_id=%d, attempt=%d\n",
 		input.UserID.String(), input.ReadingID, input.Attempt)
 
@@ -105,6 +127,8 @@ func (ctrl *UserReadingController) CreateUserReading(c *fiber.Ctx) error {
 }
 
 // GET /user-readings
+// 🔹 Ambil semua data pembacaan user dari tabel user_readings (tidak difilter).
+// ⚠️ Umumnya hanya digunakan untuk keperluan admin atau debug.
 func (ctrl *UserReadingController) GetAllUserReading(c *fiber.Ctx) error {
 	var readings []UserReadingModel.UserReading
 
@@ -116,8 +140,10 @@ func (ctrl *UserReadingController) GetAllUserReading(c *fiber.Ctx) error {
 
 	return c.JSON(readings)
 }
-
 // GET /api/user-readings/user/:user_id
+// 🔹 Ambil seluruh data pembacaan (reading) untuk satu user tertentu berdasarkan UUID.
+// Digunakan untuk menampilkan riwayat bacaan user di dashboard atau profil.
+
 func (ctrl *UserReadingController) GetByUserID(c *fiber.Ctx) error {
 	userIDParam := c.Params("user_id")
 	userID, err := uuid.Parse(userIDParam)

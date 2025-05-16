@@ -24,9 +24,19 @@ func NewUserExamController(db *gorm.DB) *UserExamController {
 	return &UserExamController{DB: db}
 }
 
-// Create user_exam
+// 🟡 POST /api/user-exams
+// Menyimpan atau memperbarui hasil ujian (exam) yang dikerjakan oleh user.
+// Jika user sudah pernah mengerjakan exam → data akan di-*update* dan attempt bertambah.
+// Jika belum pernah → akan membuat record baru.
+//
+// Fungsi ini otomatis:
+// ✅ Menambahkan attempt ke-n,
+// ✅ Menyimpan poin dan nilai tertinggi,
+// ✅ Menyimpan durasi pengerjaan,
+// ✅ Memperbarui aktivitas harian,
+// ✅ Menambahkan poin ke user_point_log.
 func (c *UserExamController) Create(ctx *fiber.Ctx) error {
-	// ✅ Ambil user_id dari JWT
+	// 🔐 Ambil user_id dari token JWT
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -40,30 +50,29 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Struct input body (tanpa unit_id)
+	// 📥 Struktur body request
 	type InputBody struct {
-		ExamID          uint    `json:"exam_id"`
-		PercentageGrade float64 `json:"percentage_grade"`
-		TimeDuration    int     `json:"time_duration"`
-		Point           int     `json:"point"`
+		ExamID          uint    `json:"exam_id"`          // ID exam
+		PercentageGrade float64 `json:"percentage_grade"` // Nilai (0-100)
+		TimeDuration    int     `json:"time_duration"`    // Lama waktu pengerjaan dalam detik
+		Point           int     `json:"point"`            // Poin yang didapat
 	}
-
 	var body InputBody
+
+	// ✅ Parse dan validasi body
 	if err := ctx.BodyParser(&body); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
 			"error":   err.Error(),
 		})
 	}
-
-	// ✅ Validasi manual
 	if body.ExamID == 0 || body.PercentageGrade == 0 {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"message": "exam_id and percentage_grade are required",
 		})
 	}
 
-	// ✅ Ambil unit_id dari exam
+	// 🔎 Ambil unit_id dari exam yang terkait
 	var exam examModel.ExamModel
 	if err := c.DB.Select("id, unit_id").First(&exam, body.ExamID).Error; err != nil {
 		log.Println("[ERROR] Exam not found:", err)
@@ -72,21 +81,19 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Cek jika sudah ada entry sebelumnya
+	// 🔄 Cek apakah user sudah pernah mengerjakan exam ini
 	var existing model.UserExamModel
-	err = c.DB.Where("user_id = ? AND exam_id = ?", userUUID, body.ExamID).
-		First(&existing).Error
-
+	err = c.DB.Where("user_id = ? AND exam_id = ?", userUUID, body.ExamID).First(&existing).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Println("[ERROR] Gagal cek user_exam existing:", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Gagal memproses data",
 			"error":   err.Error(),
 		})
 	}
 
+	// 🔁 Jika sudah ada → update nilai & tambah attempt
 	if err == nil {
-		// ✅ Sudah ada → update
 		existing.Attempt += 1
 		if body.PercentageGrade > float64(existing.PercentageGrade) {
 			existing.PercentageGrade = int(body.PercentageGrade)
@@ -102,6 +109,7 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 			})
 		}
 
+		// ✅ Tambah poin & aktivitas harian
 		_ = service.AddPointFromExam(c.DB, existing.UserID, existing.ExamID, existing.Attempt)
 		_ = activityService.UpdateOrInsertDailyActivity(c.DB, existing.UserID)
 
@@ -111,7 +119,7 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Belum ada → buat baru
+	// ✅ Jika belum pernah → buat baru
 	newExam := model.UserExamModel{
 		UserID:          userUUID,
 		ExamID:          body.ExamID,
@@ -131,6 +139,7 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// ✅ Tambah poin & aktivitas harian
 	_ = service.AddPointFromExam(c.DB, newExam.UserID, newExam.ExamID, newExam.Attempt)
 	_ = activityService.UpdateOrInsertDailyActivity(c.DB, newExam.UserID)
 
@@ -139,21 +148,22 @@ func (c *UserExamController) Create(ctx *fiber.Ctx) error {
 		"data":    newExam,
 	})
 }
-
-// Delete user_exam by ID
+// 🔴 DELETE /api/user-exams/:id
+// Menghapus 1 data `user_exam` berdasarkan ID (bukan UUID user).
+// Cocok digunakan saat admin ingin membatalkan hasil exam user tertentu.
 func (c *UserExamController) Delete(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
 	var exam model.UserExamModel
 	if err := c.DB.First(&exam, id).Error; err != nil {
-		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"message": "User exam not found",
 			"error":   err.Error(),
 		})
 	}
 
 	if err := c.DB.Delete(&exam).Error; err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to delete user exam",
 			"error":   err.Error(),
 		})
@@ -164,11 +174,13 @@ func (c *UserExamController) Delete(ctx *fiber.Ctx) error {
 	})
 }
 
-// Get all user_exams
+// 🟢 GET /api/user-exams
+// Mengambil seluruh data user_exam tanpa filter.
+// Cocok untuk keperluan debug, export, atau admin monitoring.
 func (c *UserExamController) GetAll(ctx *fiber.Ctx) error {
 	var data []model.UserExamModel
 	if err := c.DB.Find(&data).Error; err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to retrieve data",
 			"error":   err.Error(),
 		})
@@ -178,12 +190,14 @@ func (c *UserExamController) GetAll(ctx *fiber.Ctx) error {
 	})
 }
 
-// Get user_exam by ID
+// 🟢 GET /api/user-exams/:id
+// Mengambil satu data user_exam berdasarkan ID record.
+// Biasanya digunakan untuk halaman detail hasil ujian.
 func (c *UserExamController) GetByID(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	var data model.UserExamModel
 	if err := c.DB.First(&data, id).Error; err != nil {
-		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"message": "User exam not found",
 			"error":   err.Error(),
 		})
@@ -193,12 +207,14 @@ func (c *UserExamController) GetByID(ctx *fiber.Ctx) error {
 	})
 }
 
-// Get user_exams by user_id (UUID)
+// 🟢 GET /api/user-exams/user/:user_id
+// Mengambil seluruh hasil exam milik satu user (berdasarkan UUID user).
+// Cocok digunakan untuk halaman riwayat ujian user atau profil.
 func (ctrl *UserExamController) GetByUserID(c *fiber.Ctx) error {
 	userIDParam := c.Params("user_id")
 	userID, err := uuid.Parse(userIDParam)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "user_id tidak valid",
 		})
 	}
@@ -206,7 +222,7 @@ func (ctrl *UserExamController) GetByUserID(c *fiber.Ctx) error {
 	var data []model.UserExamModel
 	if err := ctrl.DB.Where("user_id = ?", userID).Find(&data).Error; err != nil {
 		log.Println("[ERROR] Gagal ambil data user_exam:", err)
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal mengambil data",
 		})
 	}

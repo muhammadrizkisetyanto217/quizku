@@ -1,6 +1,5 @@
 package controller
 
-
 import (
 	"log"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	userQuestionModel "quizku/internals/features/quizzes/questions/model"
-
 )
 
 type UserQuestionController struct {
@@ -20,7 +18,9 @@ func NewUserQuestionController(db *gorm.DB) *UserQuestionController {
 	return &UserQuestionController{DB: db}
 }
 
-// POST /api/user_questions
+// ✅ POST /api/user_questions
+// Menyimpan data pertanyaan yang dikerjakan user.
+// Bisa menangani input tunggal maupun array dalam satu endpoint.
 func (ctrl *UserQuestionController) Create(c *fiber.Ctx) error {
 	start := time.Now()
 	log.Println("[START] Create UserQuestion")
@@ -30,6 +30,7 @@ func (ctrl *UserQuestionController) Create(c *fiber.Ctx) error {
 
 	raw := c.Body()
 	if len(raw) > 0 && raw[0] == '[' {
+		// 🔁 Input berupa array
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Println("[ERROR] Failed to parse array:", err)
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -44,6 +45,7 @@ func (ctrl *UserQuestionController) Create(c *fiber.Ctx) error {
 			})
 		}
 
+		// 💾 Simpan batch ke database
 		if err := ctrl.DB.Create(&multiple).Error; err != nil {
 			log.Println("[ERROR] Failed to insert multiple user_questions:", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -58,7 +60,7 @@ func (ctrl *UserQuestionController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Fallback: single object
+	// 🧾 Input berupa single object
 	if err := c.BodyParser(&single); err != nil {
 		log.Println("[ERROR] Failed to parse single user_question:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -80,8 +82,8 @@ func (ctrl *UserQuestionController) Create(c *fiber.Ctx) error {
 	})
 }
 
-
-// GET /api/user_questions/user/:user_id
+// ✅ GET /api/user_questions/user/:user_id
+// Mengambil semua data `user_questions` berdasarkan `user_id` (UUID)
 func (ctrl *UserQuestionController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	var results []userQuestionModel.UserQuestionModel
@@ -98,15 +100,16 @@ func (ctrl *UserQuestionController) GetByUserID(c *fiber.Ctx) error {
 		"data":    results,
 	})
 }
-
-
-// GET /api/user_questions/user/:user_id/question/:question_id
+// ✅ GET /api/user_questions/user/:user_id/question/:question_id
+// Mengambil data `user_question` berdasarkan kombinasi user_id dan question_id.
+// Cocok untuk menampilkan apakah user sudah pernah menjawab pertanyaan tertentu.
 func (ctrl *UserQuestionController) GetByUserIDAndQuestionID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	questionID := c.Params("question_id")
 
 	var result userQuestionModel.UserQuestionModel
 
+	// 🔍 Cari data berdasarkan user_id dan question_id
 	if err := ctrl.DB.Where("user_id = ? AND question_id = ?", userID, questionID).First(&result).Error; err != nil {
 		log.Println("[ERROR] User question not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -114,6 +117,7 @@ func (ctrl *UserQuestionController) GetByUserIDAndQuestionID(c *fiber.Ctx) error
 		})
 	}
 
+	// ✅ Return data jika ditemukan
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User question fetched successfully",
 		"data":    result,

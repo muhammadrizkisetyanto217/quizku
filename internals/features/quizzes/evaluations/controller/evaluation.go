@@ -18,7 +18,9 @@ func NewEvaluationController(db *gorm.DB) *EvaluationController {
 	return &EvaluationController{DB: db}
 }
 
-// GET all evaluations
+// 🟢 GET /api/evaluations
+// Mengambil semua data evaluasi yang tersedia.
+// Cocok untuk halaman admin, daftar evaluasi per unit, atau builder soal.
 func (ec *EvaluationController) GetEvaluations(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all evaluations")
 	var evaluations []evaluationModel.EvaluationModel
@@ -36,7 +38,9 @@ func (ec *EvaluationController) GetEvaluations(c *fiber.Ctx) error {
 	})
 }
 
-// GET evaluation by ID
+// 🟢 GET /api/evaluations/:id
+// Mengambil satu evaluasi berdasarkan ID.
+// Cocok untuk halaman detail atau editor soal evaluasi.
 func (ec *EvaluationController) GetEvaluation(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Fetching evaluation with ID: %s\n", id)
@@ -54,7 +58,9 @@ func (ec *EvaluationController) GetEvaluation(c *fiber.Ctx) error {
 	})
 }
 
-// GET evaluations by Unit ID
+// 🟢 GET /api/evaluations/unit/:unitId
+// Mengambil semua evaluasi berdasarkan unit_id tertentu.
+// Digunakan untuk menampilkan evaluasi yang terhubung ke unit pembelajaran.
 func (ec *EvaluationController) GetEvaluationsByUnitID(c *fiber.Ctx) error {
 	unitID := c.Params("unitId")
 	log.Printf("[INFO] Fetching evaluations with unit ID: %s\n", unitID)
@@ -73,7 +79,9 @@ func (ec *EvaluationController) GetEvaluationsByUnitID(c *fiber.Ctx) error {
 	})
 }
 
-// POST create evaluation
+// 🟡 POST /api/evaluations
+// Menambahkan satu evaluasi baru ke database.
+// Cocok dipanggil dari builder soal evaluasi atau admin panel.
 func (ec *EvaluationController) CreateEvaluation(c *fiber.Ctx) error {
 	log.Println("[INFO] Creating a new evaluation")
 	var evaluation evaluationModel.EvaluationModel
@@ -95,7 +103,9 @@ func (ec *EvaluationController) CreateEvaluation(c *fiber.Ctx) error {
 	})
 }
 
-// PUT update evaluation
+// 🟠 PUT /api/evaluations/:id
+// Mengupdate isi evaluasi berdasarkan ID.
+// Digunakan saat admin mengedit detail evaluasi (nama, soal, status, dll).
 func (ec *EvaluationController) UpdateEvaluation(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Updating evaluation with ID: %s\n", id)
@@ -123,7 +133,9 @@ func (ec *EvaluationController) UpdateEvaluation(c *fiber.Ctx) error {
 	})
 }
 
-// DELETE evaluation
+// 🔴 DELETE /api/evaluations/:id
+// Menghapus satu evaluasi berdasarkan ID.
+// Operasi ini akan menghapus data dari database — gunakan dengan hati-hati.
 func (ec *EvaluationController) DeleteEvaluation(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting evaluation with ID: %s\n", id)

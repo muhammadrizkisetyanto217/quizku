@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	subcategoryModel "quizku/internals/features/lessons/subcategory/model"
+	subcategoryModel "quizku/internals/features/lessons/subcategories/model"
 
 	"gorm.io/gorm"
 )

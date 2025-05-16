@@ -19,7 +19,9 @@ func NewQuestionController(db *gorm.DB) *QuizzesQuestionController {
 	return &QuizzesQuestionController{DB: db}
 }
 
-// GET all quiz questions
+// 🔍 GET /api/quiz-questions
+// Mengambil semua soal quiz dari database, tanpa filter.
+// Umumnya dipakai untuk admin melihat seluruh bank soal yang tersedia.
 func (qqc *QuizzesQuestionController) GetQuestions(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all quiz questions")
 
@@ -41,7 +43,9 @@ func (qqc *QuizzesQuestionController) GetQuestions(c *fiber.Ctx) error {
 	})
 }
 
-// GET single quiz question
+// 🔍 GET /api/quiz-questions/:id
+// Mengambil detail satu soal quiz berdasarkan ID-nya.
+// Dipakai saat frontend ingin menampilkan detail soal untuk diedit.
 func (qqc *QuizzesQuestionController) GetQuestion(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Fetching quiz question by ID: %s\n", id)
@@ -62,7 +66,10 @@ func (qqc *QuizzesQuestionController) GetQuestion(c *fiber.Ctx) error {
 	})
 }
 
-// GET quiz questions by quiz ID
+// 📎 GET /api/quiz-questions/quiz/:quizId
+// Mengambil semua soal yang terhubung ke quiz tertentu berdasarkan quiz_id.
+// Ini memanfaatkan tabel relasi `question_links` dengan `target_type = "quiz"`.
+// Berguna untuk menyusun urutan soal per kuis yang aktif.
 func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 	quizID := c.Params("quizId")
 	log.Printf("[INFO] Fetching quiz questions linked to quiz ID: %s\n", quizID)
@@ -78,11 +85,13 @@ func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 		})
 	}
 
+	// Ekstrak semua question_id dari link
 	var questionIDs []int
 	for _, link := range links {
 		questionIDs = append(questionIDs, link.QuestionID)
 	}
 
+	// Cek jika tidak ada soal terkait
 	if len(questionIDs) == 0 {
 		log.Printf("[INFO] No questions linked to quiz_id %s\n", quizID)
 		return c.JSON(fiber.Map{
@@ -93,6 +102,7 @@ func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 		})
 	}
 
+	// Ambil semua soal berdasarkan ID yang sudah di-link
 	var questions []questionModel.QuestionModel
 	if err := qqc.DB.
 		Where("id IN ?", questionIDs).
@@ -113,12 +123,13 @@ func (qqc *QuizzesQuestionController) GetQuestionsByQuizID(c *fiber.Ctx) error {
 	})
 }
 
-// GET quiz questions by evaluation ID
+// 🔍 GET /api/quiz-questions/evaluation/:evaluationId
+// Mengambil semua soal yang terhubung ke sebuah Evaluation.
+// Menggunakan `question_links` dengan target_type = 2 (Evaluation).
 func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) error {
 	evaluationID := c.Params("evaluationId")
 	log.Printf("[INFO] Fetching evaluation questions linked to evaluation ID: %s\n", evaluationID)
 
-	// Ambil data dari question_links
 	var links []model.QuestionLink
 	if err := qqc.DB.
 		Where("target_type = ? AND target_id = ?", model.TargetTypeEvaluation, evaluationID).
@@ -130,7 +141,6 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 		})
 	}
 
-	// Ambil question_id dari links
 	var questionIDs []int
 	for _, link := range links {
 		questionIDs = append(questionIDs, link.QuestionID)
@@ -146,11 +156,8 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 		})
 	}
 
-	// Ambil question dari tabel questions
 	var questions []questionModel.QuestionModel
-	if err := qqc.DB.
-		Where("id IN ?", questionIDs).
-		Find(&questions).Error; err != nil {
+	if err := qqc.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -167,12 +174,12 @@ func (qqc *QuizzesQuestionController) GetQuestionsByEvaluationID(c *fiber.Ctx) e
 	})
 }
 
-// Get quiz questions by exam ID
+// 🔍 GET /api/quiz-questions/exam/:examId
+// Mengambil soal berdasarkan `exam_id`, dari table `question_links` target_type = 3 (Exam).
 func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 	examID := c.Params("examId")
 	log.Printf("[INFO] Fetching exam questions linked to exam ID: %s\n", examID)
 
-	// Ambil data dari question_links dengan target_type = 3 (exam)
 	var links []model.QuestionLink
 	if err := qqc.DB.
 		Where("target_type = ? AND target_id = ?", model.TargetTypeExam, examID).
@@ -184,7 +191,6 @@ func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil question_id dari links
 	var questionIDs []int
 	for _, link := range links {
 		questionIDs = append(questionIDs, link.QuestionID)
@@ -200,11 +206,8 @@ func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil question dari tabel questions
 	var questions []questionModel.QuestionModel
-	if err := qqc.DB.
-		Where("id IN ?", questionIDs).
-		Find(&questions).Error; err != nil {
+	if err := qqc.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -221,12 +224,12 @@ func (qqc *QuizzesQuestionController) GetQuestionsByExamID(c *fiber.Ctx) error {
 	})
 }
 
-// Get quiz questions by test ID
+// 🔍 GET /api/quiz-questions/test/:testId
+// Mengambil soal berdasarkan `test_exam`, dengan target_type = 4.
 func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 	testID := c.Params("testId")
 	log.Printf("[INFO] Fetching test_exam questions linked to test ID: %s\n", testID)
 
-	// Ambil data dari question_links dengan target_type = 4 (test_exam)
 	var links []model.QuestionLink
 	if err := qqc.DB.
 		Where("target_type = ? AND target_id = ?", model.TargetTypeTest, testID).
@@ -238,7 +241,6 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil question_id dari links
 	var questionIDs []int
 	for _, link := range links {
 		questionIDs = append(questionIDs, link.QuestionID)
@@ -254,11 +256,8 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Ambil question dari tabel questions
 	var questions []questionModel.QuestionModel
-	if err := qqc.DB.
-		Where("id IN ?", questionIDs).
-		Find(&questions).Error; err != nil {
+	if err := qqc.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch questions by IDs: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -275,32 +274,40 @@ func (qqc *QuizzesQuestionController) GetQuestionsByTestID(c *fiber.Ctx) error {
 	})
 }
 
-// POST create quiz question
+// ✅ POST /api/quiz-questions
+// Menambahkan satu atau banyak pertanyaan kuis ke database.
+// Bisa menerima input dalam bentuk object tunggal atau array of objects.
 func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create question(s)")
 
 	var (
-		single   questionModel.QuestionModel
-		multiple []questionModel.QuestionModel
+		single   questionModel.QuestionModel   // Untuk input tunggal
+		multiple []questionModel.QuestionModel // Untuk input array
 	)
 
 	raw := c.Body()
 	if len(raw) > 0 && raw[0] == '[' {
-		// ✅ Input berupa array
+		// 🔄 Input berupa array JSON
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Printf("[ERROR] Failed to parse array of questions: %v", err)
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON array"})
+			return c.Status(400).JSON(fiber.Map{
+				"error": "Invalid JSON array",
+			})
 		}
 
 		if len(multiple) == 0 {
 			log.Println("[ERROR] Empty question array")
-			return c.Status(400).JSON(fiber.Map{"error": "Array of questions is empty"})
+			return c.Status(400).JSON(fiber.Map{
+				"error": "Array of questions is empty",
+			})
 		}
 
-		// Simpan batch
+		// 💾 Simpan pertanyaan batch ke database
 		if err := qqc.DB.Create(&multiple).Error; err != nil {
 			log.Printf("[ERROR] Failed to insert questions: %v", err)
-			return c.Status(500).JSON(fiber.Map{"error": "Failed to create questions"})
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Failed to create questions",
+			})
 		}
 
 		log.Printf("[SUCCESS] Inserted %d questions", len(multiple))
@@ -310,15 +317,20 @@ func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Input berupa objek tunggal
+	// 🧾 Jika input berupa satu objek JSON
 	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Failed to parse single question: %v", err)
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request format"})
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request format",
+		})
 	}
 
+	// 💾 Simpan satu pertanyaan ke database
 	if err := qqc.DB.Create(&single).Error; err != nil {
 		log.Printf("[ERROR] Failed to create quiz question: %v", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to create question"})
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to create question",
+		})
 	}
 
 	log.Printf("[SUCCESS] Question created with ID: %d", single.ID)
@@ -328,11 +340,14 @@ func (qqc *QuizzesQuestionController) CreateQuestion(c *fiber.Ctx) error {
 	})
 }
 
-// PUT update quiz question
+// 📝 PUT /api/quiz-questions/:id
+// Mengupdate data pertanyaan kuis berdasarkan ID.
+// Wajib menyertakan data lengkap di body (bukan partial update).
 func (qqc *QuizzesQuestionController) UpdateQuestion(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Updating quiz question with ID: %s\n", id)
 
+	// 🔍 Cari pertanyaan berdasarkan ID
 	var question questionModel.QuestionModel
 	if err := qqc.DB.First(&question, id).Error; err != nil {
 		log.Println("[ERROR] Quiz question not found:", err)
@@ -342,6 +357,7 @@ func (qqc *QuizzesQuestionController) UpdateQuestion(c *fiber.Ctx) error {
 		})
 	}
 
+	// 🧾 Parsing body ke struct question
 	if err := c.BodyParser(&question); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return c.Status(400).JSON(fiber.Map{
@@ -350,8 +366,10 @@ func (qqc *QuizzesQuestionController) UpdateQuestion(c *fiber.Ctx) error {
 		})
 	}
 
+	// ✅ Konversi QuestionAnswer agar sesuai dengan tipe GORM pq.StringArray
 	question.QuestionAnswer = pq.StringArray(question.QuestionAnswer)
 
+	// 💾 Simpan perubahan
 	if err := qqc.DB.Save(&question).Error; err != nil {
 		log.Println("[ERROR] Failed to update quiz question:", err)
 		return c.Status(500).JSON(fiber.Map{
@@ -368,11 +386,13 @@ func (qqc *QuizzesQuestionController) UpdateQuestion(c *fiber.Ctx) error {
 	})
 }
 
-// DELETE quiz question
+// ❌ DELETE /api/quiz-questions/:id
+// Menghapus pertanyaan kuis berdasarkan ID
 func (qqc *QuizzesQuestionController) DeleteQuestion(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting quiz question with ID: %s\n", id)
 
+	// 🗑️ Hapus pertanyaan berdasarkan ID
 	if err := qqc.DB.Delete(&questionModel.QuestionModel{}, id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete quiz question:", err)
 		return c.Status(500).JSON(fiber.Map{

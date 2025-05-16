@@ -18,8 +18,10 @@ type QuestionMistakeController struct {
 func NewQuestionMistakeController(db *gorm.DB) *QuestionMistakeController {
 	return &QuestionMistakeController{DB: db}
 }
-
-// ✅ CREATE /api/question-mistakes
+// ✅ POST /api/question-mistakes
+// Menyimpan satu atau banyak kesalahan jawaban user terhadap soal.
+// Bisa digunakan untuk tracking soal yang sering salah dijawab.
+// Mendukung format tunggal dan array secara otomatis.
 func (ctrl *QuestionMistakeController) Create(c *fiber.Ctx) error {
 	start := time.Now()
 	log.Println("[START] CreateQuestionMistake")
@@ -29,7 +31,7 @@ func (ctrl *QuestionMistakeController) Create(c *fiber.Ctx) error {
 
 	raw := c.Body()
 	if len(raw) > 0 && raw[0] == '[' {
-		// Jika data berupa array
+		// 📦 Jika body berupa array
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Println("[ERROR] Failed to parse array:", err)
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid array format"})
@@ -48,7 +50,7 @@ func (ctrl *QuestionMistakeController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Jika data tunggal
+	// 🧾 Jika body berupa satu object
 	if err := c.BodyParser(&single); err != nil {
 		log.Println("[ERROR] Failed to parse single:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body format"})
@@ -66,6 +68,8 @@ func (ctrl *QuestionMistakeController) Create(c *fiber.Ctx) error {
 }
 
 // ✅ GET /api/question-mistakes/:user_id
+// Mengambil semua kesalahan jawaban berdasarkan user_id.
+// Berguna untuk membuat fitur "soal yang sering kamu salah jawab".
 func (ctrl *QuestionMistakeController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	var mistakes []questionMistakeModel.QuestionMistakeModel
@@ -79,6 +83,8 @@ func (ctrl *QuestionMistakeController) GetByUserID(c *fiber.Ctx) error {
 }
 
 // ✅ DELETE /api/question-mistakes/:id
+// Menghapus satu kesalahan soal berdasarkan ID.
+// Umumnya digunakan oleh admin untuk bersih-bersih data kesalahan yang salah input.
 func (ctrl *QuestionMistakeController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var mistake questionMistakeModel.QuestionMistakeModel

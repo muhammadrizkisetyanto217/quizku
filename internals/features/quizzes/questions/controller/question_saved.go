@@ -19,7 +19,12 @@ func NewQuestionSavedController(db *gorm.DB) *QuestionSavedController {
 	return &QuestionSavedController{DB: db}
 }
 
-// 🔹 CREATE - Single or Multiple
+// 🔹 POST /api/question-saved
+// Menyimpan satu atau banyak soal ke daftar soal favorit (saved questions).
+// Digunakan saat user ingin menyimpan soal tertentu untuk dipelajari ulang.
+//
+// ✅ Bisa input satu atau array langsung.
+// ✅ Berguna untuk fitur "bookmark soal" di frontend.
 func (ctrl *QuestionSavedController) Create(c *fiber.Ctx) error {
 	log.Println("[INFO] Create QuestionSaved called")
 
@@ -54,7 +59,9 @@ func (ctrl *QuestionSavedController) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Question saved", "data": single})
 }
 
-// 🔹 READ - By User ID
+// 🔹 GET /api/question-saved/:user_id
+// Mengambil semua soal yang disimpan user berdasarkan user_id.
+// Cocok untuk halaman "Soal Favorit Saya".
 func (ctrl *QuestionSavedController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	log.Printf("[INFO] Fetching question_saved for user: %s", userID)
@@ -67,6 +74,9 @@ func (ctrl *QuestionSavedController) GetByUserID(c *fiber.Ctx) error {
 	return c.JSON(saved)
 }
 
+// 🔹 GET /api/question-saved/:user_id/full
+// Mengambil daftar soal yang disimpan user, lengkap dengan data soalnya.
+// Cocok untuk frontend yang ingin langsung menampilkan detail soalnya juga.
 func (ctrl *QuestionSavedController) GetByUserIDWithQuestions(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	log.Printf("[INFO] Fetching question_saved WITH questions for user: %s", userID)
@@ -77,20 +87,20 @@ func (ctrl *QuestionSavedController) GetByUserIDWithQuestions(c *fiber.Ctx) erro
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch question_saved"})
 	}
 
-	// Kumpulkan question_id
+	// Ambil daftar ID soal dari data saved
 	var questionIDs []uint
 	for _, s := range saved {
 		questionIDs = append(questionIDs, s.QuestionID)
 	}
 
-	// Ambil detail pertanyaannya
+	// Ambil data detail soalnya
 	var questions []questionModel.QuestionModel
 	if err := ctrl.DB.Where("id IN ?", questionIDs).Find(&questions).Error; err != nil {
 		log.Println("[ERROR] Failed to fetch questions:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch questions"})
 	}
 
-	// Gabungkan datanya (opsional tergantung frontend)
+	// Gabungkan data saved + soal
 	type Combined struct {
 		questionSavedModel.QuestionSavedModel
 		Question questionModel.QuestionModel `json:"question"`
@@ -114,7 +124,9 @@ func (ctrl *QuestionSavedController) GetByUserIDWithQuestions(c *fiber.Ctx) erro
 	return c.JSON(combined)
 }
 
-// 🔹 DELETE - By ID
+// 🔹 DELETE /api/question-saved/:id
+// Menghapus satu data soal yang disimpan berdasarkan ID.
+// Cocok digunakan saat user ingin menghapus soal dari daftar favorit.
 func (ctrl *QuestionSavedController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting question_saved with ID: %s", id)

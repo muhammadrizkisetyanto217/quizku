@@ -2,7 +2,7 @@ package route
 
 
 import (
-	subcategoryController "quizku/internals/features/lessons/subcategory/controller"
+	subcategoryController "quizku/internals/features/lessons/subcategories/controller"
 	"quizku/internals/constants"
 	authMiddleware "quizku/internals/middlewares/auth"
 

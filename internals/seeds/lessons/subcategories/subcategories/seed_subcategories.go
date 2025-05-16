@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"quizku/internals/features/lessons/subcategory/model"
+	"quizku/internals/features/lessons/subcategories/model"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"

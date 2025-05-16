@@ -16,7 +16,7 @@ func NewUserTestExamController(db *gorm.DB) *UserTestExamController {
 	return &UserTestExamController{DB: db}
 }
 
-// ✅ Get all user test exam
+// GetAll mengambil semua data user test exam dari database.
 func (ctrl *UserTestExamController) GetAll(c *fiber.Ctx) error {
 	var results []model.UserTestExam
 	if err := ctrl.DB.Order("id DESC").Find(&results).Error; err != nil {
@@ -25,7 +25,7 @@ func (ctrl *UserTestExamController) GetAll(c *fiber.Ctx) error {
 	return c.JSON(results)
 }
 
-// ✅ Get by ID
+// GetByID mengambil 1 data user test exam berdasarkan ID-nya.
 func (ctrl *UserTestExamController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var data model.UserTestExam
@@ -35,7 +35,7 @@ func (ctrl *UserTestExamController) GetByID(c *fiber.Ctx) error {
 	return c.JSON(data)
 }
 
-// ✅ Create new
+// Create menyimpan entri baru user test exam ke database.
 func (ctrl *UserTestExamController) Create(c *fiber.Ctx) error {
 	var payload model.UserTestExam
 	if err := c.BodyParser(&payload); err != nil {
@@ -50,7 +50,7 @@ func (ctrl *UserTestExamController) Create(c *fiber.Ctx) error {
 	return c.Status(201).JSON(payload)
 }
 
-// ✅ Get by user_id (misalnya untuk riwayat nilai user)
+// GetByUserID mengambil seluruh hasil test exam milik user tertentu.
 func (ctrl *UserTestExamController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	var results []model.UserTestExam
@@ -60,7 +60,7 @@ func (ctrl *UserTestExamController) GetByUserID(c *fiber.Ctx) error {
 	return c.JSON(results)
 }
 
-// ✅ Get by test_exam_id (misalnya untuk nilai seluruh peserta di 1 ujian)
+// GetByTestExamID mengambil seluruh hasil peserta untuk satu test exam tertentu.
 func (ctrl *UserTestExamController) GetByTestExamID(c *fiber.Ctx) error {
 	examID := c.Params("test_exam_id")
 	var results []model.UserTestExam

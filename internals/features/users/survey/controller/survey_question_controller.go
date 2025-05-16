@@ -17,7 +17,8 @@ func NewSurveyQuestionController(db *gorm.DB) *SurveyQuestionController {
 	return &SurveyQuestionController{DB: db}
 }
 
-// ✅ Get all questions
+// ✅ GetAll mengembalikan seluruh pertanyaan survei yang ada di database,
+// diurutkan berdasarkan `order_index` secara ascending.
 func (ctrl *SurveyQuestionController) GetAll(c *fiber.Ctx) error {
 	var questions []model.SurveyQuestion
 	if err := ctrl.DB.Order("order_index ASC").Find(&questions).Error; err != nil {
@@ -26,7 +27,7 @@ func (ctrl *SurveyQuestionController) GetAll(c *fiber.Ctx) error {
 	return c.JSON(questions)
 }
 
-// ✅ Get question by ID
+// ✅ GetByID mengambil satu data pertanyaan survei berdasarkan ID yang diberikan.
 func (ctrl *SurveyQuestionController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var question model.SurveyQuestion
@@ -36,7 +37,8 @@ func (ctrl *SurveyQuestionController) GetByID(c *fiber.Ctx) error {
 	return c.JSON(question)
 }
 
-// ✅ Create new question
+
+// ✅ Create menambahkan satu atau banyak pertanyaan survei baru ke dalam database.
 func (ctrl *SurveyQuestionController) Create(c *fiber.Ctx) error {
 	body := c.Body()
 
@@ -88,7 +90,7 @@ func (ctrl *SurveyQuestionController) Create(c *fiber.Ctx) error {
 	}
 }
 
-// ✅ Update question
+// ✅ Update mengubah isi pertanyaan survei berdasarkan ID yang diberikan.
 func (ctrl *SurveyQuestionController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var question model.SurveyQuestion
@@ -112,7 +114,7 @@ func (ctrl *SurveyQuestionController) Update(c *fiber.Ctx) error {
 	return c.JSON(question)
 }
 
-// ✅ Delete question
+// ✅ Delete menghapus pertanyaan survei berdasarkan ID yang diberikan.
 func (ctrl *SurveyQuestionController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if err := ctrl.DB.Delete(&model.SurveyQuestion{}, id).Error; err != nil {

@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	issuedcertificateservice "quizku/internals/features/certificates/issued_certificates/service"
-	userSubcategoryModel "quizku/internals/features/lessons/subcategory/model"
+	userSubcategoryModel "quizku/internals/features/lessons/subcategories/model"
 	userThemeModel "quizku/internals/features/lessons/themes_or_levels/model"
 	userUnitModel "quizku/internals/features/lessons/units/model"
 )
@@ -29,20 +29,20 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return fmt.Errorf("nilai grade tidak valid: %d", grade)
 	}
 
-	// Ambil unit dari exam
+	// Ambil unit_id berdasarkan exam
 	var unitID uint
 	if err := db.Table("exams").Select("unit_id").Where("id = ?", examID).Scan(&unitID).Error; err != nil || unitID == 0 {
 		log.Println("[ERROR] Gagal ambil unit_id dari exam_id:", examID)
 		return err
 	}
 
-	// Ambil userUnit
+	// Ambil record user_unit untuk user dan unit tersebut
 	var userUnit userUnitModel.UserUnitModel
 	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
 		return err
 	}
 
-	// Hitung bonus aktifitas
+	// Hitung bonus berdasarkan aktivitas lain
 	activityBonus := 0
 	if userUnit.AttemptReading > 0 {
 		activityBonus += 5
@@ -53,6 +53,8 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 			activityBonus += 15
 		}
 	}
+
+	// Cek apakah semua section_quizzes pada unit sudah diselesaikan
 	var totalSections, completedSections int64
 	_ = db.Table("section_quizzes").Where("unit_id = ?", unitID).Count(&totalSections).Error
 	_ = db.Table("user_section_quizzes").
@@ -63,13 +65,15 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		activityBonus += 30
 	}
 
+	//* ✅ Hitung grade_result untuk LEVEL UNIT (user_unit.grade_result)
 	gradeResult := grade / 2
 	if activityBonus > 0 {
 		gradeResult = activityBonus + (grade / 2)
 	}
 
+	// Update nilai di tabel user_unit
 	updates := map[string]interface{}{
-		"grade_result": gradeResult,
+		"grade_result": gradeResult, // ✅ GRADE RESULT UNTUK UNIT
 		"is_passed":    gradeResult > 65,
 		"updated_at":   time.Now(),
 	}
@@ -80,16 +84,18 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return err
 	}
 
+	// Jika belum lulus, stop di sini
 	if gradeResult <= 65 {
 		return nil
 	}
 
-	// Ambil theme dan userTheme
+	// Ambil theme ID dari unit
 	var themesID uint
 	if err := db.Table("units").Select("themes_or_level_id").Where("id = ?", unitID).Scan(&themesID).Error; err != nil || themesID == 0 {
 		return err
 	}
 
+	// Update progress untuk user_themes_or_levels
 	var userTheme userThemeModel.UserThemesOrLevelsModel
 	if err := db.Where("user_id = ? AND themes_or_levels_id = ?", userID, themesID).First(&userTheme).Error; err != nil {
 		return err
@@ -99,7 +105,7 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 	}
 	userTheme.CompleteUnit[fmt.Sprintf("%d", unitID)] = fmt.Sprintf("%d", gradeResult)
 
-	// Hitung rata-rata dari complete_unit
+	// Hitung nilai rata-rata dari seluruh unit dalam theme tersebut
 	var expectedUnitIDs []int64
 	if err := db.Table("units").Where("themes_or_level_id = ?", themesID).Pluck("id", &expectedUnitIDs).Error; err != nil {
 		return err
@@ -119,21 +125,24 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		avg = total / len(expectedUnitIDs)
 	}
 
+	//* ✅ grade_result untuk LEVEL THEME (user_themes_or_levels.grade_result)
 	updateFields := map[string]interface{}{
 		"complete_unit": userTheme.CompleteUnit,
 	}
 	if matchCount == len(expectedUnitIDs) && len(expectedUnitIDs) > 0 {
-		updateFields["grade_result"] = avg
+		updateFields["grade_result"] = avg // ✅ GRADE RESULT UNTUK THEME
 	}
 	if err := db.Model(&userTheme).Updates(updateFields).Error; err != nil {
 		return err
 	}
 
-	// Ambil userSub dan total_theme
+	// Ambil subcategory dari theme
 	var subcategoryID int
 	if err := db.Table("themes_or_levels").Select("subcategories_id").Where("id = ?", themesID).Scan(&subcategoryID).Error; err != nil {
 		return err
 	}
+
+	// Update progress untuk user_subcategory
 	var userSub userSubcategoryModel.UserSubcategoryModel
 	if err := db.Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).First(&userSub).Error; err != nil {
 		return err
@@ -143,6 +152,7 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 	}
 	userSub.CompleteThemesOrLevels[fmt.Sprintf("%d", themesID)] = fmt.Sprintf("%d", avg)
 
+	// Ambil total themes dari subcategory (array themes_id)
 	var raw string
 	if err := db.Table("subcategories").Select("total_themes_or_levels").Where("id = ?", subcategoryID).Scan(&raw).Error; err != nil {
 		return err
@@ -153,6 +163,7 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		return err
 	}
 
+	// Hitung nilai rata-rata dari semua themes
 	matchTheme := 0
 	totalSub := 0
 	for _, id := range totalThemeIDs {
@@ -168,6 +179,7 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		avgSub = totalSub / len(totalThemeIDs)
 	}
 
+	// Ambil versi sertifikat terbaru
 	var issuedVersion int
 	row := db.Table("certificate_versions").
 		Where("subcategory_id = ?", subcategoryID).
@@ -182,12 +194,13 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 		log.Printf("[DEBUG] Versi sertifikat ditemukan: %d untuk subkategori ID %d", issuedVersion, subcategoryID)
 	}
 
+	//* ✅ grade_result untuk LEVEL SUBCATEGORY (user_subcategory.grade_result)
 	updateSubFields := map[string]interface{}{
 		"complete_themes_or_levels": userSub.CompleteThemesOrLevels,
 	}
 	if issuedVersion > 0 {
 		if matchTheme == len(totalThemeIDs) && len(totalThemeIDs) > 0 {
-			updateSubFields["grade_result"] = avgSub
+			updateSubFields["grade_result"] = avgSub // ✅ GRADE RESULT UNTUK SUBCATEGORY
 			updateSubFields["current_version"] = issuedVersion
 			if err := issuedcertificateservice.CreateOrUpdateIssuedCertificate(db, userID, subcategoryID, issuedVersion); err != nil {
 				log.Println("[WARNING] Gagal membuat/memperbarui sertifikat:", err)
@@ -206,6 +219,7 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 }
 
 func CheckAndUnsetExamStatus(db *gorm.DB, userID uuid.UUID, examID uint) error {
+	// 🔍 Ambil unit_id dari exam
 	var unitID uint
 	err := db.Table("exams").
 		Select("unit_id").
@@ -216,6 +230,7 @@ func CheckAndUnsetExamStatus(db *gorm.DB, userID uuid.UUID, examID uint) error {
 		return err
 	}
 
+	// 🔍 Cek apakah masih ada user_exams lain untuk unit ini
 	var count int64
 	err = db.Table("user_exams").
 		Joins("JOIN exams ON exams.id = user_exams.exam_id").
@@ -225,18 +240,24 @@ func CheckAndUnsetExamStatus(db *gorm.DB, userID uuid.UUID, examID uint) error {
 		return err
 	}
 
+	// ❌ Jika tidak ada exam tersisa untuk unit tersebut, reset nilai progress
 	if count == 0 {
 		log.Println("[INFO] Reset nilai exam dan result karena tidak ada user_exams tersisa, user_id:", userID, "unit_id:", unitID)
+
+		// ✅ Reset nilai exam dan hasil akhir pada level UNIT
+		// grade_exam    → nilai mentah dari ujian terakhir
+		// grade_result  → nilai final gabungan dengan aktivitas, dihitung oleh UpdateUserUnitFromExam
 		if err := db.Model(&userUnitModel.UserUnitModel{}).
 			Where("user_id = ? AND unit_id = ?", userID, unitID).
 			Updates(map[string]interface{}{
-				"grade_exam":   0,
-				"grade_result": 0,
+				"grade_exam":   0, // ✅ Reset nilai ujian
+				"grade_result": 0, // ✅ Reset hasil final unit (kombinasi exam + aktivitas)
 				"updated_at":   time.Now(),
 			}).Error; err != nil {
 			return err
 		}
 
+		// 🔍 Ambil themes_or_level_id dari unit
 		var themesID uint
 		err = db.Table("units").
 			Select("themes_or_level_id").
@@ -247,24 +268,29 @@ func CheckAndUnsetExamStatus(db *gorm.DB, userID uuid.UUID, examID uint) error {
 			return err
 		}
 
+		// 🔍 Cari record progress user untuk theme tersebut
 		var userTheme userThemeModel.UserThemesOrLevelsModel
 		err = db.Where("user_id = ? AND themes_or_levels_id = ?", userID, themesID).
 			First(&userTheme).Error
 		if err != nil {
 			log.Println("[WARNING] Tidak menemukan user_theme untuk reset complete_unit")
-			return nil
+			return nil // Tidak error fatal, bisa dilanjut
 		}
 
 		if userTheme.CompleteUnit != nil {
 			unitKey := fmt.Sprintf("%d", unitID)
-			delete(userTheme.CompleteUnit, unitKey)
+			delete(userTheme.CompleteUnit, unitKey) // ✅ Hapus unit dari progress theme
 
+			// ❓ Apakah semua unit pada theme sudah dihapus?
 			shouldResetGrade := len(userTheme.CompleteUnit) == 0
 
 			updateFields := map[string]interface{}{
 				"complete_unit": userTheme.CompleteUnit,
 			}
 			if shouldResetGrade {
+				// ✅ Reset nilai theme jika tidak ada unit tersisa
+				// grade_result di theme adalah hasil rata-rata semua unit di theme
+				// Jika tidak ada satupun unit, maka hasilnya dianggap belum ada
 				updateFields["grade_result"] = 0
 			}
 

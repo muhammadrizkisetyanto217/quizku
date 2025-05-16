@@ -2,6 +2,7 @@ package controller
 
 import (
 	"quizku/internals/features/progress/level_rank/model"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -14,66 +15,100 @@ func NewRankRequirementController(db *gorm.DB) *RankRequirementController {
 	return &RankRequirementController{DB: db}
 }
 
-// CREATE MANY
+// 🟡 POST /api/rank-requirements
+// Menambahkan banyak data rank sekaligus (batch insert).
+// Wajib dikirim dalam bentuk array JSON: [{ rank, name, min_level, max_level }, ...]
 func (ctrl *RankRequirementController) Create(c *fiber.Ctx) error {
 	var inputs []model.RankRequirement
+
+	// ✅ Validasi format input
 	if err := c.BodyParser(&inputs); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format data tidak valid"})
 	}
 	if len(inputs) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Data tidak boleh kosong"})
 	}
+
+	// 🔄 Simpan semua data
 	if err := ctrl.DB.Create(&inputs).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Data berhasil ditambahkan",
 		"data":    inputs,
 	})
 }
 
-// GET ALL
+// 🟢 GET /api/rank-requirements
+// Mengambil seluruh daftar rank yang tersedia, urut berdasarkan nilai `rank` naik (asc).
+// Berguna untuk mapping otomatis saat user naik level.
 func (ctrl *RankRequirementController) GetAll(c *fiber.Ctx) error {
 	var ranks []model.RankRequirement
+
 	if err := ctrl.DB.Order("rank asc").Find(&ranks).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
+
 	return c.JSON(ranks)
 }
 
-// GET BY ID
+// 🟢 GET /api/rank-requirements/:id
+// Mengambil satu data rank berdasarkan ID.
+// Biasanya digunakan untuk halaman detail atau edit.
 func (ctrl *RankRequirementController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var rank model.RankRequirement
+
 	if err := ctrl.DB.First(&rank, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Data tidak ditemukan"})
 	}
+
 	return c.JSON(rank)
 }
 
-// UPDATE BY ID
+// 🟠 PUT /api/rank-requirements/:id
+// Mengupdate data rank berdasarkan ID tertentu.
+// ID di body akan dikunci dan tidak bisa diubah untuk menjaga konsistensi.
 func (ctrl *RankRequirementController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
+
 	var input model.RankRequirement
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format tidak valid"})
 	}
+
+	// Cek apakah data rank dengan ID ini ada
 	var existing model.RankRequirement
 	if err := ctrl.DB.First(&existing, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Data tidak ditemukan"})
 	}
+
+	// Pastikan ID tidak berubah
 	input.ID = existing.ID
+
+	// Simpan update
 	if err := ctrl.DB.Save(&input).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(fiber.Map{"message": "Data berhasil diupdate", "data": input})
+
+	return c.JSON(fiber.Map{
+		"message": "Data berhasil diupdate",
+		"data":    input,
+	})
 }
 
-// DELETE BY ID
+// 🔴 DELETE /api/rank-requirements/:id
+// Menghapus satu data rank berdasarkan ID dari database.
+// Gunakan dengan hati-hati karena ini operasi permanen.
 func (ctrl *RankRequirementController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
+
 	if err := ctrl.DB.Delete(&model.RankRequirement{}, id).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(fiber.Map{"message": "Data berhasil dihapus"})
+
+	return c.JSON(fiber.Map{
+		"message": "Data berhasil dihapus",
+	})
 }

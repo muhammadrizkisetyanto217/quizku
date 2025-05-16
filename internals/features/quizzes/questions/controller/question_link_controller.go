@@ -17,8 +17,9 @@ type QuestionLinkController struct {
 func NewQuestionLinkController(db *gorm.DB) *QuestionLinkController {
 	return &QuestionLinkController{DB: db}
 }
-
-// CREATE
+// 🟡 POST /api/question-links
+// Membuat satu data `question_link` baru yang menghubungkan soal ke entitas lain
+// seperti quiz, exam, reading, evaluation, dsb. Berguna untuk strukturisasi soal.
 func (ctrl *QuestionLinkController) Create(c *fiber.Ctx) error {
 	var req model.QuestionLinkRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -27,7 +28,7 @@ func (ctrl *QuestionLinkController) Create(c *fiber.Ctx) error {
 
 	link := model.QuestionLink{
 		QuestionID: req.QuestionID,
-		TargetType: req.TargetType,
+		TargetType: req.TargetType, // e.g. "quiz", "exam", "reading"
 		TargetID:   req.TargetID,
 	}
 
@@ -39,7 +40,9 @@ func (ctrl *QuestionLinkController) Create(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Link berhasil dibuat", "data": link})
 }
 
-// GET ALL
+// 🟢 GET /api/question-links
+// Mengambil semua data `question_link` tanpa filter.
+// Cocok untuk admin panel atau validasi hubungan soal secara global.
 func (ctrl *QuestionLinkController) GetAll(c *fiber.Ctx) error {
 	var links []model.QuestionLink
 	if err := ctrl.DB.Find(&links).Error; err != nil {
@@ -48,7 +51,9 @@ func (ctrl *QuestionLinkController) GetAll(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"total": len(links), "data": links})
 }
 
-// GET BY QUESTION ID
+// 🟢 GET /api/question-links/question/:id
+// Mengambil semua link soal berdasarkan question_id.
+// Cocok untuk menampilkan hubungan/histori dari satu soal tertentu.
 func (ctrl *QuestionLinkController) GetByQuestionID(c *fiber.Ctx) error {
 	questionID := c.Params("id")
 	var links []model.QuestionLink
@@ -58,7 +63,9 @@ func (ctrl *QuestionLinkController) GetByQuestionID(c *fiber.Ctx) error {
 	return c.JSON(links)
 }
 
-// UPDATE BY ID
+// 🟠 PUT /api/question-links/:id
+// Mengupdate data link soal berdasarkan ID.
+// Umumnya dipakai untuk memperbaiki target dari soal yang sudah ada.
 func (ctrl *QuestionLinkController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req model.QuestionLinkRequest
@@ -83,7 +90,9 @@ func (ctrl *QuestionLinkController) Update(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Berhasil update", "data": link})
 }
 
-// DELETE BY ID
+// 🔴 DELETE /api/question-links/:id
+// Menghapus satu link soal berdasarkan ID.
+// Hati-hati karena ini akan memutus keterkaitan antara soal dengan entitas target.
 func (ctrl *QuestionLinkController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var link model.QuestionLink

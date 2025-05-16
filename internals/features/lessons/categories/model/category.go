@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	subcategoriesModel "quizku/internals/features/lessons/subcategory/model"
+	subcategoriesModel "quizku/internals/features/lessons/subcategories/model"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"

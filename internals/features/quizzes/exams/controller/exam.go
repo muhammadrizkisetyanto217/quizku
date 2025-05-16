@@ -18,7 +18,9 @@ func NewExamController(db *gorm.DB) *ExamController {
 	return &ExamController{DB: db}
 }
 
-// GET all exams
+// 🟢 GET /api/exams
+// Mengambil semua data exam dari database.
+// Cocok untuk halaman admin atau builder ujian akhir.
 func (ec *ExamController) GetExams(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all exams")
 	var exams []examModel.ExamModel
@@ -36,7 +38,9 @@ func (ec *ExamController) GetExams(c *fiber.Ctx) error {
 	})
 }
 
-// GET exam by ID
+// 🟢 GET /api/exams/:id
+// Mengambil satu data exam berdasarkan ID.
+// Berguna untuk halaman detail atau edit ujian.
 func (ec *ExamController) GetExam(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Fetching exam with ID:", id)
@@ -53,7 +57,9 @@ func (ec *ExamController) GetExam(c *fiber.Ctx) error {
 	})
 }
 
-// GET exams by unit_id
+// 🟢 GET /api/exams/unit/:unitId
+// Mengambil semua ujian berdasarkan unit_id tertentu.
+// Digunakan untuk menampilkan daftar ujian yang terkait dengan satu unit.
 func (ec *ExamController) GetExamsByUnitID(c *fiber.Ctx) error {
 	unitID := c.Params("unitId")
 	log.Printf("[INFO] Fetching exams for unit_id: %s\n", unitID)
@@ -72,7 +78,9 @@ func (ec *ExamController) GetExamsByUnitID(c *fiber.Ctx) error {
 	})
 }
 
-// POST create a new exam
+// 🟡 POST /api/exams
+// Menambahkan ujian baru ke database.
+// Cocok digunakan di halaman admin atau form tambah ujian.
 func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 	log.Println("[INFO] Creating a new exam")
 
@@ -94,7 +102,9 @@ func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 	})
 }
 
-// PUT update exam
+// 🟠 PUT /api/exams/:id
+// Mengupdate ujian berdasarkan ID.
+// Menggunakan map[string]interface{} agar fleksibel hanya update field yang dibutuhkan.
 func (ec *ExamController) UpdateExam(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Updating exam with ID:", id)
@@ -105,14 +115,11 @@ func (ec *ExamController) UpdateExam(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Exam not found"})
 	}
 
-	// Pakai map untuk fleksibel (bisa update sebagian field)
 	var updateData map[string]interface{}
 	if err := c.BodyParser(&updateData); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
-
-	// Optional: bisa tambahkan validasi manual di sini kalau perlu
 
 	if len(updateData) == 0 {
 		return c.Status(400).JSON(fiber.Map{"error": "No fields to update"})
@@ -130,7 +137,9 @@ func (ec *ExamController) UpdateExam(c *fiber.Ctx) error {
 	})
 }
 
-// DELETE exam
+// 🔴 DELETE /api/exams/:id
+// Menghapus ujian berdasarkan ID.
+// Hati-hati: ini adalah operasi permanen.
 func (ec *ExamController) DeleteExam(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Println("[INFO] Deleting exam with ID:", id)

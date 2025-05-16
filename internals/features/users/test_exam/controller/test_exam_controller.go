@@ -16,7 +16,7 @@ func NewTestExamController(db *gorm.DB) *TestExamController {
 	return &TestExamController{DB: db}
 }
 
-// ✅ Get all test exams
+// GetAll mengambil semua data test exam yang tersedia.
 func (ctrl *TestExamController) GetAll(c *fiber.Ctx) error {
 	var exams []model.TestExam
 	if err := ctrl.DB.Order("id DESC").Find(&exams).Error; err != nil {
@@ -25,7 +25,7 @@ func (ctrl *TestExamController) GetAll(c *fiber.Ctx) error {
 	return c.JSON(exams)
 }
 
-// ✅ Get test exam by ID
+// GetByID mengambil satu data test exam berdasarkan ID.
 func (ctrl *TestExamController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var exam model.TestExam
@@ -35,7 +35,7 @@ func (ctrl *TestExamController) GetByID(c *fiber.Ctx) error {
 	return c.JSON(exam)
 }
 
-// ✅ Create new test exam
+// Create membuat entri test exam baru di database.
 func (ctrl *TestExamController) Create(c *fiber.Ctx) error {
 	var payload model.TestExam
 	if err := c.BodyParser(&payload); err != nil {
@@ -49,7 +49,7 @@ func (ctrl *TestExamController) Create(c *fiber.Ctx) error {
 	return c.Status(201).JSON(payload)
 }
 
-// ✅ Update test exam
+// Update mengubah data test exam berdasarkan ID.
 func (ctrl *TestExamController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -95,7 +95,7 @@ func (ctrl *TestExamController) Update(c *fiber.Ctx) error {
 	})
 }
 
-// ✅ Delete test exam
+// Delete menghapus data test exam berdasarkan ID.
 func (ctrl *TestExamController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if err := ctrl.DB.Delete(&model.TestExam{}, id).Error; err != nil {
