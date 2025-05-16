@@ -32,9 +32,9 @@ func SeedUserSurveysFromJSON(db *gorm.DB, filePath string) {
 	var userSurveys []model.UserSurvey
 	for _, s := range seeds {
 		userSurveys = append(userSurveys, model.UserSurvey{
-			UserID:           s.UserID,
-			SurveyQuestionID: s.SurveyQuestionID,
-			UserAnswer:       s.UserAnswer,
+			UserSurveyUserID:           s.UserID,
+			UserSurveyQuestionID: s.SurveyQuestionID,
+			UserSurveyAnswer:       s.UserAnswer,
 		})
 	}
 

@@ -50,9 +50,9 @@ func SeedSurveyQuestionsFromJSON(db *gorm.DB, filePath string) {
 		}
 
 		newQuestions = append(newQuestions, model.SurveyQuestion{
-			QuestionText:   s.QuestionText,
-			QuestionAnswer: s.QuestionAnswer,
-			OrderIndex:     s.OrderIndex,
+			SurveyQuestionText:   s.QuestionText,
+			SurveyQuestionAnswer: s.QuestionAnswer,
+			SurveyQuestionOrderIndex:     s.OrderIndex,
 		})
 	}
 

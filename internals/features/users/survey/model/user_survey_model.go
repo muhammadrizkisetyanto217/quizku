@@ -7,11 +7,13 @@ import (
 )
 
 type UserSurvey struct {
-	ID               int       `gorm:"primaryKey" json:"id"`
-	UserID           uuid.UUID `gorm:"type:uuid;not null;index" json:"user_id"`
-	SurveyQuestionID int       `gorm:"not null;index" json:"survey_question_id"`
-	UserAnswer       string    `gorm:"type:text;not null" json:"user_answer"`
-	CreatedAt        time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UserSurveyID         int       `gorm:"column:user_survey_id;primaryKey" json:"user_survey_id"`
+	UserSurveyUserID     uuid.UUID `gorm:"column:user_survey_user_id;type:uuid;not null;index" json:"user_survey_user_id"`
+	UserSurveyQuestionID int       `gorm:"column:user_survey_question_id;not null;index" json:"user_survey_question_id"`
+	UserSurveyAnswer     string    `gorm:"column:user_survey_answer;type:text;not null" json:"user_survey_answer"`
+
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 }
 
 func (UserSurvey) TableName() string {

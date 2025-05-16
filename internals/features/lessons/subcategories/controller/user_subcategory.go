@@ -80,9 +80,9 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		VersionNumber int
 	}
 	tx.Table("certificate_versions").
-		Select("version_number").
+		Select("certificate_version_number").
 		Where("subcategory_id = ?", body.SubcategoryID).
-		Order("version_number DESC").
+		Order("certificate_version_number DESC").
 		Limit(1).
 		Scan(&certVersion)
 
@@ -375,9 +375,9 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 			var versionNumber *int = nil
 			if err := ctrl.DB.
 				Where("subcategory_id = ?", sub.ID).
-				Order("version_number DESC").
+				Order("certificate_version_number DESC").
 				First(&certVersion).Error; err == nil {
-				versionNumber = &certVersion.VersionNumber
+				versionNumber = &certVersion.CertVersionNumber
 			}
 			issuedVersion := 0
 			if versionNumber != nil {

@@ -10,10 +10,10 @@ import (
 )
 
 type RankSeed struct {
-	Rank     int    `json:"rank"`
-	Name     string `json:"name"`
-	MinLevel int    `json:"min_level"`
-	MaxLevel *int   `json:"max_level"` // nullable
+	RankReqRank     int    `json:"rank_req_rank"`
+	RankReqName     string `json:"rank_req_name"`
+	RankReqMinLevel int    `json:"rank_req_min_level"`
+	RankReqMaxLevel *int   `json:"rank_req_max_level"` // nullable
 }
 
 func SeedRanksRequirementsFromJSON(db *gorm.DB, filePath string) {
@@ -31,22 +31,22 @@ func SeedRanksRequirementsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, r := range input {
 		var existing model.RankRequirement
-		if err := db.Where("rank = ?", r.Rank).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Rank %d sudah ada, lewati...", r.Rank)
+		if err := db.Where("rank_req_rank = ?", r.RankReqRank).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Rank %d sudah ada, lewati...", r.RankReqRank)
 			continue
 		}
 
 		newRank := model.RankRequirement{
-			Rank:     r.Rank,
-			Name:     r.Name,
-			MinLevel: r.MinLevel,
-			MaxLevel: r.MaxLevel,
+			RankReqRank:     r.RankReqRank,
+			RankReqName:     r.RankReqName,
+			RankReqMinLevel: r.RankReqMinLevel,
+			RankReqMaxLevel: r.RankReqMaxLevel,
 		}
 
 		if err := db.Create(&newRank).Error; err != nil {
-			log.Printf("❌ Gagal insert Rank %d: %v", r.Rank, err)
+			log.Printf("❌ Gagal insert Rank %d: %v", r.RankReqRank, err)
 		} else {
-			log.Printf("✅ Berhasil insert Rank %d (%s)", r.Rank, r.Name)
+			log.Printf("✅ Berhasil insert Rank %d (%s)", r.RankReqRank, r.RankReqName)
 		}
 	}
 }

@@ -13,14 +13,14 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	model "quizku/internals/features/certificates/issued_certificates/model"
+	model "quizku/internals/features/certificates/user_certificates/model"
 	categoryModel "quizku/internals/features/lessons/categories/model"
 	subcategoryModel "quizku/internals/features/lessons/subcategories/model"
 	themesModel "quizku/internals/features/lessons/themes_or_levels/model"
 	unitModel "quizku/internals/features/lessons/units/model"
 	userProfileModel "quizku/internals/features/users/user/model"
 
-	issuedCertificateService "quizku/internals/features/certificates/issued_certificates/service"
+	issuedCertificateService "quizku/internals/features/certificates/user_certificates/service"
 )
 
 type IssuedCertificateController struct {
@@ -47,7 +47,7 @@ func (ctrl *IssuedCertificateController) GetByIDUser(c *fiber.Ctx) error {
 	}
 
 	// 🔍 Ambil data sertifikat dari database berdasarkan ID
-	var cert model.IssuedCertificateModel
+	var cert model.UserCertificate
 	if err := ctrl.DB.First(&cert, id).Error; err != nil {
 		// ❌ Jika tidak ditemukan, kirim error 404
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
@@ -61,7 +61,6 @@ func (ctrl *IssuedCertificateController) GetByIDUser(c *fiber.Ctx) error {
 		"data":    cert,
 	})
 }
-
 
 // ✅ Untuk User: Get all certificates miliknya sendiri
 func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
@@ -80,13 +79,13 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 	}
 
 	// ✅ Ambil semua sertifikat milik user
-	var issuedCerts []model.IssuedCertificateModel
-	if err := ctrl.DB.Where("user_id = ?", userID).Find(&issuedCerts).Error; err != nil {
+	var issuedCerts []model.UserCertificate
+	if err := ctrl.DB.Where("user_cert_user_id = ?", userID).Find(&issuedCerts).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil sertifikat"})
 	}
-	issuedMap := make(map[uint]model.IssuedCertificateModel)
+	issuedMap := make(map[uint]model.UserCertificate)
 	for _, cert := range issuedCerts {
-		issuedMap[cert.SubcategoryID] = cert
+		issuedMap[cert.UserCertSubcategoryID] = cert
 	}
 
 	// ✅ Ambil semua kategori (beserta subkategori & themes aktif)
@@ -140,8 +139,8 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 	var versionList []VersionMap
 	if err := ctrl.DB.
 		Table("certificate_versions").
-		Select("subcategory_id, MAX(version_number) as version_number").
-		Group("subcategory_id").
+		Select("cert_versions_subcategory_id, MAX(cert_versions_number) as certificate_version_number").
+		Group("cert_versions_subcategory_id").
 		Scan(&versionList).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil versi sertifikat"})
 	}
@@ -188,9 +187,9 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		UserID                 uuid.UUID           `json:"user_id"`
 		ThemesOrLevels         []ThemeWithProgress `json:"themes_or_levels"`
 		HasProgressSubcategory bool                `json:"has_progress_subcategory"`
-		IssuedAt               time.Time           `json:"issued_at"`
-		SlugURL                string              `json:"slug_url"`
-		IsUpToDate             bool                `json:"is_up_to_date"`
+		IssuedAt               time.Time           `json:"certificate_issued_at"`
+		SlugURL                string              `json:"certificate_slug_url"`
+		IsUpToDate             bool                `json:"user_cert_is_up_to_date"`
 	}
 
 	type CategoryWithSubcat struct {
@@ -274,9 +273,9 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 				UserID:                 userID,
 				ThemesOrLevels:         themes,
 				HasProgressSubcategory: true,
-				IssuedAt:               issued.IssuedAt,
-				SlugURL:                issued.SlugURL,
-				IsUpToDate:             issued.IsUpToDate,
+				IssuedAt:               issued.UserCertIssuedAt,
+				SlugURL:                issued.UserCertSlugURL,
+				IsUpToDate:             issued.UserCertIsUpToDate,
 			})
 		}
 
@@ -330,8 +329,8 @@ func (ctrl *IssuedCertificateController) GetBySubcategoryID(c *fiber.Ctx) error 
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal ambil profile user"})
 	}
 
-	var cert model.IssuedCertificateModel
-	if err := ctrl.DB.Where("user_id = ? AND subcategory_id = ?", userID, subcategoryID).First(&cert).Error; err != nil {
+	var cert model.UserCertificate
+	if err := ctrl.DB.Where("user_cert_user_id = ? AND user_cert_subcategory_id = ?", userID, subcategoryID).First(&cert).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Sertifikat tidak ditemukan"})
 	}
 
@@ -377,15 +376,15 @@ func (ctrl *IssuedCertificateController) GetBySubcategoryID(c *fiber.Ctx) error 
 	// Ambil versi issued tertinggi
 	var versionIssued int
 	_ = ctrl.DB.Table("certificate_versions").
-		Select("MAX(version_number)").
-		Where("subcategory_id = ?", subcategoryID).
+		Select("MAX(cert_versions_number)").
+		Where("cert_versions_subcategory_id = ?", subcategoryID).
 		Scan(&versionIssued)
 
-		// 🔁 Cek dan update is_up_to_date jika perlu
+		// 🔁 Cek dan update user_cert_is_up_to_date jika perlu
 	isUpToDate, err := issuedCertificateService.CheckAndUpdateIsUpToDate(ctrl.DB, userID, subcategoryID, cert, us, sub, versionIssued)
 	if err != nil {
 		log.Println("[WARNING] Gagal validasi IsUpToDate:", err.Error())
-		isUpToDate = cert.IsUpToDate // fallback ke yang ada
+		isUpToDate = cert.UserCertIsUpToDate // fallback ke yang ada
 	}
 
 	type UnitTitleOnly struct {
@@ -419,9 +418,9 @@ func (ctrl *IssuedCertificateController) GetBySubcategoryID(c *fiber.Ctx) error 
 		UserID                 uuid.UUID           `json:"user_id"`
 		ThemesOrLevels         []ThemeWithProgress `json:"themes_or_levels"`
 		HasProgressSubcategory bool                `json:"has_progress_subcategory"`
-		IssuedAt               time.Time           `json:"issued_at"`
-		SlugURL                string              `json:"slug_url"`
-		IsUpToDate             bool                `json:"is_up_to_date"`
+		IssuedAt               time.Time           `json:"user_cert_issued_at"`
+		SlugURL                string              `json:"user_cert_slug_url"`
+		IsUpToDate             bool                `json:"user_cert_is_up_to_date"`
 	}
 
 	// Susun data theme beserta progress-nya
@@ -490,8 +489,8 @@ func (ctrl *IssuedCertificateController) GetBySubcategoryID(c *fiber.Ctx) error 
 			UserID:                 userID,
 			ThemesOrLevels:         themes,
 			HasProgressSubcategory: true,
-			IssuedAt:               cert.IssuedAt,
-			SlugURL:                cert.SlugURL,
+			IssuedAt:               cert.UserCertIssuedAt,
+			SlugURL:                cert.UserCertSlugURL,
 			IsUpToDate:             isUpToDate,
 		},
 	})
@@ -504,15 +503,15 @@ func (ctrl *IssuedCertificateController) GetBySlug(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Slug tidak boleh kosong"})
 	}
 
-	var cert model.IssuedCertificateModel
-	if err := ctrl.DB.Where("slug_url = ?", slug).First(&cert).Error; err != nil {
+	var cert model.UserCertificate
+	if err := ctrl.DB.Where("user_cert_slug_url = ?", slug).First(&cert).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Sertifikat tidak ditemukan"})
 	}
 
 	var versionCurrent int
 	err := ctrl.DB.Table("user_subcategory").
 		Select("current_version").
-		Where("user_id = ? AND subcategory_id = ?", cert.UserID, cert.SubcategoryID).
+		Where("user_id = ? AND subcategory_id = ?", cert.UserCertID, cert.UserCertSubcategoryID).
 		Scan(&versionCurrent).Error
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal ambil current_version"})
@@ -520,9 +519,9 @@ func (ctrl *IssuedCertificateController) GetBySlug(c *fiber.Ctx) error {
 
 	var versionIssued int
 	err = ctrl.DB.Table("certificate_versions").
-		Select("version_number").
-		Where("subcategory_id = ?", cert.SubcategoryID).
-		Order("version_number DESC").
+		Select("cert_versions_number").
+		Where("cert_versions_subcategory_id = ?", cert.UserCertSubcategoryID).
+		Order("cert_versions_number DESC").
 		Limit(1).
 		Scan(&versionIssued).Error
 	if err != nil {
@@ -530,14 +529,14 @@ func (ctrl *IssuedCertificateController) GetBySlug(c *fiber.Ctx) error {
 	}
 
 	type PublicCertificateResponse struct {
-		model.IssuedCertificateModel
+		model.UserCertificate
 		VersionCurrent int `json:"version_current"`
 		VersionIssued  int `json:"version_issued"`
 	}
 	resp := PublicCertificateResponse{
-		IssuedCertificateModel: cert,
-		VersionCurrent:         versionCurrent,
-		VersionIssued:          versionIssued,
+		UserCertificate: cert,
+		VersionCurrent:  versionCurrent,
+		VersionIssued:   versionIssued,
 	}
 
 	return c.JSON(resp)

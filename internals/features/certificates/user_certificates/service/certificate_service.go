@@ -30,21 +30,21 @@ func CreateOrUpdateIssuedCertificate(
 		return db.Table("issued_certificates").
 			Where("id = ?", existingID).
 			Updates(map[string]interface{}{
-				"is_up_to_date": true,
-				"issued_at":     now,
-				"updated_at":    now,
+				"user_cert_is_up_to_date": true,
+				"certificate_issued_at":   now,
+				"updated_at":              now,
 			}).Error
 	}
 
 	// Create new
 	slug := fmt.Sprintf("cert-%s-%d", userID.String(), now.Unix())
 	return db.Table("issued_certificates").Create(map[string]interface{}{
-		"user_id":        userID,
-		"subcategory_id": subcategoryID,
-		"is_up_to_date":  true,
-		"slug_url":       slug,
-		"issued_at":      now,
-		"created_at":     now,
-		"updated_at":     now,
+		"user_id":                 userID,
+		"subcategory_id":          subcategoryID,
+		"user_cert_is_up_to_date": true,
+		"certificate_slug_url":    slug,
+		"certificate_issued_at":   now,
+		"created_at":              now,
+		"updated_at":              now,
 	}).Error
 }

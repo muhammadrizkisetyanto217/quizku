@@ -46,7 +46,7 @@ func (ctrl *RankRequirementController) Create(c *fiber.Ctx) error {
 func (ctrl *RankRequirementController) GetAll(c *fiber.Ctx) error {
 	var ranks []model.RankRequirement
 
-	if err := ctrl.DB.Order("rank asc").Find(&ranks).Error; err != nil {
+	if err := ctrl.DB.Order("rank_req_rank ASC").Find(&ranks).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -60,7 +60,7 @@ func (ctrl *RankRequirementController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var rank model.RankRequirement
 
-	if err := ctrl.DB.First(&rank, id).Error; err != nil {
+	if err := ctrl.DB.First(&rank, "rank_req_id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Data tidak ditemukan"})
 	}
 
@@ -78,16 +78,13 @@ func (ctrl *RankRequirementController) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format tidak valid"})
 	}
 
-	// Cek apakah data rank dengan ID ini ada
 	var existing model.RankRequirement
-	if err := ctrl.DB.First(&existing, id).Error; err != nil {
+	if err := ctrl.DB.First(&existing, "rank_req_id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Data tidak ditemukan"})
 	}
 
-	// Pastikan ID tidak berubah
-	input.ID = existing.ID
+	input.RankReqID = existing.RankReqID
 
-	// Simpan update
 	if err := ctrl.DB.Save(&input).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -104,7 +101,7 @@ func (ctrl *RankRequirementController) Update(c *fiber.Ctx) error {
 func (ctrl *RankRequirementController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	if err := ctrl.DB.Delete(&model.RankRequirement{}, id).Error; err != nil {
+	if err := ctrl.DB.Delete(&model.RankRequirement{}, "rank_req_id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 

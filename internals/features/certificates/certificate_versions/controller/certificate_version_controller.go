@@ -81,7 +81,6 @@ func (ctrl *CertificateVersionController) Create(c *fiber.Ctx) error {
 	return c.JSON(payload)
 }
 
-
 func (ctrl *CertificateVersionController) Update(c *fiber.Ctx) error {
 	// 🔹 Ambil ID dari parameter URL
 	id := c.Params("id")
@@ -107,15 +106,15 @@ func (ctrl *CertificateVersionController) Update(c *fiber.Ctx) error {
 	// 🧩 Siapkan map kosong untuk data yang akan diupdate
 	updates := map[string]interface{}{}
 
-	// 🔍 Update field "note" jika ada
-	if note, ok := updateData["note"].(string); ok {
-		updates["note"] = note
+	// 🔍 Update field "cert_version_note" jika ada
+	if cert_version_note, ok := updateData["cert_version_note"].(string); ok {
+		updates["cert_version_note"] = cert_version_note
 	}
 
-	// 🔍 Update field "total_themes" jika ada
-	if totalThemes, ok := updateData["total_themes"].(float64); ok {
+	// 🔍 Update field "certificate_total_themes" jika ada
+	if totalThemes, ok := updateData["cert_total_themes"].(float64); ok {
 		// ❗ Karena nilai number dari JSON dibaca sebagai float64, kita konversi ke int
-		updates["total_themes"] = int(totalThemes)
+		updates["cert_versions_total_themes"] = int(totalThemes)
 	}
 
 	// 🕒 Tambahkan updated_at untuk tracking
@@ -140,7 +139,6 @@ func (ctrl *CertificateVersionController) Update(c *fiber.Ctx) error {
 	// ✅ Kirim kembali data versi yang telah diupdate
 	return c.JSON(version)
 }
-
 
 func (ctrl *CertificateVersionController) Delete(c *fiber.Ctx) error {
 	// 🔹 Ambil ID dari parameter URL

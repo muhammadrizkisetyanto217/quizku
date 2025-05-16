@@ -12,7 +12,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	issuedcertificateservice "quizku/internals/features/certificates/issued_certificates/service"
+	issuedcertificateservice "quizku/internals/features/certificates/user_certificates/service"
 	userSubcategoryModel "quizku/internals/features/lessons/subcategories/model"
 	userThemeModel "quizku/internals/features/lessons/themes_or_levels/model"
 	userUnitModel "quizku/internals/features/lessons/units/model"
@@ -183,8 +183,8 @@ func UpdateUserUnitFromExam(db *gorm.DB, userID uuid.UUID, examID uint, grade in
 	var issuedVersion int
 	row := db.Table("certificate_versions").
 		Where("subcategory_id = ?", subcategoryID).
-		Select("version_number").
-		Order("version_number DESC").
+		Select("certificate_version_number").
+		Order("certificate_version_number DESC").
 		Limit(1).
 		Row()
 	if err := row.Scan(&issuedVersion); err != nil {

@@ -19,18 +19,20 @@ func NewTestExamController(db *gorm.DB) *TestExamController {
 // GetAll mengambil semua data test exam yang tersedia.
 func (ctrl *TestExamController) GetAll(c *fiber.Ctx) error {
 	var exams []model.TestExam
-	if err := ctrl.DB.Order("id DESC").Find(&exams).Error; err != nil {
+	if err := ctrl.DB.Order("test_exam_id DESC").Find(&exams).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch test exams"})
 	}
 	return c.JSON(exams)
 }
 
-// GetByID mengambil satu data test exam berdasarkan ID.
+// ✅ Ambil test_exam berdasarkan ID
 func (ctrl *TestExamController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var exam model.TestExam
-	if err := ctrl.DB.First(&exam, id).Error; err != nil {
-		return c.Status(404).JSON(fiber.Map{"error": "Test exam not found"})
+	if err := ctrl.DB.First(&exam, "test_exam_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Test exam tidak ditemukan",
+		})
 	}
 	return c.JSON(exam)
 }
@@ -49,57 +51,61 @@ func (ctrl *TestExamController) Create(c *fiber.Ctx) error {
 	return c.Status(201).JSON(payload)
 }
 
-// Update mengubah data test exam berdasarkan ID.
+// ✅ Perbarui data test_exam berdasarkan ID
 func (ctrl *TestExamController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	// Cari data berdasarkan ID
 	var exam model.TestExam
-	if err := ctrl.DB.First(&exam, id).Error; err != nil {
-		return c.Status(404).JSON(fiber.Map{"error": "Test exam not found"})
+	if err := ctrl.DB.First(&exam, "test_exam_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Test exam tidak ditemukan",
+		})
 	}
 
-	// Parse input dari user
 	var payload model.TestExam
 	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Body request tidak valid"})
 	}
 
-	// Validasi status agar tidak kosong dan sesuai nilai yang diizinkan
+	// Validasi status
 	validStatuses := map[string]bool{
 		"active":   true,
-		"inactive": true,
+		"pending":  true,
 		"archived": true,
 	}
-
-	if payload.Status == "" {
-		payload.Status = "active" // fallback default
-	} else if !validStatuses[payload.Status] {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid status value"})
+	if payload.TestExamStatus != "" && !validStatuses[payload.TestExamStatus] {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Status tidak valid (harus: active, pending, archived)",
+		})
 	}
 
-	// Update field
-	exam.Name = payload.Name
-	exam.Status = payload.Status
+	exam.TestExamName = payload.TestExamName
+	if payload.TestExamStatus != "" {
+		exam.TestExamStatus = payload.TestExamStatus
+	}
 	exam.UpdatedAt = time.Now()
 
-	// Simpan ke DB
 	if err := ctrl.DB.Save(&exam).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to update test exam"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Gagal memperbarui test_exam",
+		})
 	}
 
 	return c.JSON(fiber.Map{
-		"status":  true,
-		"message": "Test exam updated successfully",
+		"message": "Test exam berhasil diperbarui",
 		"data":    exam,
 	})
 }
 
-// Delete menghapus data test exam berdasarkan ID.
+// ✅ Hapus test_exam berdasarkan ID
 func (ctrl *TestExamController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
-	if err := ctrl.DB.Delete(&model.TestExam{}, id).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete test exam"})
+	if err := ctrl.DB.Delete(&model.TestExam{}, "test_exam_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Gagal menghapus test_exam",
+		})
 	}
-	return c.JSON(fiber.Map{"message": "Test exam deleted successfully"})
+	return c.JSON(fiber.Map{
+		"message": "Test exam berhasil dihapus",
+	})
 }

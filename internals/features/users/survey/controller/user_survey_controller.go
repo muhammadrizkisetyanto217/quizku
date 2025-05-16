@@ -4,10 +4,11 @@ import (
 	"log"
 	"time"
 
+	model "quizku/internals/features/users/survey/model"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	model "quizku/internals/features/users/survey/model"
 )
 
 type UserSurveyController struct {
@@ -48,10 +49,10 @@ func (ctrl *UserSurveyController) SubmitSurveyAnswers(c *fiber.Ctx) error {
 	// Simpan semua jawaban ke DB
 	for _, input := range inputs {
 		answer := model.UserSurvey{
-			UserID:          userID,
-			SurveyQuestionID: input.SurveyQuestionID,
-			UserAnswer:       input.UserAnswer,
-			CreatedAt:        time.Now(),
+			UserSurveyUserID:     userID,
+			UserSurveyQuestionID: input.SurveyQuestionID,
+			UserSurveyAnswer:     input.UserAnswer,
+			CreatedAt:            time.Now(),
 		}
 
 		if err := ctrl.DB.Create(&answer).Error; err != nil {

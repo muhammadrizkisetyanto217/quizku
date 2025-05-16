@@ -7,12 +7,13 @@ import (
 )
 
 type SurveyQuestion struct {
-	ID             int            `gorm:"primaryKey" json:"id"`
-	QuestionText   string         `gorm:"type:text;not null" json:"question_text"`
-	QuestionAnswer pq.StringArray `gorm:"type:text[]" json:"question_answer,omitempty"`
-	OrderIndex     int            `gorm:"not null;index" json:"order_index"`
-	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	SurveyQuestionID         int            `gorm:"column:survey_question_id;primaryKey" json:"survey_question_id"`
+	SurveyQuestionText       string         `gorm:"column:survey_question_text;type:text;not null" json:"survey_question_text"`
+	SurveyQuestionAnswer     pq.StringArray `gorm:"column:survey_question_answer;type:text[]" json:"survey_question_answer,omitempty"`
+	SurveyQuestionOrderIndex int            `gorm:"column:survey_question_order_index;not null;index" json:"survey_question_order_index"`
+
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 }
 
 func (SurveyQuestion) TableName() string {

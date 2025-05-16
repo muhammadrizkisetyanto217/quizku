@@ -1,86 +1,38 @@
 [
     {
-        "rank": 1,
-        "name": "Pemula",
-        "min_level": 1,
-        "max_rank": 9
+        "rank_req_rank": 1,
+        "rank_req_name": "Prajurit",
+        "rank_req_min_level": 1,
+        "rank_req_max_level": 9
     },
     {
-        "rank": 2,
-        "name": "Menengah",
-        "min_level": 10,
-        "max_level": 19
+        "rank_req_rank": 2,
+        "rank_req_name": "Sersan",
+        "rank_req_min_level": 10,
+        "rank_req_max_level": 19
     },
     {
-        "rank": 3,
-        "name": "Ahli",
-        "min_level": 20,
-        "max_level": 29
+        "rank_req_rank": 3,
+        "rank_req_name": "Letnan",
+        "rank_req_min_level": 20,
+        "rank_req_max_level": 29
     },
     {
-        "rank": 4,
-        "name": "Master",
-        "min_level": 30,
-        "max_level": 39
+        "rank_req_rank": 4,
+        "rank_req_name": "Kapten",
+        "rank_req_min_level": 30,
+        "rank_req_max_level": 39
     },
     {
-        "level": 11,
-        "name": "Level 11",
-        "min_points": 200,
-        "max_points": 219
+        "rank_req_rank": 5,
+        "rank_req_name": "Mayor",
+        "rank_req_min_level": 40,
+        "rank_req_max_level": 49
     },
     {
-        "level": 12,
-        "name": "Level 12",
-        "min_points": 220,
-        "max_points": 239
-    },
-    {
-        "level": 13,
-        "name": "Level 13",
-        "min_points": 240,
-        "max_points": 259
-    },
-    {
-        "level": 14,
-        "name": "Level 14",
-        "min_points": 260,
-        "max_points": 279
-    },
-    {
-        "level": 15,
-        "name": "Level 15",
-        "min_points": 280,
-        "max_points": 299
-    },
-    {
-        "level": 16,
-        "name": "Level 16",
-        "min_points": 300,
-        "max_points": 319
-    },
-    {
-        "level": 17,
-        "name": "Level 17",
-        "min_points": 320,
-        "max_points": 339
-    },
-    {
-        "level": 18,
-        "name": "Level 18",
-        "min_points": 340,
-        "max_points": 359
-    },
-    {
-        "level": 19,
-        "name": "Level 19",
-        "min_points": 360,
-        "max_points": 379
-    },
-    {
-        "level": 20,
-        "name": "Level 20",
-        "min_points": 380,
-        "max_points": 399
+        "rank_req_rank": 6,
+        "rank_req_name": "Jenderal",
+        "rank_req_min_level": 50,
+        "rank_req_max_level": null
     }
 ]

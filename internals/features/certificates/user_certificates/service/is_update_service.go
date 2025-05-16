@@ -1,7 +1,7 @@
 package service
 
 import (
-	"quizku/internals/features/certificates/issued_certificates/model"
+	"quizku/internals/features/certificates/user_certificates/model"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -9,12 +9,11 @@ import (
 	subcategoryModel "quizku/internals/features/lessons/subcategories/model"
 )
 
-
 func CheckAndUpdateIsUpToDate(
 	db *gorm.DB,
 	userID uuid.UUID,
 	subcategoryID int,
-	cert model.IssuedCertificateModel,
+	cert model.UserCertificate,
 	us subcategoryModel.UserSubcategoryModel,
 	sub subcategoryModel.SubcategoryModel,
 	issuedVersion int,
@@ -26,12 +25,12 @@ func CheckAndUpdateIsUpToDate(
 	isUpToDate := (us.CurrentVersion == issuedVersion) && (completed >= total)
 
 	// Hanya update jika nilai berbeda
-	if cert.IsUpToDate != isUpToDate {
-		err := db.Model(&model.IssuedCertificateModel{}).
-			Where("id = ?", cert.ID).
-			Update("is_up_to_date", isUpToDate).Error
+	if cert.UserCertIsUpToDate != isUpToDate {
+		err := db.Model(&model.UserCertificate{}).
+			Where("id = ?", cert.UserCertID).
+			Update("user_cert_is_up_to_date", isUpToDate).Error
 		if err != nil {
-			return cert.IsUpToDate, err
+			return cert.UserCertIsUpToDate, err
 		}
 	}
 

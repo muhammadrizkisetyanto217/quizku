@@ -22,6 +22,9 @@ type UserExamModel struct {
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
+
+
+
 func (UserExamModel) TableName() string {
 	return "user_exams"
 }

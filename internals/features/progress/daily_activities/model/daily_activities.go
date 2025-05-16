@@ -8,17 +8,18 @@ import (
 )
 
 type UserDailyActivity struct {
-	ID           uint           `gorm:"primaryKey" json:"id"`                                              // SERIAL
-	UserID       uuid.UUID      `gorm:"type:uuid;not null;index" json:"user_id"`                           // UUID
-	Date         time.Time      `gorm:"type:date;not null" json:"date"`                                    // tanggal logika (sama dgn activity_date)
-	ActivityDate time.Time      `gorm:"type:date;not null;uniqueIndex:idx_user_date" json:"activity_date"` // tanggal aktivitas
-	AmountDay    int            `gorm:"not null;default:1" json:"amount_day"`                              // jumlah hari aktif
-	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserDailyActivityID           uint      `gorm:"column:user_daily_activity_id;primaryKey" json:"user_daily_activity_id"`
+	UserDailyActivityUserID       uuid.UUID `gorm:"column:user_daily_activity_user_id;type:uuid;not null;index" json:"user_daily_activity_user_id"`
+	UserDailyActivityDate         time.Time `gorm:"column:user_daily_activity_date;type:date;not null" json:"user_daily_activity_date"`
+	UserDailyActivityActivityDate time.Time `gorm:"column:user_daily_activity_activity_date;type:date;not null;uniqueIndex:idx_user_activity_date" json:"user_daily_activity_activity_date"`
+	UserDailyActivityAmountDay    int       `gorm:"column:user_daily_activity_amount_day;not null;default:1" json:"user_daily_activity_amount_day"`
+
+	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"`
 }
 
 // TableName override nama tabel
 func (UserDailyActivity) TableName() string {
-	return "user_daily_activity"
+	return "user_daily_activities"
 }

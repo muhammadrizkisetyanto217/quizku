@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"quizku/internals/features/progress/level_rank/model"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
-	"quizku/internals/features/progress/level_rank/model"
 )
 
 type LevelRequirementController struct {
@@ -18,13 +19,12 @@ func NewLevelRequirementController(db *gorm.DB) *LevelRequirementController {
 	return &LevelRequirementController{DB: db}
 }
 
-
 // 🟢 GET /api/level-requirements
 // Mengambil seluruh daftar level requirements dari database, diurutkan berdasarkan level ASC.
 // Cocok untuk digunakan di halaman leaderboard, level up, atau progres pengguna.
 func (ctrl *LevelRequirementController) GetAll(c *fiber.Ctx) error {
 	var levels []model.LevelRequirement
-	if err := ctrl.DB.Order("level ASC").Find(&levels).Error; err != nil {
+	if err := ctrl.DB.Order("level_req_level ASC").Find(&levels).Error; err != nil {
 		log.Println("[ERROR] Gagal ambil level:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal mengambil level"})
 	}
@@ -38,7 +38,7 @@ func (ctrl *LevelRequirementController) GetByID(c *fiber.Ctx) error {
 	id, _ := strconv.Atoi(c.Params("id"))
 	var level model.LevelRequirement
 
-	if err := ctrl.DB.First(&level, id).Error; err != nil {
+	if err := ctrl.DB.First(&level, "level_req_id = ?", id).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Level tidak ditemukan"})
 	}
 	return c.JSON(fiber.Map{"data": level})
@@ -50,16 +50,12 @@ func (ctrl *LevelRequirementController) GetByID(c *fiber.Ctx) error {
 func (ctrl *LevelRequirementController) Create(c *fiber.Ctx) error {
 	var input []model.LevelRequirement
 
-	// Validasi format input
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format JSON harus berupa array"})
 	}
-
 	if len(input) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Data level kosong"})
 	}
-
-	// Simpan ke database
 	if err := ctrl.DB.Create(&input).Error; err != nil {
 		log.Println("[ERROR] Gagal buat level batch:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal menyimpan data"})
@@ -78,17 +74,15 @@ func (ctrl *LevelRequirementController) Update(c *fiber.Ctx) error {
 	id, _ := strconv.Atoi(c.Params("id"))
 	var level model.LevelRequirement
 
-	// Cek apakah data level ada
-	if err := ctrl.DB.First(&level, id).Error; err != nil {
+	if err := ctrl.DB.First(&level, "level_req_id = ?", id).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Level tidak ditemukan"})
 	}
 
-	// Parse dan overwrite data
 	var input model.LevelRequirement
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Input tidak valid"})
 	}
-	input.ID = level.ID // Kunci ID tetap
+	input.LevelReqID = level.LevelReqID // pastikan ID tidak berubah
 
 	if err := ctrl.DB.Save(&input).Error; err != nil {
 		log.Println("[ERROR] Gagal update level:", err)
@@ -103,7 +97,7 @@ func (ctrl *LevelRequirementController) Update(c *fiber.Ctx) error {
 func (ctrl *LevelRequirementController) Delete(c *fiber.Ctx) error {
 	id, _ := strconv.Atoi(c.Params("id"))
 
-	if err := ctrl.DB.Delete(&model.LevelRequirement{}, id).Error; err != nil {
+	if err := ctrl.DB.Delete(&model.LevelRequirement{}, "level_req_id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal hapus level"})
 	}
 

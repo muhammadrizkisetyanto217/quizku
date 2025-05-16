@@ -1,68 +1,32 @@
 [
     {
-        "level": 1,
-        "name": "Level 1",
-        "min_points": 0,
-        "max_points": 19
+        "level_req_level": 1,
+        "level_req_name": "Pemula",
+        "level_req_min_points": 0,
+        "level_req_max_points": 99
     },
     {
-        "level": 2,
-        "name": "Level 2",
-        "min_points": 20,
-        "max_points": 39
+        "level_req_level": 2,
+        "level_req_name": "Dasar",
+        "level_req_min_points": 100,
+        "level_req_max_points": 199
     },
     {
-        "level": 3,
-        "name": "Level 3",
-        "min_points": 40,
-        "max_points": 59
+        "level_req_level": 3,
+        "level_req_name": "Menengah",
+        "level_req_min_points": 200,
+        "level_req_max_points": 399
     },
     {
-        "level": 4,
-        "name": "Level 4",
-        "min_points": 60,
-        "max_points": 79
+        "level_req_level": 4,
+        "level_req_name": "Mahir",
+        "level_req_min_points": 400,
+        "level_req_max_points": 699
     },
     {
-        "level": 5,
-        "name": "Level 5",
-        "min_points": 80,
-        "max_points": 99
-    },
-    {
-        "level": 6,
-        "name": "Level 6",
-        "min_points": 100,
-        "max_points": 119
-    },
-    {
-        "level": 7,
-        "name": "Level 7",
-        "min_points": 120,
-        "max_points": 139
-    },
-    {
-        "level": 8,
-        "name": "Level 8",
-        "min_points": 140,
-        "max_points": 159
-    },
-    {
-        "level": 9,
-        "name": "Level 9",
-        "min_points": 160,
-        "max_points": 179
-    },
-    {
-        "level": 10,
-        "name": "Level 10",
-        "min_points": 180,
-        "max_points": 199
-    },
-    {
-        "level": 11,
-        "name": "Level 11",
-        "min_points": 200,
-        "max_points": null
+        "level_req_level": 5,
+        "level_req_name": "Ahli",
+        "level_req_min_points": 700,
+        "level_req_max_points": null
     }
 ]

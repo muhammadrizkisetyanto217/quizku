@@ -2,7 +2,7 @@ package details
 
 import (
 	certRoute "quizku/internals/features/certificates/certificate_versions/route"
-	issuedCertRoute "quizku/internals/features/certificates/issued_certificates/route"
+	issuedCertRoute "quizku/internals/features/certificates/user_certificates/route"
 	rateLimiter "quizku/internals/middlewares"
 	authMiddleware "quizku/internals/middlewares/auth"
 

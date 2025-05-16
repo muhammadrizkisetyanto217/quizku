@@ -10,10 +10,10 @@ import (
 )
 
 type LevelSeed struct {
-	Level     int    `json:"level"`
-	Name      string `json:"name"`
-	MinPoints int    `json:"min_points"`
-	MaxPoints *int   `json:"max_points"`
+	LevelReqLevel     int    `json:"level_req_level"`
+	LevelReqName      string `json:"level_req_name"`
+	LevelReqMinPoints int    `json:"level_req_min_points"`
+	LevelReqMaxPoints *int   `json:"level_req_max_points"` // bisa null
 }
 
 func SeedLevelRequirementsFromJSON(db *gorm.DB, filePath string) {
@@ -31,22 +31,22 @@ func SeedLevelRequirementsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, item := range data {
 		var existing model.LevelRequirement
-		if err := db.Where("level = ?", item.Level).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Level %d sudah ada, lewati...", item.Level)
+		if err := db.Where("level_req_level = ?", item.LevelReqLevel).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Level %d sudah ada, lewati...", item.LevelReqLevel)
 			continue
 		}
 
 		record := model.LevelRequirement{
-			Level:     item.Level,
-			Name:      item.Name,
-			MinPoints: item.MinPoints,
-			MaxPoints: item.MaxPoints,
+			LevelReqLevel:     item.LevelReqLevel,
+			LevelReqName:      item.LevelReqName,
+			LevelReqMinPoints: item.LevelReqMinPoints,
+			LevelReqMaxPoints: item.LevelReqMaxPoints,
 		}
 
 		if err := db.Create(&record).Error; err != nil {
-			log.Printf("❌ Gagal insert Level %d: %v", item.Level, err)
+			log.Printf("❌ Gagal insert Level %d: %v", item.LevelReqLevel, err)
 		} else {
-			log.Printf("✅ Berhasil insert Level %d", item.Level)
+			log.Printf("✅ Berhasil insert Level %d", item.LevelReqLevel)
 		}
 	}
 }

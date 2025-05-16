@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
-	controller "quizku/internals/features/certificates/issued_certificates/controller"
+	controller "quizku/internals/features/certificates/user_certificates/controller"
 )
 
 func IssuedCertificateUserRoutes(app fiber.Router, db *gorm.DB) {
