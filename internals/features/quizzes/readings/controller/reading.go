@@ -45,7 +45,7 @@ func (rc *ReadingController) GetReading(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching reading with ID:", id)
 
 	var reading readingModel.ReadingModel
-	if err := rc.DB.First(&reading, id).Error; err != nil {
+	if err := rc.DB.First(&reading, "reading_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Reading not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Reading not found",
@@ -59,17 +59,17 @@ func (rc *ReadingController) GetReading(c *fiber.Ctx) error {
 // Mengambil semua data bacaan berdasarkan unit_id tertentu.
 func (rc *ReadingController) GetReadingsByUnit(c *fiber.Ctx) error {
 	unitID := c.Params("unitId")
-	log.Printf("[INFO] Fetching readings for unit_id: %s\n", unitID)
+	log.Printf("[INFO] Fetching readings for reading_unit_id: %s\n", unitID)
 
 	var readings []readingModel.ReadingModel
-	if err := rc.DB.Where("unit_id = ?", unitID).Find(&readings).Error; err != nil {
-		log.Printf("[ERROR] Failed to fetch readings for unit_id %s: %v\n", unitID, err)
+	if err := rc.DB.Where("reading_unit_id = ?", unitID).Find(&readings).Error; err != nil {
+		log.Printf("[ERROR] Failed to fetch readings for reading_unit_id %s: %v\n", unitID, err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch readings",
 		})
 	}
 
-	log.Printf("[SUCCESS] Retrieved %d readings for unit_id %s\n", len(readings), unitID)
+	log.Printf("[SUCCESS] Retrieved %d readings for reading_unit_id %s\n", len(readings), unitID)
 	return c.JSON(readings)
 }
 
@@ -93,7 +93,7 @@ func (rc *ReadingController) CreateReading(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("[SUCCESS] Reading created: ID=%d\n", reading.ID)
+	log.Printf("[SUCCESS] Reading created: ID=%d\n", reading.ReadingID)
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Reading created successfully",
 		"data":    reading,
@@ -107,7 +107,7 @@ func (rc *ReadingController) UpdateReading(c *fiber.Ctx) error {
 	log.Printf("[INFO] Updating reading with ID: %s\n", id)
 
 	var reading readingModel.ReadingModel
-	if err := rc.DB.First(&reading, id).Error; err != nil {
+	if err := rc.DB.First(&reading, "reading_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Reading not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Reading not found",
@@ -141,7 +141,7 @@ func (rc *ReadingController) DeleteReading(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting reading with ID: %s\n", id)
 
-	if err := rc.DB.Delete(&readingModel.ReadingModel{}, id).Error; err != nil {
+	if err := rc.DB.Delete(&readingModel.ReadingModel{}, "reading_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Failed to delete reading:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete reading",
@@ -164,9 +164,11 @@ func (rc *ReadingController) GetReadingWithTooltips(c *fiber.Ctx) error {
 	log.Printf("[INFO] Fetching reading with ID: %s\n", id)
 
 	var reading readingModel.ReadingModel
-	if err := rc.DB.First(&reading, id).Error; err != nil {
+	if err := rc.DB.First(&reading, "reading_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Reading not found:", err)
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Reading not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Reading not found",
+		})
 	}
 
 	log.Printf("[SUCCESS] Retrieved reading with ID: %s\n", id)
@@ -192,7 +194,7 @@ func (rc *ReadingController) MarkKeywords(text string, tooltips []tooltipModel.T
 		// Regex case-insensitive tapi preserve original match
 		re := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(keyword) + `\b`)
 		text = re.ReplaceAllStringFunc(text, func(match string) string {
-			return match + "=" + keywordID // Tetap gunakan `match` agar case aslinya dipertahankan
+			return match + "=" + keywordID
 		})
 
 		log.Printf("[DEBUG] Replacing all '%s' with '%s' in text", keyword, keyword+"="+keywordID)

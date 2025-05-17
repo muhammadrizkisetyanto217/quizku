@@ -13,7 +13,7 @@ type QuestionModel struct {
 	QuestionText          string         `gorm:"column:question_text;type:text;not null" json:"question_text"`                              // Isi pertanyaan
 	QuestionAnswerChoices pq.StringArray `gorm:"column:question_answer_choices;type:text[];not null" json:"question_answer_choices"`        // Pilihan jawaban
 	QuestionCorrectAnswer string         `gorm:"column:question_correct_answer;type:varchar(50);not null" json:"question_correct_answer"`   // Jawaban benar
-	QuestionHelpParagraph string         `gorm:"column:question_help_paragraph;type:text;not null" json:"question_help_paragraph"`          // Paragraf bantuan jika ada
+	QuestionHelpParagraph string         `gorm:"column:question_paragraph_help;type:text;not null" json:"question_paragraph_help"`          // Paragraf bantuan jika ada
 	QuestionExplanation   string         `gorm:"column:question_explanation;type:text;not null" json:"question_explanation"`                // Penjelasan mengapa jawaban benar
 	QuestionAnswerText    string         `gorm:"column:question_answer_text;type:text;not null" json:"question_answer_text"`                // Ringkasan teks jawaban
 	QuestionStatus        string         `gorm:"column:question_status;type:varchar(10);not null;default:'pending'" json:"question_status"` // pending, active, archived

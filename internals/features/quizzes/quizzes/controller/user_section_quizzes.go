@@ -42,7 +42,9 @@ func (ctrl *UserSectionQuizzesController) GetUserSectionQuizzesByUserID(c *fiber
 
 	// ✅ Ambil data user_section_quizzes dari database
 	var data []model.UserSectionQuizzesModel
-	if err := ctrl.DB.Where("user_id = ?", userID).Find(&data).Error; err != nil {
+	if err := ctrl.DB.
+		Where("user_section_quizzes_user_id = ?", userID).
+		Find(&data).Error; err != nil {
 		log.Println("[ERROR] Gagal ambil user_section_quizzes:", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal mengambil data user_section_quizzes",

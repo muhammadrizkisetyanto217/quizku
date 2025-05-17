@@ -11,12 +11,12 @@ import (
 )
 
 type EvaluationSeed struct {
-	NameEvaluation string  `json:"name_evaluations"`
-	Status         string  `json:"status"`
-	TotalQuestion  []int64 `json:"total_question"`
-	IconURL        string  `json:"icon_url"`
-	UnitID         uint    `json:"unit_id"`
-	CreatedBy      string  `json:"created_by"`
+	EvaluationName          string  `json:"evaluation_name"`
+	EvaluationStatus        string  `json:"evaluation_status"`
+	EvaluationTotalQuestion []int64 `json:"evaluation_total_question"`
+	EvaluationIconURL       string  `json:"evaluation_icon_url"`
+	EvaluationUnitID        uint    `json:"evaluation_unit_id"`
+	EvaluationCreatedBy     string  `json:"evaluation_created_by"` // UUID dalam bentuk string
 }
 
 func SeedEvaluationsFromJSON(db *gorm.DB, filePath string) {
@@ -34,29 +34,29 @@ func SeedEvaluationsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, seed := range seeds {
 		var existing model.EvaluationModel
-		if err := db.Where("name_evaluations = ?", seed.NameEvaluation).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Evaluation '%s' sudah ada, lewati...", seed.NameEvaluation)
+		if err := db.Where("evaluation_name = ?", seed.EvaluationName).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Evaluation '%s' sudah ada, lewati...", seed.EvaluationName)
 			continue
 		}
 
 		eval := model.EvaluationModel{
-			NameEvaluation: seed.NameEvaluation,
-			Status:         seed.Status,
-			TotalQuestion:  seed.TotalQuestion,
-			IconURL:        &seed.IconURL,
-			UnitID:         seed.UnitID,
-			CreatedBy:      parseUUID(seed.CreatedBy),
+			EvaluationName:          seed.EvaluationName,
+			EvaluationStatus:        seed.EvaluationStatus,
+			EvaluationTotalQuestion: seed.EvaluationTotalQuestion,
+			EvaluationIconURL:       &seed.EvaluationIconURL,
+			EvaluationUnitID:        seed.EvaluationUnitID,
+			EvaluationCreatedBy:     parseUUID(seed.EvaluationCreatedBy),
 		}
 
 		if err := db.Create(&eval).Error; err != nil {
-			log.Printf("❌ Gagal insert '%s': %v", seed.NameEvaluation, err)
+			log.Printf("❌ Gagal insert '%s': %v", seed.EvaluationName, err)
 		} else {
-			log.Printf("✅ Berhasil insert '%s'", seed.NameEvaluation)
+			log.Printf("✅ Berhasil insert '%s'", seed.EvaluationName)
 		}
 	}
 }
 
-// helper mandiri
+// Helper UUID validasi
 func parseUUID(s string) uuid.UUID {
 	id, err := uuid.Parse(s)
 	if err != nil {

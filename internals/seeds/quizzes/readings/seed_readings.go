@@ -11,11 +11,11 @@ import (
 )
 
 type ReadingSeed struct {
-	Title           string  `json:"title"`
-	Status          string  `json:"status"`
-	DescriptionLong string  `json:"description_long"`
-	UnitID          uint    `json:"unit_id"`
-	CreatedBy       string  `json:"created_by"`
+	ReadingTitle           string `json:"reading_title"`
+	ReadingStatus          string `json:"reading_status"`
+	ReadingDescriptionLong string `json:"reading_description_long"`
+	ReadingUnitID          uint   `json:"reading_unit_id"`
+	ReadingCreatedBy       string `json:"reading_created_by"`
 }
 
 func SeedReadingsFromJSON(db *gorm.DB, filePath string) {
@@ -33,28 +33,27 @@ func SeedReadingsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, seed := range seeds {
 		var existing model.ReadingModel
-		if err := db.Where("title = ?", seed.Title).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Reading '%s' sudah ada, lewati...", seed.Title)
+		if err := db.Where("reading_title = ?", seed.ReadingTitle).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Reading '%s' sudah ada, lewati...", seed.ReadingTitle)
 			continue
 		}
 
 		reading := model.ReadingModel{
-			Title:           seed.Title,
-			Status:          seed.Status,
-			DescriptionLong: seed.DescriptionLong,
-			UnitID:          seed.UnitID,
-			CreatedBy:       parseUUID(seed.CreatedBy),
+			ReadingTitle:           seed.ReadingTitle,
+			ReadingStatus:          seed.ReadingStatus,
+			ReadingDescriptionLong: seed.ReadingDescriptionLong,
+			ReadingUnitID:          seed.ReadingUnitID,
+			ReadingCreatedBy:       parseUUID(seed.ReadingCreatedBy),
 		}
 
 		if err := db.Create(&reading).Error; err != nil {
-			log.Printf("❌ Gagal insert '%s': %v", seed.Title, err)
+			log.Printf("❌ Gagal insert '%s': %v", seed.ReadingTitle, err)
 		} else {
-			log.Printf("✅ Berhasil insert '%s'", seed.Title)
+			log.Printf("✅ Berhasil insert '%s'", seed.ReadingTitle)
 		}
 	}
 }
 
-// helper mandiri
 func parseUUID(s string) uuid.UUID {
 	id, err := uuid.Parse(s)
 	if err != nil {

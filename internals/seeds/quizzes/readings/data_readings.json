@@ -1,34 +1,30 @@
 [
     {
-        "title": "Makna dan Tujuan Wudhu untuk Bersuci Bagian 14",
-        "status": "active",
-        "tooltip_id": [
-            "1",
-            "2"
-        ],
-        "description_long": "Wudhu merupakan ibadah penyucian diri yang wajib dilakukan sebelum melaksanakan sholat. Tujuan utama dari wudhu bukan hanya membersihkan anggota tubuh, namun juga sebagai bentuk ketaatan kepada perintah Allah SWT. Wudhu juga mengajarkan kedisiplinan, kebersihan, dan kesiapan mental dalam menjalankan ibadah. Dalam Islam, menjaga kesucian jasmani dan rohani sangat ditekankan, dan wudhu menjadi salah satu cara untuk mencapai keduanya.",
-        "unit_id": 1,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "reading_title": "Makna dan Tujuan Wudhu untuk Bersuci Bagian 14",
+        "reading_status": "active",
+        "reading_description_long": "Wudhu merupakan ibadah penyucian diri yang wajib dilakukan sebelum melaksanakan sholat. Tujuan utama dari wudhu bukan hanya membersihkan anggota tubuh, namun juga sebagai bentuk ketaatan kepada perintah Allah SWT. Wudhu juga mengajarkan kedisiplinan, kebersihan, dan kesiapan mental dalam menjalankan ibadah. Dalam Islam, menjaga kesucian jasmani dan rohani sangat ditekankan, dan wudhu menjadi salah satu cara untuk mencapai keduanya.",
+        "reading_unit_id": 1,
+        "reading_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "title": "Makna dan Tujuan Wudhu untuk Bersuci Bagian 15",
-        "status": "active",
-        "description_long": "Wudhu merupakan ibadah penyucian diri yang wajib dilakukan sebelum melaksanakan sholat. Tujuan utama dari wudhu bukan hanya membersihkan anggota tubuh, namun juga sebagai bentuk ketaatan kepada perintah Allah SWT. Wudhu juga mengajarkan kedisiplinan, kebersihan, dan kesiapan mental dalam menjalankan ibadah. Dalam Islam, menjaga kesucian jasmani dan rohani sangat ditekankan, dan wudhu menjadi salah satu cara untuk mencapai keduanya.",
-        "unit_id": 2,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "reading_title": "Makna dan Tujuan Wudhu untuk Bersuci Bagian 15",
+        "reading_status": "active",
+        "reading_description_long": "Wudhu merupakan ibadah penyucian diri yang wajib dilakukan sebelum melaksanakan sholat. Tujuan utama dari wudhu bukan hanya membersihkan anggota tubuh, namun juga sebagai bentuk ketaatan kepada perintah Allah SWT. Wudhu juga mengajarkan kedisiplinan, kebersihan, dan kesiapan mental dalam menjalankan ibadah. Dalam Islam, menjaga kesucian jasmani dan rohani sangat ditekankan, dan wudhu menjadi salah satu cara untuk mencapai keduanya.",
+        "reading_unit_id": 2,
+        "reading_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "title": "Pengantar Fiqh: Thaharah dan Kebersihan dalam Islam",
-        "status": "active",
-        "description_long": "Fiqh adalah ilmu yang membahas tentang tata cara menjalankan ibadah dan muamalah. Dalam aspek thaharah, fiqh menekankan pentingnya menjaga kebersihan sebagai bagian dari iman. Kebersihan jasmani dan rohani menjadi syarat sahnya ibadah seperti sholat. Oleh karena itu, memahami dasar-dasar fiqh thaharah menjadi penting dalam kehidupan sehari-hari umat Islam.",
-        "unit_id": 3,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "reading_title": "Pengantar Fiqh: Thaharah dan Kebersihan dalam Islam",
+        "reading_status": "active",
+        "reading_description_long": "Fiqh adalah ilmu yang membahas tentang tata cara menjalankan ibadah dan muamalah. Dalam aspek thaharah, fiqh menekankan pentingnya menjaga kebersihan sebagai bagian dari iman. Kebersihan jasmani dan rohani menjadi syarat sahnya ibadah seperti sholat. Oleh karena itu, memahami dasar-dasar fiqh thaharah menjadi penting dalam kehidupan sehari-hari umat Islam.",
+        "reading_unit_id": 3,
+        "reading_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "title": "Fiqh sebagai Pondasi Praktik Ibadah",
-        "status": "active",
-        "description_long": "Fiqh tidak hanya sekadar teori, melainkan panduan praktis dalam menjalankan syariat. Ia menjadi pondasi dalam memahami hukum ibadah seperti wudhu, tayamum, najis, dan sebagainya. Dengan memahami fiqh, seorang muslim akan lebih yakin dan mantap dalam beribadah, serta tidak mudah terjebak dalam keraguan atau kekeliruan amalan.",
-        "unit_id": 4,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "reading_title": "Fiqh sebagai Pondasi Praktik Ibadah",
+        "reading_status": "active",
+        "reading_description_long": "Fiqh tidak hanya sekadar teori, melainkan panduan praktis dalam menjalankan syariat. Ia menjadi pondasi dalam memahami hukum ibadah seperti wudhu, tayamum, najis, dan sebagainya. Dengan memahami fiqh, seorang muslim akan lebih yakin dan mantap dalam beribadah, serta tidak mudah terjebak dalam keraguan atau kekeliruan amalan.",
+        "reading_unit_id": 4,
+        "reading_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     }
 ]

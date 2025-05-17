@@ -40,7 +40,6 @@ func UpdateOrInsertDailyActivity(db *gorm.DB, userID uuid.UUID) error {
 	// Buat entri baru
 	newActivity := model.UserDailyActivity{
 		UserDailyActivityUserID:       userID,
-		UserDailyActivityDate:         today, // bisa sama dengan activity_date
 		UserDailyActivityActivityDate: today,
 		UserDailyActivityAmountDay:    newAmountDay,
 	}

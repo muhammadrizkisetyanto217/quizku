@@ -10,18 +10,19 @@ import (
 )
 
 type SectionQuizzesModel struct {
-	ID                 uint           `gorm:"primaryKey" json:"id"`
-	NameSectionQuizzes string         `gorm:"size:50;not null" json:"name_section_quizzes"`
-	Status             string         `gorm:"size:10;default:'pending';check:status IN ('active', 'pending', 'archived')" json:"status"`
-	MaterialsQuizzes   string         `gorm:"type:text;not null" json:"materials_quizzes"`
-	IconURL            string         `gorm:"size:100" json:"icon_url"`
-	TotalQuizzes       pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_quizzes"`
-	CreatedAt          time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt          time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt          gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
-	CreatedBy          uuid.UUID      `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE" json:"created_by"`
-	UnitID             uint           `gorm:"not null;constraint:OnDelete:CASCADE" json:"unit_id"`
-	Quizzes            []QuizModel    `gorm:"foreignKey:SectionQuizID" json:"quizzes"`
+	SectionQuizzesID           uint           `gorm:"column:section_quizzes_id;primaryKey;autoIncrement" json:"section_quizzes_id"`
+	SectionQuizzesName         string         `gorm:"column:section_quizzes_name;size:50;not null" json:"section_quizzes_name"`
+	SectionQuizzesStatus       string         `gorm:"column:section_quizzes_status;type:varchar(10);default:'pending';check:section_quizzes_status IN ('active', 'pending', 'archived')" json:"section_quizzes_status"`
+	SectionQuizzesMaterials    string         `gorm:"column:section_quizzes_materials;type:text;not null" json:"section_quizzes_materials"`
+	SectionQuizzesIconURL      string         `gorm:"column:section_quizzes_icon_url;size:100" json:"section_quizzes_icon_url"`
+	SectionQuizzesTotalQuizzes pq.Int64Array  `gorm:"column:section_quizzes_total_quizzes;type:integer[];default:'{}'" json:"section_quizzes_total_quizzes"`
+	CreatedAt                  time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt                  time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
+	DeletedAt                  gorm.DeletedAt `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"`
+	SectionQuizzesUnitID       uint           `gorm:"column:section_quizzes_unit_id;not null" json:"section_quizzes_unit_id"`
+	SectionQuizzesCreatedBy    uuid.UUID      `gorm:"column:section_quizzes_created_by;type:uuid;not null" json:"section_quizzes_created_by"`
+
+	Quizzes []QuizModel `gorm:"foreignKey:QuizSectionQuizzesID" json:"quizzes"`
 }
 
 func (SectionQuizzesModel) TableName() string {
@@ -30,12 +31,12 @@ func (SectionQuizzesModel) TableName() string {
 
 // ✅ AfterSave: Sinkronisasi array ID section_quizzes setelah simpan
 func (s *SectionQuizzesModel) AfterSave(tx *gorm.DB) error {
-	return SyncTotalSectionQuizzes(tx, s.UnitID)
+	return SyncTotalSectionQuizzes(tx, s.SectionQuizzesUnitID)
 }
 
 // ✅ AfterDelete: Sinkronisasi array ID section_quizzes setelah dihapus
 func (s *SectionQuizzesModel) AfterDelete(tx *gorm.DB) error {
-	return SyncTotalSectionQuizzes(tx, s.UnitID)
+	return SyncTotalSectionQuizzes(tx, s.SectionQuizzesUnitID)
 }
 
 // ✅ Sinkronisasi field total_section_quizzes di tabel units
@@ -45,9 +46,9 @@ func SyncTotalSectionQuizzes(db *gorm.DB, unitID uint) error {
 	err := db.Exec(`
 		UPDATE units
 		SET total_section_quizzes = (
-			SELECT ARRAY_AGG(id ORDER BY id)
+			SELECT ARRAY_AGG(section_quizzes_id ORDER BY section_quizzes_id)
 			FROM section_quizzes
-			WHERE unit_id = ? AND deleted_at IS NULL
+			WHERE section_quizzes_unit_id = ? AND deleted_at IS NULL
 		)
 		WHERE id = ?
 	`, unitID, unitID).Error

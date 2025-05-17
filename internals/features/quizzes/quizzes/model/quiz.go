@@ -10,44 +10,43 @@ import (
 )
 
 type QuizModel struct {
-	ID            int           `json:"id" gorm:"primaryKey"`
-	Name          string        `json:"name_quizzes" gorm:"type:varchar(50);unique;not null;column:name_quizzes"`
-	Status        string        `json:"status" gorm:"type:varchar(10);default:pending;check:status IN ('active', 'pending', 'archived')"`
-	TotalQuestion pq.Int64Array `gorm:"type:integer[];default:'{}'" json:"total_question"`
-	IconURL       string        `json:"icon_url" gorm:"type:varchar(100)"`
-	CreatedAt     time.Time     `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt     time.Time     `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP"`
-	DeletedAt     *time.Time    `json:"deleted_at" gorm:"index"`
-	SectionQuizID int           `json:"section_quizzes_id" gorm:"column:section_quizzes_id"`
-	CreatedBy     uuid.UUID     `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE" json:"created_by"`
+	QuizID               int           `gorm:"column:quiz_id;primaryKey;autoIncrement" json:"quiz_id"`
+	QuizName             string        `gorm:"column:quiz_name;type:varchar(50);unique;not null" json:"quiz_name"`
+	QuizStatus           string        `gorm:"column:quiz_status;type:varchar(10);default:'pending';check:quiz_status IN ('active', 'pending', 'archived')" json:"quiz_status"`
+	QuizTotalQuestion    pq.Int64Array `gorm:"column:quiz_total_question;type:integer[];default:'{}'" json:"quiz_total_question"`
+	QuizIconURL          string        `gorm:"column:quiz_icon_url;type:varchar(100)" json:"quiz_icon_url"`
+	CreatedAt            time.Time     `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt            time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
+	DeletedAt            *time.Time    `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"`
+	QuizSectionQuizzesID int           `gorm:"column:quiz_section_quizzes_id;not null" json:"quiz_section_quizzes_id"`
+	QuizCreatedBy        uuid.UUID     `gorm:"column:quiz_created_by;type:uuid;not null;constraint:OnDelete:CASCADE" json:"quiz_created_by"`
 }
 
 func (QuizModel) TableName() string {
 	return "quizzes"
 }
-
-// ✅ AfterSave: sinkronkan daftar quiz ke section_quizzes
 func (q *QuizModel) AfterSave(tx *gorm.DB) error {
-	return SyncTotalQuizzes(tx, q.SectionQuizID)
+	return SyncTotalQuizzes(tx, q.QuizSectionQuizzesID)
 }
 
-// ✅ AfterDelete: sinkronkan daftar quiz ke section_quizzes
+
+
+
 func (q *QuizModel) AfterDelete(tx *gorm.DB) error {
-	return SyncTotalQuizzes(tx, q.SectionQuizID)
+	return SyncTotalQuizzes(tx, q.QuizSectionQuizzesID)
 }
 
-// ✅ Fungsi sinkronisasi array ID quiz ke section_quizzes.total_quizzes
 func SyncTotalQuizzes(db *gorm.DB, sectionQuizID int) error {
-	log.Println("[SERVICE] SyncTotalQuizzes - section_quizzes_id:", sectionQuizID)
+	log.Println("[SERVICE] SyncTotalQuizzes - quiz_section_quizzes_id:", sectionQuizID)
 
 	err := db.Exec(`
 		UPDATE section_quizzes
-		SET total_quizzes = (
-			SELECT ARRAY_AGG(id ORDER BY id)
+		SET section_quizzes_total_quizzes = (
+			SELECT ARRAY_AGG(quiz_id ORDER BY quiz_id)
 			FROM quizzes
-			WHERE section_quizzes_id = ? AND deleted_at IS NULL
+			WHERE quiz_section_quizzes_id = ? AND deleted_at IS NULL
 		)
-		WHERE id = ?
+		WHERE section_quizzes_id = ?
 	`, sectionQuizID, sectionQuizID).Error
 
 	if err != nil {

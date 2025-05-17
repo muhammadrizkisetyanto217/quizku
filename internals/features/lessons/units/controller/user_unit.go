@@ -117,7 +117,7 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 	for _, unit := range units {
 		unitIDs = append(unitIDs, unit.ID)
 		for _, section := range unit.SectionQuizzes {
-			sectionQuizToUnit[section.ID] = unit.ID
+			sectionQuizToUnit[section.SectionQuizzesID] = unit.ID
 		}
 	}
 
@@ -134,8 +134,8 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 	// Ambil seluruh section_progress user dalam 1 query
 	var allSectionProgress []userSectionQuizzesModel.UserSectionQuizzesModel
 	if err := ctrl.DB.
-		Where("user_id = ?", userID).
-		Where("section_quizzes_id IN ?", keys(sectionQuizToUnit)).
+		Where("user_section_quizzes_user_id = ?", userID).
+		Where("user_section_quizzes_section_quizzes_id IN ?", keys(sectionQuizToUnit)).
 		Find(&allSectionProgress).Error; err != nil {
 		log.Printf("[ERROR] Gagal ambil seluruh section_progress user: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -147,10 +147,13 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 	progressPerUnit := make(map[uint][]userSectionQuizzesModel.UserSectionQuizzesModel)
 	completedMap := make(map[uint][]int64)
 	for _, sp := range allSectionProgress {
-		unitID := sectionQuizToUnit[sp.SectionQuizzesID]
+		sectionID := sp.UserSectionQuizzesSectionQuizzesID
+		unitID := sectionQuizToUnit[sectionID]
+
 		progressPerUnit[unitID] = append(progressPerUnit[unitID], sp)
-		if len(sp.CompleteQuiz) > 0 {
-			completedMap[unitID] = append(completedMap[unitID], int64(sp.SectionQuizzesID))
+
+		if len(sp.UserSectionQuizzesCompleteQuiz) > 0 {
+			completedMap[unitID] = append(completedMap[unitID], int64(sectionID))
 		}
 	}
 

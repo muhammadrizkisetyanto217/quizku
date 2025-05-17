@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"quizku/internals/features/quizzes/quizzes/model"
+	sectionQuizModel "quizku/internals/features/quizzes/quizzes/model"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -13,13 +13,13 @@ import (
 )
 
 type SectionQuizSeed struct {
-	NameSectionQuizzes string  `json:"name_section_quizzes"`
-	Status             string  `json:"status"`
-	MaterialsQuizzes   string  `json:"materials_quizzes"`
-	IconURL            string  `json:"icon_url"`
-	UnitID             uint    `json:"unit_id"`
-	CreatedBy          string  `json:"created_by"`
-	TotalQuizzes       []int64 `json:"total_quizzes"`
+	SectionQuizzesName         string  `json:"section_quizzes_name"`
+	SectionQuizzesStatus       string  `json:"section_quizzes_status"`
+	SectionQuizzesMaterials    string  `json:"section_quizzes_materials"`
+	SectionQuizzesIconURL      string  `json:"section_quizzes_icon_url"`
+	SectionQuizzesUnitID       uint    `json:"section_quizzes_unit_id"`
+	SectionQuizzesCreatedBy    string  `json:"section_quizzes_created_by"`
+	SectionQuizzesTotalQuizzes []int64 `json:"section_quizzes_total_quizzes"`
 }
 
 func SeedSectionQuizzesFromJSON(db *gorm.DB, filePath string) {
@@ -36,26 +36,26 @@ func SeedSectionQuizzesFromJSON(db *gorm.DB, filePath string) {
 	}
 
 	for _, seed := range seeds {
-		var existing model.SectionQuizzesModel
-		if err := db.Where("name_section_quizzes = ?", seed.NameSectionQuizzes).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Section Quiz '%s' sudah ada, lewati...", seed.NameSectionQuizzes)
+		var existing sectionQuizModel.SectionQuizzesModel
+		if err := db.Where("section_quizzes_name = ?", seed.SectionQuizzesName).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Section Quiz '%s' sudah ada, lewati...", seed.SectionQuizzesName)
 			continue
 		}
 
-		newSection := model.SectionQuizzesModel{
-			NameSectionQuizzes: seed.NameSectionQuizzes,
-			Status:             seed.Status,
-			MaterialsQuizzes:   seed.MaterialsQuizzes,
-			IconURL:            seed.IconURL,
-			TotalQuizzes:       pq.Int64Array(seed.TotalQuizzes),
-			UnitID:             seed.UnitID,
-			CreatedBy:          parseUUID(seed.CreatedBy),
+		newSection := sectionQuizModel.SectionQuizzesModel{
+			SectionQuizzesName:         seed.SectionQuizzesName,
+			SectionQuizzesStatus:       seed.SectionQuizzesStatus,
+			SectionQuizzesMaterials:    seed.SectionQuizzesMaterials,
+			SectionQuizzesIconURL:      seed.SectionQuizzesIconURL,
+			SectionQuizzesTotalQuizzes: pq.Int64Array(seed.SectionQuizzesTotalQuizzes),
+			SectionQuizzesUnitID:       seed.SectionQuizzesUnitID,
+			SectionQuizzesCreatedBy:    parseUUID(seed.SectionQuizzesCreatedBy),
 		}
 
 		if err := db.Create(&newSection).Error; err != nil {
-			log.Printf("❌ Gagal insert '%s': %v", seed.NameSectionQuizzes, err)
+			log.Printf("❌ Gagal insert '%s': %v", seed.SectionQuizzesName, err)
 		} else {
-			log.Printf("✅ Berhasil insert '%s'", seed.NameSectionQuizzes)
+			log.Printf("✅ Berhasil insert '%s'", seed.SectionQuizzesName)
 		}
 	}
 }

@@ -41,68 +41,70 @@ func (ctrl *UserEvaluationController) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
-	// 📦 Struktur input body
+	// 📦 Struktur input JSON sesuai model
 	type InputBody struct {
-		EvaluationID    uint `json:"evaluation_id"`    // ID evaluasi yang dikerjakan
-		PercentageGrade int  `json:"percentage_grade"` // Nilai persentase
-		TimeDuration    int  `json:"time_duration"`    // Lama waktu pengerjaan (detik)
-		Point           int  `json:"point"`            // Poin yang didapatkan dari evaluasi ini
+		UserEvaluationEvaluationID    uint `json:"user_evaluation_evaluation_id"`
+		UserEvaluationPercentageGrade int  `json:"user_evaluation_percentage_grade"`
+		UserEvaluationTimeDuration    int  `json:"user_evaluation_time_duration"`
+		UserEvaluationPoint           int  `json:"user_evaluation_point"`
 	}
 	var body InputBody
 	if err := c.BodyParser(&body); err != nil {
 		log.Println("[ERROR] Failed to parse body:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
-	if body.EvaluationID == 0 || body.PercentageGrade == 0 {
+	if body.UserEvaluationEvaluationID == 0 || body.UserEvaluationPercentageGrade == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "evaluation_id and percentage_grade are required",
+			"error": "user_evaluation_evaluation_id and user_evaluation_percentage_grade are required",
 		})
 	}
 
-	// 🔎 Ambil evaluasi dan unit_id-nya
+	// 🔎 Ambil evaluasi untuk ambil unit_id
 	var evaluation evaluationModel.EvaluationModel
-	if err := ctrl.DB.Select("id, unit_id").First(&evaluation, body.EvaluationID).Error; err != nil {
+	if err := ctrl.DB.
+		Select("evaluation_id, evaluation_unit_id").
+		First(&evaluation, "evaluation_id = ?", body.UserEvaluationEvaluationID).Error; err != nil {
 		log.Println("[ERROR] Evaluation not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Evaluation not found"})
 	}
 
-	// 🔁 Cek attempt terakhir user untuk evaluasi ini
+	// 🔁 Ambil attempt terakhir dari user untuk evaluasi ini
 	var latestAttempt int
 	err = ctrl.DB.Table("user_evaluations").
-		Select("COALESCE(MAX(attempt), 0)").
-		Where("user_id = ? AND evaluation_id = ?", userUUID, body.EvaluationID).
+		Select("COALESCE(MAX(user_evaluation_attempt), 0)").
+		Where("user_evaluation_user_id = ? AND user_evaluation_evaluation_id = ?", userUUID, body.UserEvaluationEvaluationID).
 		Scan(&latestAttempt).Error
 	if err != nil {
 		log.Println("[ERROR] Failed to count latest attempt:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	// 📤 Siapkan data untuk disimpan
+	// 🧾 Buat entri baru
 	input := userEvaluationModel.UserEvaluationModel{
-		UserID:          userUUID,
-		EvaluationID:    body.EvaluationID,
-		UnitID:          evaluation.UnitID,
-		Attempt:         latestAttempt + 1,
-		PercentageGrade: body.PercentageGrade,
-		TimeDuration:    body.TimeDuration,
-		Point:           body.Point,
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
+		UserEvaluationUserID:          userUUID,
+		UserEvaluationEvaluationID:    body.UserEvaluationEvaluationID,
+		UserEvaluationUnitID:          evaluation.EvaluationUnitID,
+		UserEvaluationAttempt:         latestAttempt + 1,
+		UserEvaluationPercentageGrade: body.UserEvaluationPercentageGrade,
+		UserEvaluationTimeDuration:    body.UserEvaluationTimeDuration,
+		UserEvaluationPoint:           body.UserEvaluationPoint,
+		CreatedAt:                     time.Now(),
+		UpdatedAt:                     time.Now(),
 	}
 
-	// 💾 Simpan ke DB
+	// 💾 Simpan ke database
 	if err := ctrl.DB.Create(&input).Error; err != nil {
 		log.Println("[ERROR] Failed to create user evaluation:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user evaluation"})
 	}
 
-	// ⛏️ Update progress & poin
-	_ = service.UpdateUserUnitFromEvaluation(ctrl.DB, input.UserID, input.UnitID, input.PercentageGrade)
-	_ = service.AddPointFromEvaluation(ctrl.DB, input.UserID, input.EvaluationID, input.Attempt)
-	_ = activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserID)
+	// ⛏️ Update progres, poin, dan aktivitas harian
+	_ = service.UpdateUserUnitFromEvaluation(ctrl.DB, input.UserEvaluationUserID, input.UserEvaluationUnitID, input.UserEvaluationPercentageGrade)
+	_ = service.AddPointFromEvaluation(ctrl.DB, input.UserEvaluationUserID, input.UserEvaluationEvaluationID, input.UserEvaluationAttempt)
+	_ = activityService.UpdateOrInsertDailyActivity(ctrl.DB, input.UserEvaluationUserID)
 
 	log.Printf("[SUCCESS] UserEvaluation created: user_id=%s, evaluation_id=%d, attempt=%d\n",
-		input.UserID.String(), input.EvaluationID, input.Attempt)
+		input.UserEvaluationUserID.String(), input.UserEvaluationEvaluationID, input.UserEvaluationAttempt)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User evaluation created successfully",
@@ -116,10 +118,23 @@ func (ctrl *UserEvaluationController) GetByUserID(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	var evaluations []userEvaluationModel.UserEvaluationModel
 
-	// Ambil seluruh log evaluasi milik user
-	if err := ctrl.DB.Where("user_id = ?", userID).Find(&evaluations).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get evaluations"})
+	log.Printf("[INFO] Fetching user evaluations for user_id: %s", userID)
+
+	// 🔍 Ambil semua evaluasi berdasarkan user_evaluation_user_id
+	if err := ctrl.DB.
+		Where("user_evaluation_user_id = ?", userID).
+		Find(&evaluations).Error; err != nil {
+		log.Println("[ERROR] Failed to get user evaluations:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get evaluations",
+		})
 	}
 
-	return c.JSON(evaluations)
+	log.Printf("[SUCCESS] Found %d user evaluations for user_id: %s", len(evaluations), userID)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User evaluations fetched successfully",
+		"total":   len(evaluations),
+		"data":    evaluations,
+	})
 }

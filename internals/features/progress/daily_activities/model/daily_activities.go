@@ -10,7 +10,6 @@ import (
 type UserDailyActivity struct {
 	UserDailyActivityID           uint      `gorm:"column:user_daily_activity_id;primaryKey" json:"user_daily_activity_id"`
 	UserDailyActivityUserID       uuid.UUID `gorm:"column:user_daily_activity_user_id;type:uuid;not null;index" json:"user_daily_activity_user_id"`
-	UserDailyActivityDate         time.Time `gorm:"column:user_daily_activity_date;type:date;not null" json:"user_daily_activity_date"`
 	UserDailyActivityActivityDate time.Time `gorm:"column:user_daily_activity_activity_date;type:date;not null;uniqueIndex:idx_user_activity_date" json:"user_daily_activity_activity_date"`
 	UserDailyActivityAmountDay    int       `gorm:"column:user_daily_activity_amount_day;not null;default:1" json:"user_daily_activity_amount_day"`
 

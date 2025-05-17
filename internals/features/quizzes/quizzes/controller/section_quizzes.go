@@ -36,18 +36,22 @@ func (sqc *SectionQuizController) GetSectionQuizzes(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"status":  true,
 		"message": "Section quizzes fetched successfully",
+		"total":   len(quizzes),
 		"data":    quizzes,
 	})
 }
 
 // ✅ GET /api/section-quizzes/:id
 // Mengambil satu data section_quiz berdasarkan ID-nya.
+
 func (sqc *SectionQuizController) GetSectionQuiz(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Fetching section quiz with ID: %s\n", id)
 
 	var quiz model.SectionQuizzesModel
-	if err := sqc.DB.First(&quiz, id).Error; err != nil {
+	if err := sqc.DB.
+		Where("section_quizzes_id = ?", id).
+		First(&quiz).Error; err != nil {
 		log.Println("[ERROR] Section quiz not found:", err)
 		return c.Status(404).JSON(fiber.Map{
 			"status":  false,
@@ -55,6 +59,7 @@ func (sqc *SectionQuizController) GetSectionQuiz(c *fiber.Ctx) error {
 		})
 	}
 
+	log.Printf("[SUCCESS] Retrieved section quiz with ID: %s\n", id)
 	return c.JSON(fiber.Map{
 		"status":  true,
 		"message": "Section quiz fetched successfully",
@@ -66,10 +71,12 @@ func (sqc *SectionQuizController) GetSectionQuiz(c *fiber.Ctx) error {
 // Mengambil semua section_quizzes yang termasuk dalam unit tertentu.
 func (sqc *SectionQuizController) GetSectionQuizzesByUnit(c *fiber.Ctx) error {
 	unitID := c.Params("unitId")
-	log.Printf("[INFO] Fetching section quizzes for unit_id: %s\n", unitID)
+	log.Printf("[INFO] Fetching section quizzes for section_quizzes_unit_id: %s\n", unitID)
 
 	var sectionQuizzes []model.SectionQuizzesModel
-	if err := sqc.DB.Where("unit_id = ?", unitID).Find(&sectionQuizzes).Error; err != nil {
+	if err := sqc.DB.
+		Where("section_quizzes_unit_id = ?", unitID).
+		Find(&sectionQuizzes).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch section quizzes for unit_id %s: %v\n", unitID, err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,
@@ -77,10 +84,11 @@ func (sqc *SectionQuizController) GetSectionQuizzesByUnit(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("[SUCCESS] Retrieved %d section quizzes for unit_id %s\n", len(sectionQuizzes), unitID)
+	log.Printf("[SUCCESS] Retrieved %d section quizzes for section_quizzes_unit_id %s\n", len(sectionQuizzes), unitID)
 	return c.JSON(fiber.Map{
 		"status":  true,
 		"message": "Section quizzes fetched by unit ID successfully",
+		"total":   len(sectionQuizzes),
 		"data":    sectionQuizzes,
 	})
 }
@@ -106,7 +114,7 @@ func (sqc *SectionQuizController) CreateSectionQuiz(c *fiber.Ctx) error {
 			return c.Status(400).JSON(fiber.Map{"status": false, "message": "Request array is empty"})
 		}
 
-		// (Opsional) validasi tambahan
+		// 🛠️ Tambahan validasi semantik (opsional)
 
 		if err := sqc.DB.Create(&multiple).Error; err != nil {
 			log.Println("[ERROR] Failed to create multiple section quizzes:", err)
@@ -127,14 +135,14 @@ func (sqc *SectionQuizController) CreateSectionQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"status": false, "message": "Invalid request format (expected object or array)"})
 	}
 
-	// (Opsional) validasi tambahan
+	// 🛠️ Validasi semantik (opsional)
 
 	if err := sqc.DB.Create(&single).Error; err != nil {
 		log.Println("[ERROR] Failed to create section quiz:", err)
 		return c.Status(500).JSON(fiber.Map{"status": false, "message": "Failed to create section quiz"})
 	}
 
-	log.Printf("[SUCCESS] Section quiz created with ID: %d\n", single.ID)
+	log.Printf("[SUCCESS] Section quiz created with ID: %d\n", single.SectionQuizzesID)
 	return c.Status(201).JSON(fiber.Map{
 		"status":  true,
 		"message": "Section quiz created successfully",
@@ -149,7 +157,7 @@ func (sqc *SectionQuizController) UpdateSectionQuiz(c *fiber.Ctx) error {
 	log.Printf("[INFO] Updating section quiz with ID: %s\n", id)
 
 	var quiz model.SectionQuizzesModel
-	if err := sqc.DB.First(&quiz, id).Error; err != nil {
+	if err := sqc.DB.First(&quiz, "section_quizzes_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Section quiz not found:", err)
 		return c.Status(404).JSON(fiber.Map{"status": false, "message": "Section quiz not found"})
 	}
@@ -175,7 +183,7 @@ func (sqc *SectionQuizController) DeleteSectionQuiz(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting section quiz with ID: %s\n", id)
 
-	if err := sqc.DB.Delete(&model.SectionQuizzesModel{}, id).Error; err != nil {
+	if err := sqc.DB.Where("section_quizzes_id = ?", id).Delete(&model.SectionQuizzesModel{}).Error; err != nil {
 		log.Println("[ERROR] Failed to delete section quiz:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"status":  false,

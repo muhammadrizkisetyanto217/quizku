@@ -14,7 +14,7 @@ type QuestionSeed struct {
 	QuestionText          string   `json:"question_text"`
 	QuestionAnswerChoices []string `json:"question_answer_choices"`
 	QuestionCorrectAnswer string   `json:"question_correct_answer"`
-	QuestionHelpParagraph string   `json:"question_help_paragraph"`
+	QuestionHelpParagraph string   `json:"question_paragraph_help"`
 	QuestionExplanation   string   `json:"question_explanation"`
 	QuestionAnswerText    string   `json:"question_answer_text"`
 }

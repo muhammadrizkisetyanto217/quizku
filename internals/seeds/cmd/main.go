@@ -20,12 +20,12 @@ import (
 	units_news "quizku/internals/seeds/lessons/units/units_news"
 	level "quizku/internals/seeds/progress/levels"
 	rank "quizku/internals/seeds/progress/ranks"
-	evaluations "quizku/internals/seeds/quizzes/evaluations"
-	exams "quizku/internals/seeds/quizzes/exams"
+	// evaluations "quizku/internals/seeds/quizzes/evaluations"
+	// exams "quizku/internals/seeds/quizzes/exams"
 	questions "quizku/internals/seeds/quizzes/questions"
-	quizzes "quizku/internals/seeds/quizzes/quizzes"
-	reading "quizku/internals/seeds/quizzes/readings"
-	section_quizzes "quizku/internals/seeds/quizzes/section_quizzes"
+	// quizzes "quizku/internals/seeds/quizzes/quizzes"
+	// reading "quizku/internals/seeds/quizzes/readings"
+	// section_quizzes "quizku/internals/seeds/quizzes/section_quizzes"
 	users "quizku/internals/seeds/users/auth"
 	userProfiles "quizku/internals/seeds/users/users"
 	tooltips "quizku/internals/seeds/utils/tooltips"
@@ -64,12 +64,12 @@ func main() {
 		units.SeedUnitsFromJSON(db, "internals/seeds/lessons/units/units/data_units.json")
 		units_news.SeedUnitsNewsFromJSON(db, "internals/seeds/lessons/units/units_news/data_units_news.json")
 	case "quizzes":
-		evaluations.SeedEvaluationsFromJSON(db, "internals/seeds/quizzes/evaluations/data_evaluations.json")
-		exams.SeedExamsFromJSON(db, "internals/seeds/quizzes/exams/data_exams.json")
-		section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
+		// evaluations.SeedEvaluationsFromJSON(db, "internals/seeds/quizzes/evaluations/data_evaluations.json")
+		// exams.SeedExamsFromJSON(db, "internals/seeds/quizzes/exams/data_exams.json")
+		// section_quizzes.SeedSectionQuizzesFromJSON(db, "internals/seeds/quizzes/section_quizzes/data_section_quizzes.json")
 		questions.SeedQuestionsFromJSON(db, "internals/seeds/quizzes/questions/data_questions.json")
-		quizzes.SeedQuizzesFromJSON(db, "internals/seeds/quizzes/quizzes/data_quizzes.json")
-		reading.SeedReadingsFromJSON(db, "internals/seeds/quizzes/readings/data_readings.json")
+		// quizzes.SeedQuizzesFromJSON(db, "internals/seeds/quizzes/quizzes/data_quizzes.json")
+		// reading.SeedReadingsFromJSON(db, "internals/seeds/quizzes/readings/data_readings.json")
 	case "progress":
 		level.SeedLevelRequirementsFromJSON(db, "internals/seeds/progress/levels/data_levels_requirements.json")
 		rank.SeedRanksRequirementsFromJSON(db, "internals/seeds/progress/ranks/data_ranks_requirements.json")

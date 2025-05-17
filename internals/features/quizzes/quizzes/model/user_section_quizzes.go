@@ -7,18 +7,17 @@ import (
 	"gorm.io/datatypes"
 )
 
-// Fungsi untuk memperbarui UserSectionQuizzesModel
-// UserSectionQuizzesModel menyimpan daftar kuis yang telah diselesaikan dalam suatu section
 type UserSectionQuizzesModel struct {
-	ID               uint           `gorm:"primaryKey" json:"id"`
-	UserID           uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
-	SectionQuizzesID uint           `gorm:"not null" json:"section_quizzes_id"`
-	CompleteQuiz     datatypes.JSON `gorm:"type:jsonb;not null;default:'{}'" json:"complete_quiz"`
-	GradeResult      int            `gorm:"default:0" json:"grade_result"`
-	CreatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	UserSectionQuizzesID               uint           `gorm:"column:user_section_quizzes_id;primaryKey;autoIncrement" json:"user_section_quizzes_id"`
+	UserSectionQuizzesUserID           uuid.UUID      `gorm:"column:user_section_quizzes_user_id;type:uuid;not null" json:"user_section_quizzes_user_id"`
+	UserSectionQuizzesSectionQuizzesID uint           `gorm:"column:user_section_quizzes_section_quizzes_id;not null" json:"user_section_quizzes_section_quizzes_id"`
+	UserSectionQuizzesCompleteQuiz     datatypes.JSON `gorm:"column:user_section_quizzes_complete_quiz;type:jsonb;not null;default:'{}'" json:"user_section_quizzes_complete_quiz"`
+	UserSectionQuizzesGradeResult      int            `gorm:"column:user_section_quizzes_grade_result;not null;default:0" json:"user_section_quizzes_grade_result"`
+	CreatedAt                          time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt                          time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 }
 
+// ✅ Mapping nama tabel
 func (UserSectionQuizzesModel) TableName() string {
 	return "user_section_quizzes"
 }
