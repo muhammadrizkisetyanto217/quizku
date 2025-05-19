@@ -1,42 +1,42 @@
 [
     {
-        "name": "Unit 1: Pengantar Aqidah",
-        "status": "active",
-        "description_short": "Pengenalan wudhu dalam Islam",
-        "description_overview": "Membahas pentingnya bersuci dalam Islam serta pengenalan terhadap wudhu secara umum.",
-        "image_url": "",
-        "total_section_quizzes": [],
-        "themes_or_level_id": 1,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "unit_name": "Unit 1: Pengantar Aqidah",
+        "unit_status": "active",
+        "unit_description_short": "Pengenalan wudhu dalam Islam",
+        "unit_description_overview": "Membahas pentingnya bersuci dalam Islam serta pengenalan terhadap wudhu secara umum.",
+        "unit_image_url": "",
+        "unit_total_section_quizzes": [],
+        "unit_themes_or_level_id": 1,
+        "unit_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "name": "Unit 2: Aqidah Sebagai Pondasi Islam",
-        "status": "active",
-        "description_short": "Langkah-langkah wudhu yang benar",
-        "description_overview": "Menjelaskan tahapan dan bacaan dalam berwudhu sesuai sunnah Rasulullah.",
-        "image_url": "",
-        "total_section_quizzes": [],
-        "themes_or_level_id": 1,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "unit_name": "Unit 2: Aqidah Sebagai Pondasi Islam",
+        "unit_status": "active",
+        "unit_description_short": "Langkah-langkah wudhu yang benar",
+        "unit_description_overview": "Menjelaskan tahapan dan bacaan dalam berwudhu sesuai sunnah Rasulullah.",
+        "unit_image_url": "",
+        "unit_total_section_quizzes": [],
+        "unit_themes_or_level_id": 1,
+        "unit_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "name": "Unit 3: Pengantar Fiqh",
-        "status": "active",
-        "description_short": "Pengenalan wudhu dalam Islam",
-        "description_overview": "Membahas pentingnya bersuci dalam Islam serta pengenalan terhadap wudhu secara umum.",
-        "image_url": "",
-        "total_section_quizzes": [],
-        "themes_or_level_id": 2,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "unit_name": "Unit 3: Pengantar Fiqh",
+        "unit_status": "active",
+        "unit_description_short": "Pengenalan wudhu dalam Islam",
+        "unit_description_overview": "Membahas pentingnya bersuci dalam Islam serta pengenalan terhadap wudhu secara umum.",
+        "unit_image_url": "",
+        "unit_total_section_quizzes": [],
+        "unit_themes_or_level_id": 2,
+        "unit_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "name": "Unit 4: Fiqh Sebagai Pondasi Islam",
-        "status": "active",
-        "description_short": "Langkah-langkah wudhu yang benar",
-        "description_overview": "Menjelaskan tahapan dan bacaan dalam berwudhu sesuai sunnah Rasulullah.",
-        "image_url": "",
-        "total_section_quizzes": [],
-        "themes_or_level_id": 2,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "unit_name": "Unit 4: Fiqh Sebagai Pondasi Islam",
+        "unit_status": "active",
+        "unit_description_short": "Langkah-langkah wudhu yang benar",
+        "unit_description_overview": "Menjelaskan tahapan dan bacaan dalam berwudhu sesuai sunnah Rasulullah.",
+        "unit_image_url": "",
+        "unit_total_section_quizzes": [],
+        "unit_themes_or_level_id": 2,
+        "unit_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     }
 ]

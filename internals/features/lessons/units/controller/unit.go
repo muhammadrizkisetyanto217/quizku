@@ -54,7 +54,7 @@ func (uc *UnitController) GetUnit(c *fiber.Ctx) error {
 	var unit model.UnitModel
 
 	// Preload SectionQuizzes saja (tidak sampai ke quizzes)
-	if err := uc.DB.Preload("SectionQuizzes").First(&unit, id).Error; err != nil {
+	if err := uc.DB.Preload("SectionQuizzes").First(&unit, "unit_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Unit not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Unit not found"})
 	}
@@ -77,9 +77,9 @@ func (uc *UnitController) GetUnitByThemesOrLevels(c *fiber.Ctx) error {
 
 	// Ambil semua unit berdasarkan foreign key themes_or_level_id
 	if err := uc.DB.Preload("SectionQuizzes").
-		Where("themes_or_level_id = ?", themesOrLevelID).
+		Where("unit_themes_or_level_id = ?", themesOrLevelID).
 		Find(&units).Error; err != nil {
-		log.Printf("[ERROR] Failed to fetch units for themes_or_level_id %s: %v\n", themesOrLevelID, err)
+		log.Printf("[ERROR] Failed to fetch units for unit_themes_or_level_id %s: %v\n", themesOrLevelID, err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch units"})
 	}
 
@@ -104,9 +104,8 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 		multiple []model.UnitModel
 	)
 
-	raw := c.Body() // Ambil raw body untuk deteksi apakah array
+	raw := c.Body()
 	if len(raw) > 0 && raw[0] == '[' {
-		// 🧩 Jika bentuknya array JSON
 		if err := c.BodyParser(&multiple); err != nil {
 			log.Printf("[ERROR] Failed to parse unit array: %v", err)
 			return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON array"})
@@ -117,19 +116,17 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 			return c.Status(400).JSON(fiber.Map{"error": "Array of units is empty"})
 		}
 
-		// Validasi setiap unit (wajib: themes_or_level_id dan name)
 		for i, unit := range multiple {
-			if unit.ThemesOrLevelID == 0 || unit.Name == "" {
+			if unit.UnitThemesOrLevelID == 0 || unit.UnitName == "" {
 				log.Printf("[ERROR] Invalid unit at index %d: %+v\n", i, unit)
 				return c.Status(400).JSON(fiber.Map{
-					"error":      "Each unit must have a valid themes_or_level_id and name",
+					"error":      "Each unit must have a valid unit_themes_or_level_id and unit_name",
 					"index":      i,
 					"unit_input": unit,
 				})
 			}
 		}
 
-		// Simpan batch
 		if err := uc.DB.Create(&multiple).Error; err != nil {
 			log.Printf("[ERROR] Failed to insert multiple units: %v", err)
 			return c.Status(500).JSON(fiber.Map{"error": "Failed to create units"})
@@ -142,7 +139,6 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 		})
 	}
 
-	// 📦 Jika bentuknya objek tunggal
 	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Failed to parse single unit input: %v", err)
 		return c.Status(400).JSON(fiber.Map{
@@ -152,18 +148,16 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 
 	log.Printf("[DEBUG] Parsed single unit: %+v\n", single)
 
-	// Validasi wajib
-	if single.ThemesOrLevelID == 0 || single.Name == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "themes_or_level_id and name are required"})
+	if single.UnitThemesOrLevelID == 0 || single.UnitName == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "unit_themes_or_level_id and unit_name are required"})
 	}
 
-	// Simpan ke database
 	if err := uc.DB.Create(&single).Error; err != nil {
 		log.Printf("[ERROR] Failed to insert unit: %v", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create unit"})
 	}
 
-	log.Printf("[SUCCESS] Unit created: ID=%d, Name=%s\n", single.ID, single.Name)
+	log.Printf("[SUCCESS] Unit created: ID=%d, Name=%s\n", single.UnitID, single.UnitName)
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Unit created successfully",
 		"data":    single,
@@ -173,32 +167,33 @@ func (uc *UnitController) CreateUnit(c *fiber.Ctx) error {
 // 🟠 PUT /api/units/:id
 // Mengupdate unit berdasarkan ID.
 // Field yang diupdate fleksibel karena menerima map[string]interface{} dari body.
+// 🟠 PUT /api/units/:id
+// Mengupdate unit berdasarkan unit_id.
+// Field yang diupdate fleksibel karena menerima map[string]interface{} dari body.
 func (uc *UnitController) UpdateUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
-	log.Println("[INFO] Updating unit with ID:", id)
+	log.Println("[INFO] Updating unit with unit_id:", id)
 
 	var unit model.UnitModel
 
-	// Cek apakah unit dengan ID tersebut ada
-	if err := uc.DB.First(&unit, id).Error; err != nil {
+	// Cek apakah unit dengan unit_id tersebut ada
+	if err := uc.DB.First(&unit, "unit_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Unit not found:", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Unit not found"})
 	}
 
-	// Parsing data update ke bentuk map agar fleksibel
 	var requestData map[string]interface{}
 	if err := c.BodyParser(&requestData); err != nil {
 		log.Println("[ERROR] Invalid request body:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	// Lakukan update hanya pada field yang dikirim
 	if err := uc.DB.Model(&unit).Updates(requestData).Error; err != nil {
 		log.Println("[ERROR] Failed to update unit:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update unit"})
 	}
 
-	log.Printf("[SUCCESS] Unit updated: ID=%s\n", id)
+	log.Printf("[SUCCESS] Unit updated: unit_id=%s\n", id)
 	return c.JSON(fiber.Map{
 		"message": "Unit updated successfully",
 		"data":    unit,
@@ -210,19 +205,17 @@ func (uc *UnitController) UpdateUnit(c *fiber.Ctx) error {
 // Menggunakan soft delete jika model menggunakan gorm.Model dengan DeletedAt.
 func (uc *UnitController) DeleteUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
-	log.Println("[INFO] Deleting unit with ID:", id)
+	log.Println("[INFO] Deleting unit with unit_id:", id)
 
 	var unit model.UnitModel
 
-	// Cek apakah unit ada
-	if err := uc.DB.First(&unit, id).Error; err != nil {
+	if err := uc.DB.First(&unit, "unit_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Unit not found:", err)
 		return c.Status(404).JSON(fiber.Map{
 			"error": "Unit not found",
 		})
 	}
 
-	// Lakukan delete
 	if err := uc.DB.Delete(&unit).Error; err != nil {
 		log.Println("[ERROR] Failed to delete unit:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -230,8 +223,8 @@ func (uc *UnitController) DeleteUnit(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("[SUCCESS] Unit with ID %s deleted successfully\n", id)
+	log.Printf("[SUCCESS] Unit with unit_id %s deleted successfully\n", id)
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Unit with ID %s deleted successfully", id),
+		"message": fmt.Sprintf("Unit with unit_id %s deleted successfully", id),
 	})
 }

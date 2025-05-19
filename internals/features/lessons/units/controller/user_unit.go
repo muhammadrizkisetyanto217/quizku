@@ -24,7 +24,7 @@ func NewUserUnitController(db *gorm.DB) *UserUnitController {
 }
 
 // 🟢 GET /api/user-units/:user_id
-// Mengambil semua data progres unit milik user berdasarkan user_id.
+// Mengambil semua data progres unit milik user berdasarkan user_unit_user_id.
 // Data yang dikembalikan termasuk relasi SectionProgress per unit.
 func (ctrl *UserUnitController) GetByUserID(c *fiber.Ctx) error {
 	userIDParam := c.Params("user_id")
@@ -39,10 +39,10 @@ func (ctrl *UserUnitController) GetByUserID(c *fiber.Ctx) error {
 
 	var data []userModel.UserUnitModel
 
-	// Ambil semua user_unit milik user, preload SectionProgress
+	// Ambil semua user_unit berdasarkan user_unit_user_id
 	if err := ctrl.DB.
 		Preload("SectionProgress").
-		Where("user_id = ?", userID).
+		Where("user_unit_user_id = ?", userID).
 		Find(&data).Error; err != nil {
 
 		log.Println("[ERROR] Gagal ambil data user_unit:", err)
@@ -51,9 +51,9 @@ func (ctrl *UserUnitController) GetByUserID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Kirim hasil
 	return c.JSON(fiber.Map{
-		"data": data,
+		"total": len(data),
+		"data":  data,
 	})
 }
 
@@ -92,46 +92,46 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 
 	// Pastikan user punya entri user_themes_or_levels
 	var userTheme themesOrLevelsModel.UserThemesOrLevelsModel
-	if err := ctrl.DB.Where("user_id = ? AND themes_or_levels_id = ?", userID, themesID).
+	if err := ctrl.DB.Where("user_themes_or_levels_user_id = ? AND user_themes_or_levels_themes_or_levels_id = ?", userID, themesID).
 		First(&userTheme).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "Data user_theme tidak ditemukan",
 		})
 	}
 
-	// Ambil semua unit dalam theme tersebut + relasi section_quizzes dan quizzes
+	// Ambil semua unit dalam theme tersebut
 	var units []userModel.UnitModel
 	if err := ctrl.DB.
 		Preload("SectionQuizzes").
 		Preload("SectionQuizzes.Quizzes").
-		Where("themes_or_level_id = ?", themesID).
+		Where("unit_themes_or_level_id = ?", themesID).
 		Find(&units).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal ambil data unit, section_quizzes dan quizzes",
 		})
 	}
 
-	// Buat map untuk mapping section_quizzes ke unit_id
+	// Buat mapping unit_id & section_quiz_id
 	var unitIDs []uint
 	sectionQuizToUnit := make(map[uint]uint)
 	for _, unit := range units {
-		unitIDs = append(unitIDs, unit.ID)
+		unitIDs = append(unitIDs, unit.UnitID)
 		for _, section := range unit.SectionQuizzes {
-			sectionQuizToUnit[section.SectionQuizzesID] = unit.ID
+			sectionQuizToUnit[section.SectionQuizzesID] = unit.UnitID
 		}
 	}
 
-	// Ambil semua user_unit milik user di theme tersebut
+	// Ambil user_unit berdasarkan user_id dan unit_id
 	var userUnits []userModel.UserUnitModel
 	if err := ctrl.DB.
-		Where("user_id = ? AND unit_id IN ?", userID, unitIDs).
+		Where("user_unit_user_id = ? AND user_unit_unit_id IN ?", userID, unitIDs).
 		Find(&userUnits).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal ambil data progress unit",
 		})
 	}
 
-	// Ambil seluruh section_progress user dalam 1 query
+	// Ambil seluruh section_progress
 	var allSectionProgress []userSectionQuizzesModel.UserSectionQuizzesModel
 	if err := ctrl.DB.
 		Where("user_section_quizzes_user_id = ?", userID).
@@ -143,41 +143,39 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 		})
 	}
 
-	// Mapping: section_progress → unit_id
+	// Mapping progress dan section selesai
 	progressPerUnit := make(map[uint][]userSectionQuizzesModel.UserSectionQuizzesModel)
 	completedMap := make(map[uint][]int64)
 	for _, sp := range allSectionProgress {
 		sectionID := sp.UserSectionQuizzesSectionQuizzesID
 		unitID := sectionQuizToUnit[sectionID]
-
 		progressPerUnit[unitID] = append(progressPerUnit[unitID], sp)
-
 		if len(sp.UserSectionQuizzesCompleteQuiz) > 0 {
 			completedMap[unitID] = append(completedMap[unitID], int64(sectionID))
 		}
 	}
 
-	// Gabungkan user_unit dengan section_progress dan update complete_section_quizzes jika perlu
+	// Gabungkan progress ke user_unit
 	progressMap := make(map[uint]userModel.UserUnitModel)
 	for _, u := range userUnits {
-		u.SectionProgress = progressPerUnit[u.UnitID]
-		progressMap[u.UnitID] = u
+		u.SectionProgress = progressPerUnit[u.UserUnitUnitID]
+		progressMap[u.UserUnitUnitID] = u
 
-		if completed, ok := completedMap[u.UnitID]; ok && len(completed) > 0 {
+		if completed, ok := completedMap[u.UserUnitUnitID]; ok && len(completed) > 0 {
 			_ = ctrl.DB.Model(&userModel.UserUnitModel{}).
-				Where("id = ?", u.ID).
-				Update("complete_section_quizzes", pq.Int64Array(completed)).Error
+				Where("user_unit_id = ?", u.UserUnitID).
+				Update("user_unit_complete_section_quizzes", pq.Int64Array(completed)).Error
 		}
 	}
 
-	// Gabungkan response unit + progress
+	// Gabungkan ke response akhir
 	type ResponseUnit struct {
 		userModel.UnitModel
 		UserProgress userModel.UserUnitModel `json:"user_progress"`
 	}
 	var result []ResponseUnit
 	for _, unit := range units {
-		userProgress := progressMap[unit.ID]
+		userProgress := progressMap[unit.UnitID]
 		result = append(result, ResponseUnit{
 			UnitModel:    unit,
 			UserProgress: userProgress,
@@ -189,11 +187,10 @@ func (ctrl *UserUnitController) GetUserUnitsByThemesOrLevels(c *fiber.Ctx) error
 	})
 }
 
-// ⚙️ Fungsi bantu untuk mengambil semua key dari map
 func keys(m map[uint]uint) []uint {
-	out := make([]uint, 0, len(m))
-	for k := range m {
-		out = append(out, k)
+	k := make([]uint, 0, len(m))
+	for key := range m {
+		k = append(k, key)
 	}
-	return out
+	return k
 }

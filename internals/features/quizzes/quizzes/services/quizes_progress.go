@@ -187,15 +187,15 @@ func UpdateUserUnitIfSectionCompleted(
 
 	// 5. Ambil data user_unit
 	var userUnit userUnitModel.UserUnitModel
-	if err := db.Where("user_id = ? AND unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
+	if err := db.Where("user_unit_user_id = ? AND user_unit_unit_id = ?", userID, unitID).First(&userUnit).Error; err != nil {
 		log.Printf("[ERROR] Gagal ambil user_unit: %v", err)
 		return err
 	}
 
 	// 6. Update complete_section_quizzes jika belum tercatat
 	var completedSectionIDs []int64
-	if len(userUnit.CompleteSectionQuizzes) > 0 {
-		_ = json.Unmarshal(userUnit.CompleteSectionQuizzes, &completedSectionIDs)
+	if len(userUnit.UserUnitCompleteSectionQuizzes) > 0 {
+		_ = json.Unmarshal(userUnit.UserUnitCompleteSectionQuizzes, &completedSectionIDs)
 	}
 	alreadyIncluded := false
 	for _, sid := range completedSectionIDs {
@@ -207,19 +207,19 @@ func UpdateUserUnitIfSectionCompleted(
 	if !alreadyIncluded {
 		completedSectionIDs = append(completedSectionIDs, int64(completedSectionID))
 		if encoded, err := json.Marshal(completedSectionIDs); err == nil {
-			userUnit.CompleteSectionQuizzes = encoded
+			userUnit.UserUnitCompleteSectionQuizzes = encoded
 			userUnit.UpdatedAt = time.Now()
 		}
 	}
 
 	// 7. Hitung nilai rata-rata kuis (GradeQuiz) dan total kelulusan (GradeResult) jika semua section sudah selesai
 	var unit userUnitModel.UnitModel
-	if err := db.Where("id = ?", unitID).First(&unit).Error; err != nil {
+	if err := db.Where("unit_id = ?", unitID).First(&unit).Error; err != nil {
 		log.Printf("[ERROR] Gagal mengambil data unit (unit_id=%d): %v", unitID, err)
 		return err
 	}
 
-	if len(unit.TotalSectionQuizzes) > 0 && len(completedSectionIDs) == len(unit.TotalSectionQuizzes) {
+	if len(unit.UnitTotalSectionQuizzes) > 0 && len(completedSectionIDs) == len(unit.UnitTotalSectionQuizzes) {
 		totalQuizScore := 0
 		sectionCount := 0
 
@@ -237,17 +237,18 @@ func UpdateUserUnitIfSectionCompleted(
 		}
 
 		if sectionCount > 0 {
-			userUnit.GradeQuiz = totalQuizScore / sectionCount
-			userUnit.GradeResult = (userUnit.GradeQuiz + userUnit.GradeExam + getGradeEvaluation(userUnit)) / 3
-			userUnit.IsPassed = userUnit.GradeResult >= 70
+			userUnit.UserUnitGradeQuiz = totalQuizScore / sectionCount
+			userUnit.UserUnitGradeResult = (userUnit.UserUnitGradeQuiz + userUnit.UserUnitGradeExam + getGradeEvaluation(userUnit)) / 3
+			userUnit.UserUnitIsPassed = userUnit.UserUnitGradeResult >= 70
 
 			log.Printf("[SERVICE] ✅ Semua section selesai. GradeQuiz: %d, GradeResult: %d, IsPassed: %v",
-				userUnit.GradeQuiz, userUnit.GradeResult, userUnit.IsPassed)
+				userUnit.UserUnitGradeQuiz, userUnit.UserUnitGradeResult, userUnit.UserUnitIsPassed)
 		}
 	}
 
 	return db.Save(&userUnit).Error
 }
+
 
 func getGradeEvaluation(userUnit userUnitModel.UserUnitModel) int {
 	type EvaluationAttempt struct {
@@ -256,9 +257,10 @@ func getGradeEvaluation(userUnit userUnitModel.UserUnitModel) int {
 	}
 
 	var evalData EvaluationAttempt
-	if err := json.Unmarshal(userUnit.AttemptEvaluation, &evalData); err != nil {
+	if err := json.Unmarshal(userUnit.UserUnitAttemptEvaluation, &evalData); err != nil {
 		log.Printf("[ERROR] Gagal mengurai JSON AttemptEvaluation: %v", err)
 		return 0
 	}
 	return evalData.EvaluationScore
 }
+

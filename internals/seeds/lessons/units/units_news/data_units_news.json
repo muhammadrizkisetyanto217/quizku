@@ -1,20 +1,32 @@
 [
     {
-        "title": "Unit 1: Pengenalan Wudhu",
-        "description": "Berisi materi awal mengenai pentingnya bersuci dalam Islam.",
-        "is_public": true,
-        "unit_id": 1
+        "unit_news_title": "Unit 1: Pengenalan Wudhu",
+        "unit_news_description": "Berisi materi awal mengenai pentingnya bersuci dalam Islam.",
+        "unit_news_is_public": true,
+        "unit_news_unit_id": 1
     },
     {
-        "title": "Unit 2: Tata Cara Wudhu",
-        "description": "Langkah demi langkah melaksanakan wudhu sesuai sunnah.",
-        "is_public": true,
-        "unit_id": 1
+        "unit_news_title": "Unit 2: Tata Cara Wudhu",
+        "unit_news_description": "Langkah demi langkah melaksanakan wudhu sesuai sunnah.",
+        "unit_news_is_public": true,
+        "unit_news_unit_id": 1
     },
     {
-        "title": "Unit 3: Hal yang Membatalkan Wudhu",
-        "description": "Penjelasan lengkap mengenai hal-hal yang membatalkan wudhu.",
-        "is_public": false,
-        "unit_id": 1
+        "unit_news_title": "Unit 3: Hal yang Membatalkan Wudhu",
+        "unit_news_description": "Penjelasan lengkap mengenai hal-hal yang membatalkan wudhu.",
+        "unit_news_is_public": false,
+        "unit_news_unit_id": 1
+    },
+    {
+        "unit_news_title": "Unit 4: Kesalahan Umum dalam Wudhu",
+        "unit_news_description": "Menghindari kesalahan umum saat berwudhu.",
+        "unit_news_is_public": true,
+        "unit_news_unit_id": 1
+    },
+    {
+        "unit_news_title": "Unit 5: Doa Setelah Wudhu",
+        "unit_news_description": "Doa yang dianjurkan setelah berwudhu.",
+        "unit_news_is_public": true,
+        "unit_news_unit_id": 1
     }
 ]

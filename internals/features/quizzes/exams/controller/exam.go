@@ -23,9 +23,9 @@ func NewExamController(db *gorm.DB) *ExamController {
 // Cocok untuk halaman admin atau builder ujian akhir.
 func (ec *ExamController) GetExams(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all exams")
-	var exams []examModel.ExamModel
 
-	if err := ec.DB.Find(&exams).Error; err != nil {
+	var exams []examModel.ExamModel
+	if err := ec.DB.Order("exam_id ASC").Find(&exams).Error; err != nil {
 		log.Println("[ERROR] Failed to fetch exams:", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch exams"})
 	}
@@ -46,7 +46,7 @@ func (ec *ExamController) GetExam(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching exam with ID:", id)
 
 	var exam examModel.ExamModel
-	if err := ec.DB.First(&exam, id).Error; err != nil {
+	if err := ec.DB.First(&exam, "exam_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Exam not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Exam not found"})
 	}
@@ -60,12 +60,14 @@ func (ec *ExamController) GetExam(c *fiber.Ctx) error {
 // 🟢 GET /api/exams/unit/:unitId
 // Mengambil semua ujian berdasarkan unit_id tertentu.
 // Digunakan untuk menampilkan daftar ujian yang terkait dengan satu unit.
+// 🟢 GET /api/exams/unit/:unitId
+// Mengambil semua ujian berdasarkan exam_unit_id tertentu.
 func (ec *ExamController) GetExamsByUnitID(c *fiber.Ctx) error {
 	unitID := c.Params("unitId")
-	log.Printf("[INFO] Fetching exams for unit_id: %s\n", unitID)
+	log.Printf("[INFO] Fetching exams for exam_unit_id: %s\n", unitID)
 
 	var exams []examModel.ExamModel
-	if err := ec.DB.Where("unit_id = ?", unitID).Find(&exams).Error; err != nil {
+	if err := ec.DB.Where("exam_unit_id = ?", unitID).Find(&exams).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch exams for unit_id %s: %v\n", unitID, err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch exams"})
 	}
@@ -81,6 +83,8 @@ func (ec *ExamController) GetExamsByUnitID(c *fiber.Ctx) error {
 // 🟡 POST /api/exams
 // Menambahkan ujian baru ke database.
 // Cocok digunakan di halaman admin atau form tambah ujian.
+// 🟡 POST /api/exams
+// Menambahkan ujian baru ke database.
 func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 	log.Println("[INFO] Creating a new exam")
 
@@ -95,7 +99,7 @@ func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create exam"})
 	}
 
-	log.Printf("[SUCCESS] Exam created: ID=%d\n", exam.ID)
+	log.Printf("[SUCCESS] Exam created: exam_id=%d\n", exam.ExamID)
 	return c.Status(201).JSON(fiber.Map{
 		"message": "Exam created successfully",
 		"data":    exam,
@@ -107,10 +111,10 @@ func (ec *ExamController) CreateExam(c *fiber.Ctx) error {
 // Menggunakan map[string]interface{} agar fleksibel hanya update field yang dibutuhkan.
 func (ec *ExamController) UpdateExam(c *fiber.Ctx) error {
 	id := c.Params("id")
-	log.Println("[INFO] Updating exam with ID:", id)
+	log.Println("[INFO] Updating exam with exam_id:", id)
 
 	var exam examModel.ExamModel
-	if err := ec.DB.First(&exam, id).Error; err != nil {
+	if err := ec.DB.First(&exam, "exam_id = ?", id).Error; err != nil {
 		log.Println("[ERROR] Exam not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Exam not found"})
 	}
@@ -130,7 +134,7 @@ func (ec *ExamController) UpdateExam(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update exam"})
 	}
 
-	log.Printf("[SUCCESS] Exam updated: ID=%s\n", id)
+	log.Printf("[SUCCESS] Exam updated: exam_id=%s\n", id)
 	return c.JSON(fiber.Map{
 		"message": "Exam updated successfully",
 		"data":    exam,
@@ -142,17 +146,17 @@ func (ec *ExamController) UpdateExam(c *fiber.Ctx) error {
 // Hati-hati: ini adalah operasi permanen.
 func (ec *ExamController) DeleteExam(c *fiber.Ctx) error {
 	id := c.Params("id")
-	log.Println("[INFO] Deleting exam with ID:", id)
+	log.Println("[INFO] Deleting exam with exam_id:", id)
 
-	if err := ec.DB.Delete(&examModel.ExamModel{}, id).Error; err != nil {
+	if err := ec.DB.Where("exam_id = ?", id).Delete(&examModel.ExamModel{}).Error; err != nil {
 		log.Println("[ERROR] Failed to delete exam:", err)
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Failed to delete exam",
 		})
 	}
 
-	log.Printf("[SUCCESS] Exam with ID %s deleted\n", id)
+	log.Printf("[SUCCESS] Exam with exam_id %s deleted\n", id)
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Exam with ID %s deleted successfully", id),
+		"message": fmt.Sprintf("Exam with exam_id %s deleted successfully", id),
 	})
 }

@@ -8,13 +8,13 @@ import (
 )
 
 type UserThemesOrLevelsModel struct {
-	ID               uint              `gorm:"primaryKey" json:"id"`
-	UserID           uuid.UUID         `gorm:"type:uuid;not null;index:idx_user_themes_user_theme,unique" json:"user_id"`
-	ThemesOrLevelsID uint              `gorm:"not null;index:idx_user_themes_user_theme,unique" json:"themes_or_levels_id"`
-	CompleteUnit     datatypes.JSONMap `gorm:"type:jsonb;default:'{}'" json:"complete_unit"`
-	GradeResult      int               `gorm:"default:0" json:"grade_result"`
-	CreatedAt        time.Time         `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt        time.Time         `gorm:"autoUpdateTime" json:"updated_at"`
+	UserThemeID              uint              `gorm:"column:user_theme_id;primaryKey;autoIncrement" json:"user_theme_id"`
+	UserThemeUserID          uuid.UUID         `gorm:"column:user_theme_user_id;type:uuid;not null;index:idx_user_theme_unique,unique" json:"user_theme_user_id"`
+	UserThemeThemesOrLevelID uint              `gorm:"column:user_theme_themes_or_level_id;not null;index:idx_user_theme_unique,unique" json:"user_theme_themes_or_level_id"`
+	UserThemeCompleteUnit    datatypes.JSONMap `gorm:"column:user_theme_complete_unit;type:jsonb;default:'{}'" json:"user_theme_complete_unit"`
+	UserThemeGradeResult     int               `gorm:"column:user_theme_grade_result;default:0" json:"user_theme_grade_result"`
+	CreatedAt                time.Time         `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt                time.Time         `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 }
 
 func (UserThemesOrLevelsModel) TableName() string {

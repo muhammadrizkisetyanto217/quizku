@@ -9,57 +9,56 @@ import (
 )
 
 type ThemesOrLevelsModel struct {
-	ID               uint           `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name             string         `gorm:"type:varchar(255)" json:"name"`
-	Status           string         `gorm:"type:varchar(10);default:'pending';check:status IN ('active','pending','archived')" json:"status"`
-	DescriptionShort string         `gorm:"type:varchar(100)" json:"description_short"`
-	DescriptionLong  string         `gorm:"type:varchar(2000)" json:"description_long"`
-	TotalUnit        pq.Int64Array  `gorm:"type:integer[];default:'{}'" json:"total_unit"`
-	ImageURL         string         `gorm:"type:varchar(100)" json:"image_url"`
-	CreatedAt        time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt        *time.Time     `json:"updated_at,omitempty"`
-	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
-	SubcategoriesID  int            `gorm:"column:subcategories_id" json:"subcategories_id"`
+	ThemesOrLevelID               uint          `gorm:"column:themes_or_level_id;primaryKey;autoIncrement" json:"themes_or_level_id"`
+	ThemesOrLevelName             string        `gorm:"column:themes_or_level_name;type:varchar(255);not null" json:"themes_or_level_name"`
+	ThemesOrLevelStatus           string        `gorm:"column:themes_or_level_status;type:varchar(10);default:'pending';check:themes_or_level_status IN ('active','pending','archived')" json:"themes_or_level_status"`
+	ThemesOrLevelDescriptionShort string        `gorm:"column:themes_or_level_description_short;type:varchar(100)" json:"themes_or_level_description_short"`
+	ThemesOrLevelDescriptionLong  string        `gorm:"column:themes_or_level_description_long;type:varchar(2000)" json:"themes_or_level_description_long"`
+	ThemesOrLevelTotalUnit        pq.Int64Array `gorm:"column:themes_or_level_total_unit;type:integer[];default:'{}'" json:"themes_or_level_total_unit"`
+	ThemesOrLevelImageURL         string        `gorm:"column:themes_or_level_image_url;type:varchar(100)" json:"themes_or_level_image_url"`
+	ThemesOrLevelSubcategoryID    int           `gorm:"column:themes_or_level_subcategory_id" json:"themes_or_level_subcategory_id"`
+
+	CreatedAt time.Time      `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt *time.Time     `gorm:"column:updated_at" json:"updated_at,omitempty"`
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"`
 }
 
 func (ThemesOrLevelsModel) TableName() string {
 	return "themes_or_levels"
 }
 
-// AfterSave akan sinkronisasi total_themes_or_levels setelah create/update
-func (t *ThemesOrLevelsModel) AfterSave(tx *gorm.DB) (err error) {
-	log.Printf("[HOOK] AfterSave triggered for ThemeID: %d", t.ID)
-	return SyncTotalThemesOrLevels(tx, t.SubcategoriesID)
+func (t *ThemesOrLevelsModel) AfterSave(tx *gorm.DB) error {
+	log.Printf("[HOOK] AfterSave triggered for ThemeID: %d", t.ThemesOrLevelID)
+	return SyncTotalThemesOrLevels(tx, t.ThemesOrLevelSubcategoryID)
 }
 
-// AfterDelete akan sinkronisasi ulang subkategori meskipun data sudah soft deleted
-func (t *ThemesOrLevelsModel) AfterDelete(tx *gorm.DB) (err error) {
-	log.Printf("[HOOK] AfterDelete triggered for ThemeID: %d", t.ID)
+func (t *ThemesOrLevelsModel) AfterDelete(tx *gorm.DB) error {
+	log.Printf("[HOOK] AfterDelete triggered for ThemeID: %d", t.ThemesOrLevelID)
 
 	var subcategoryID int
 	if err := tx.Unscoped().
 		Model(&ThemesOrLevelsModel{}).
-		Select("subcategories_id").
-		Where("id = ?", t.ID).
+		Select("themes_or_level_subcategory_id").
+		Where("themes_or_level_id = ?", t.ThemesOrLevelID).
 		Take(&subcategoryID).Error; err != nil {
-		log.Println("[ERROR] Gagal ambil subcategories_id setelah delete:", err)
+		log.Println("[ERROR] Gagal ambil subcategory_id setelah delete:", err)
 		return err
 	}
 
-	log.Printf("[HOOK] Ditemukan subcategoryID: %d untuk ThemeID: %d", subcategoryID, t.ID)
+	log.Printf("[HOOK] Ditemukan subcategoryID: %d untuk ThemeID: %d", subcategoryID, t.ThemesOrLevelID)
 	return SyncTotalThemesOrLevels(tx, subcategoryID)
 }
 
-// Sinkronisasi ulang total_themes_or_levels (array of theme IDs) ke tabel subcategories
+// Sync ulang ke subcategories.total_themes_or_levels
 func SyncTotalThemesOrLevels(db *gorm.DB, subcategoryID int) error {
 	log.Println("[SERVICE] SyncTotalThemesOrLevels - subcategoryID:", subcategoryID)
 
 	err := db.Exec(`
 		UPDATE subcategories
 		SET total_themes_or_levels = (
-			SELECT ARRAY_AGG(id)
+			SELECT ARRAY_AGG(themes_or_level_id ORDER BY themes_or_level_id)
 			FROM themes_or_levels
-			WHERE subcategories_id = ? AND deleted_at IS NULL
+			WHERE themes_or_level_subcategory_id = ? AND deleted_at IS NULL
 		)
 		WHERE id = ?
 	`, subcategoryID, subcategoryID).Error
@@ -69,6 +68,5 @@ func SyncTotalThemesOrLevels(db *gorm.DB, subcategoryID int) error {
 	} else {
 		log.Println("[SUCCESS] Synced total_themes_or_levels for subcategoryID:", subcategoryID)
 	}
-
 	return err
 }

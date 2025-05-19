@@ -9,11 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// ✅ Struct input sesuai penamaan semantik di model
 type ThemesOrLevelsNewsSeedInput struct {
-	Title            string `json:"title"`
-	Description      string `json:"description"`
-	IsPublic         bool   `json:"is_public"`
-	ThemesOrLevelsID uint   `json:"themes_or_levels_id"`
+	ThemesNewsTitle           string `json:"themes_news_title"`
+	ThemesNewsDescription     string `json:"themes_news_description"`
+	ThemesNewsIsPublic        bool   `json:"themes_news_is_public"`
+	ThemesNewsThemesOrLevelID uint   `json:"themes_news_themes_or_level_id"`
 }
 
 func SeedThemesOrLevelsNewsFromJSON(db *gorm.DB, filePath string) {
@@ -29,25 +30,26 @@ func SeedThemesOrLevelsNewsFromJSON(db *gorm.DB, filePath string) {
 		log.Fatalf("❌ Gagal decode JSON: %v", err)
 	}
 
-	for _, news := range inputs {
+	for _, input := range inputs {
 		var existing themesModel.ThemesOrLevelsNewsModel
-		err := db.Where("title = ? AND themes_or_levels_id = ?", news.Title, news.ThemesOrLevelsID).First(&existing).Error
+		err := db.Where("themes_news_title = ? AND themes_news_themes_or_level_id = ?", input.ThemesNewsTitle, input.ThemesNewsThemesOrLevelID).
+			First(&existing).Error
 		if err == nil {
-			log.Printf("ℹ️ News '%s' untuk themes_or_levels_id '%d' sudah ada, lewati...", news.Title, news.ThemesOrLevelsID)
+			log.Printf("ℹ️ News '%s' untuk themes_or_level_id '%d' sudah ada, dilewati...", input.ThemesNewsTitle, input.ThemesNewsThemesOrLevelID)
 			continue
 		}
 
 		newsEntry := themesModel.ThemesOrLevelsNewsModel{
-			Title:            news.Title,
-			Description:      news.Description,
-			IsPublic:         news.IsPublic,
-			ThemesOrLevelsID: news.ThemesOrLevelsID,
+			ThemesNewsTitle:           input.ThemesNewsTitle,
+			ThemesNewsDescription:     input.ThemesNewsDescription,
+			ThemesNewsIsPublic:        input.ThemesNewsIsPublic,
+			ThemesNewsThemesOrLevelID: input.ThemesNewsThemesOrLevelID,
 		}
 
 		if err := db.Create(&newsEntry).Error; err != nil {
-			log.Printf("❌ Gagal insert news '%s': %v", news.Title, err)
+			log.Printf("❌ Gagal insert news '%s': %v", input.ThemesNewsTitle, err)
 		} else {
-			log.Printf("✅ Berhasil insert news '%s'", news.Title)
+			log.Printf("✅ Berhasil insert news '%s'", input.ThemesNewsTitle)
 		}
 	}
 }

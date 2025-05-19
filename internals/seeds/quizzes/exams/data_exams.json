@@ -1,34 +1,34 @@
 [
     {
-        "name_exams": "Ujian Pertama unit ke-1",
-        "status": "active",
-        "total_question": [],
-        "icon_url": "https://example.com/icons/exam.png",
-        "unit_id": 1,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "exam_name": "Ujian Pertama unit ke-1",
+        "exam_status": "active",
+        "exam_total_question_ids": [],
+        "exam_icon_url": "https://example.com/icons/exam.png",
+        "exam_unit_id": 1,
+        "exam_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "name_exams": "Ujian Pertama unit ke-2",
-        "status": "active",
-        "total_question": [],
-        "icon_url": "https://example.com/icons/exam.png",
-        "unit_id": 2,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "exam_name": "Ujian Pertama unit ke-2",
+        "exam_status": "active",
+        "exam_total_question_ids": [],
+        "exam_icon_url": "https://example.com/icons/exam.png",
+        "exam_unit_id": 2,
+        "exam_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "name_exams": "Ujian Pertama unit ke-3",
-        "status": "active",
-        "total_question": [],
-        "icon_url": "https://example.com/icons/exam.png",
-        "unit_id": 3,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "exam_name": "Ujian Pertama unit ke-3",
+        "exam_status": "active",
+        "exam_total_question_ids": [],
+        "exam_icon_url": "https://example.com/icons/exam.png",
+        "exam_unit_id": 3,
+        "exam_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     },
     {
-        "name_exams": "Ujian Pertama unit ke-4",
-        "status": "active",
-        "total_question": [],
-        "icon_url": "https://example.com/icons/exam.png",
-        "unit_id": 4,
-        "created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
+        "exam_name": "Ujian Pertama unit ke-4",
+        "exam_status": "active",
+        "exam_total_question_ids": [],
+        "exam_icon_url": "https://example.com/icons/exam.png",
+        "exam_unit_id": 4,
+        "exam_created_by": "382a6de4-1e7f-4698-a7a3-4df72955c0de"
     }
 ]

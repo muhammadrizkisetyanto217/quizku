@@ -122,7 +122,7 @@ func (uc *UserQuizController) CreateOrUpdateUserQuiz(c *fiber.Ctx) error {
 	}
 
 	var unit unitModel.UnitModel
-	if err := uc.DB.First(&unit, "id = ?", section.SectionQuizzesUnitID).Error; err != nil {
+	if err := uc.DB.First(&unit, "unit_id = ?", section.SectionQuizzesUnitID).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch unit"})
 	}
 
@@ -140,7 +140,7 @@ func (uc *UserQuizController) CreateOrUpdateUserQuiz(c *fiber.Ctx) error {
 	_ = services.UpdateUserUnitIfSectionCompleted(
 		uc.DB,
 		userUUID,                 // userID: UUID user yang login
-		unit.ID,                  // unitID: ID unit terkait
+		unit.UnitID,              // unitID: ID unit terkait
 		section.SectionQuizzesID, // completedSectionID: ID section yang baru selesai
 	)
 
@@ -173,7 +173,6 @@ func max(a, b int) int {
 func (uc *UserQuizController) GetUserQuizzesByUserID(c *fiber.Ctx) error {
 	userIDParam := c.Params("user_id")
 
-	// ✅ Validasi UUID format
 	userID, err := uuid.Parse(userIDParam)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -181,19 +180,20 @@ func (uc *UserQuizController) GetUserQuizzesByUserID(c *fiber.Ctx) error {
 		})
 	}
 
-	// ✅ Ambil data user_quizzes berdasarkan kolom semantik
 	var userQuizzes []model.UserQuizzesModel
 	if err := uc.DB.
 		Where("user_quiz_user_id = ?", userID).
+		Order("updated_at DESC").
 		Find(&userQuizzes).Error; err != nil {
+
 		log.Println("[ERROR] Gagal mengambil user_quizzes:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal mengambil data quiz user",
 		})
 	}
 
-	// ✅ Kembalikan hasil
 	return c.JSON(fiber.Map{
-		"data": userQuizzes,
+		"total": len(userQuizzes),
+		"data":  userQuizzes,
 	})
 }

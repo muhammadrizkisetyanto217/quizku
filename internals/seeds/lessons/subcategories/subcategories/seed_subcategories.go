@@ -34,18 +34,18 @@ func SeedSubcategoriesFromJSON(db *gorm.DB, filePath string) {
 
 	for _, s := range input {
 		var existing model.SubcategoryModel
-		if err := db.Where("name = ?", s.Name).First(&existing).Error; err == nil {
+		if err := db.Where("subcategory_name = ?", s.Name).First(&existing).Error; err == nil {
 			log.Printf("ℹ️ Subkategori '%s' sudah ada, lewati...", s.Name)
 			continue
 		}
 
 		sub := model.SubcategoryModel{
-			Name:                s.Name,
-			Status:              s.Status,
-			DescriptionLong:     s.DescriptionLong,
-			ImageURL:            s.ImageURL,
-			TotalThemesOrLevels: pq.Int64Array(s.TotalThemesOrLevels),
-			CategoriesID:        s.CategoriesID,
+			SubcategoryName:                s.Name,
+			SubcategoryStatus:              s.Status,
+			SubcategoryDescriptionLong:     s.DescriptionLong,
+			SubcategoryImageURL:            s.ImageURL,
+			SubcategoryTotalThemesOrLevels: pq.Int64Array(s.TotalThemesOrLevels),
+			SubcategoryCategoryID:          s.CategoriesID,
 		}
 
 		if err := db.Create(&sub).Error; err != nil {

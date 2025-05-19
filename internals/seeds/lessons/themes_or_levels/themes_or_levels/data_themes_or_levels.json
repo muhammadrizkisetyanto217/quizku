@@ -1,20 +1,20 @@
 [
     {
-        "name": "Pengantar Aqidah",
-        "status": "active",
-        "description_short": "Pembahasan tentang wudhu",
-        "description_long": "Materi ini mencakup tata cara berwudhu, syarat sah, pembatal, dan hal-hal terkait lainnya dalam fiqh wudhu.",
-        "total_unit": [],
-        "image_url": "https://example.com/images/fiqh-wudhu.jpg",
-        "subcategories_id": 1
+        "themes_or_level_name": "Pengantar Aqidah",
+        "themes_or_level_status": "active",
+        "themes_or_level_description_short": "Pembahasan tentang wudhu",
+        "themes_or_level_description_long": "Materi ini mencakup tata cara berwudhu, syarat sah, pembatal, dan hal-hal terkait lainnya dalam fiqh wudhu.",
+        "themes_or_level_total_unit": [],
+        "themes_or_level_image_url": "https://example.com/images/fiqh-wudhu.jpg",
+        "themes_or_level_subcategory_id": 1
     },
     {
-        "name": "Pendalaman Aqidah",
-        "status": "active",
-        "description_short": "Pengantar fiqh sholat",
-        "description_long": "Materi ini membahas pengertian sholat, hukum-hukumnya, dan urgensinya dalam Islam sebelum masuk ke praktik teknis.",
-        "total_unit": [],
-        "image_url": "https://example.com/images/fiqh-pengantar-sholat.jpg",
-        "subcategories_id": 1
+        "themes_or_level_name": "Pendalaman Aqidah",
+        "themes_or_level_status": "active",
+        "themes_or_level_description_short": "Pengantar fiqh sholat",
+        "themes_or_level_description_long": "Materi ini membahas pengertian sholat, hukum-hukumnya, dan urgensinya dalam Islam sebelum masuk ke praktik teknis.",
+        "themes_or_level_total_unit": [],
+        "themes_or_level_image_url": "https://example.com/images/fiqh-pengantar-sholat.jpg",
+        "themes_or_level_subcategory_id": 1
     }
 ]

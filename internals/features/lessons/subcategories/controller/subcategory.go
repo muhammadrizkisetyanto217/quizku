@@ -48,28 +48,28 @@ func (sc *SubcategoryController) GetSubcategory(c *fiber.Ctx) error {
 	var subcategory model.SubcategoryModel
 
 	// 🔍 Query berdasarkan ID
-	if err := sc.DB.First(&subcategory, id).Error; err != nil {
+	if err := sc.DB.Where("subcategory_id = ?", id).First(&subcategory).Error; err != nil {
 		log.Println("[ERROR] Subcategory not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Subcategory not found"})
 	}
 
 	// ✅ Kirim data
-	log.Printf("[SUCCESS] Subcategory retrieved: ID=%d, Name=%s\n", subcategory.ID, subcategory.Name)
+	log.Printf("[SUCCESS] Subcategory retrieved: ID=%d, Name=%s\n", subcategory.SubcategoryID, subcategory.SubcategoryName)
 	return c.JSON(fiber.Map{
 		"message": "Subcategory fetched successfully",
 		"data":    subcategory,
 	})
 }
 
-// 🟢 GET SUBCATEGORIES BY CATEGORY ID: Ambil data subkategori berdasarkan categories_id
+// 🟢 GET SUBCATEGORIES BY CATEGORY ID: Ambil data subkategori berdasarkan subcategory_category_id
 func (sc *SubcategoryController) GetSubcategoriesByCategory(c *fiber.Ctx) error {
 	categoryID := c.Params("category_id")
 	log.Printf("[INFO] Fetching subcategories with category ID: %s\n", categoryID)
 
 	var subcategories []model.SubcategoryModel
 
-	// 🔍 Query subkategori berdasarkan categories_id
-	if err := sc.DB.Where("categories_id = ?", categoryID).Find(&subcategories).Error; err != nil {
+	// 🔍 Query subkategori berdasarkan subcategory_category_id
+	if err := sc.DB.Where("subcategory_category_id = ?", categoryID).Find(&subcategories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch subcategories for category ID %s: %v\n", categoryID, err)
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch subcategories"})
 	}
@@ -85,72 +85,79 @@ func (sc *SubcategoryController) GetSubcategoriesByCategory(c *fiber.Ctx) error 
 
 // 🟢 CREATE SUBCATEGORY: Tambah satu atau banyak subkategori dengan validasi
 func (sc *SubcategoryController) CreateSubcategory(c *fiber.Ctx) error {
-	log.Println("[INFO] Received request to create subcategory")
+	log.Println("[INFO] Menerima request untuk membuat subkategori")
 
 	var single model.SubcategoryModel
 	var multiple []model.SubcategoryModel
 
-	// 🧠 Coba parse sebagai array
+	// 🧠 Coba parsing sebagai array
 	if err := c.BodyParser(&multiple); err == nil && len(multiple) > 0 {
-		log.Printf("[DEBUG] Parsed %d subcategories as array\n", len(multiple))
+		log.Printf("[DEBUG] Parsed sebagai array: %d subcategories\n", len(multiple))
 
-		// ✅ Validasi tiap item
+		// ✅ Validasi setiap subkategori dalam array
 		for i, item := range multiple {
-			if item.Name == "" || item.CategoriesID == 0 {
+			if item.SubcategoryName == "" || item.SubcategoryCategoryID == 0 {
 				return c.Status(400).JSON(fiber.Map{
-					"error": "All fields are required in array (name, categories_id)",
+					"error": "Field subcategory_name dan subcategory_category_id wajib diisi",
 					"index": i,
 				})
 			}
-
-			var count int64
-			if err := sc.DB.Table("categories").Where("id = ?", item.CategoriesID).Count(&count).Error; err != nil || count == 0 {
+			var exists int64
+			if err := sc.DB.Table("categories").
+				Where("category_id = ?", item.SubcategoryCategoryID).
+				Count(&exists).Error; err != nil || exists == 0 {
 				return c.Status(400).JSON(fiber.Map{
-					"error": "Invalid categories_id in array",
+					"error": "subcategory_category_id tidak valid (kategori tidak ditemukan)",
 					"index": i,
 				})
 			}
 		}
 
-		// 💾 Simpan semua jika valid
+		// 💾 Simpan seluruh array
 		if err := sc.DB.Create(&multiple).Error; err != nil {
-			log.Printf("[ERROR] Failed to insert multiple subcategories: %v\n", err)
-			return c.Status(500).JSON(fiber.Map{"error": "Failed to create subcategories"})
+			log.Printf("[ERROR] Gagal insert batch subcategories: %v", err)
+			return c.Status(500).JSON(fiber.Map{"error": "Gagal menyimpan subcategories"})
 		}
 
-		log.Printf("[SUCCESS] %d subcategories created successfully\n", len(multiple))
+		log.Printf("[SUCCESS] %d subcategories berhasil dibuat", len(multiple))
 		return c.Status(201).JSON(fiber.Map{
-			"message": "Multiple subcategories created successfully",
+			"message": "Subcategories berhasil dibuat",
 			"data":    multiple,
 		})
 	}
 
-	// 🔁 Parse sebagai objek tunggal
+	// 🔁 Parsing sebagai objek tunggal
 	if err := c.BodyParser(&single); err != nil {
-		log.Printf("[ERROR] Failed to parse single subcategory input: %v\n", err)
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+		log.Printf("[ERROR] Gagal parsing request body single: %v", err)
+		return c.Status(400).JSON(fiber.Map{"error": "Format request tidak valid"})
 	}
-	log.Printf("[DEBUG] Parsed single subcategory: %+v\n", single)
+	log.Printf("[DEBUG] Subcategory tunggal yang dikirim: %+v", single)
 
-	// ✅ Validasi
-	if single.Name == "" || single.CategoriesID == 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "All fields are required (name, categories_id)"})
-	}
-
-	var count int64
-	if err := sc.DB.Table("categories").Where("id = ?", single.CategoriesID).Count(&count).Error; err != nil || count == 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid categories_id. Referenced category does not exist"})
+	// ✅ Validasi tunggal
+	if single.SubcategoryName == "" || single.SubcategoryCategoryID == 0 {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Field subcategory_name dan subcategory_category_id wajib diisi",
+		})
 	}
 
-	// 💾 Simpan
+	var exists int64
+	if err := sc.DB.Table("categories").
+		Where("category_id = ?", single.SubcategoryCategoryID).
+		Count(&exists).Error; err != nil || exists == 0 {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "subcategory_category_id tidak valid (kategori tidak ditemukan)",
+		})
+	}
+
+	// 💾 Simpan subkategori tunggal
 	if err := sc.DB.Create(&single).Error; err != nil {
-		log.Printf("[ERROR] Error creating subcategory: %v\n", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to create subcategory"})
+		log.Printf("[ERROR] Gagal insert subcategory tunggal: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal menyimpan subcategory"})
 	}
 
-	log.Printf("[SUCCESS] Subcategory created: ID=%d, Name=%s\n", single.ID, single.Name)
+	log.Printf("[SUCCESS] Subcategory berhasil dibuat: ID=%d, Nama=%s", single.SubcategoryID, single.SubcategoryName)
 	return c.Status(201).JSON(fiber.Map{
-		"message": "Subcategory created successfully",
+		"message": "Subcategory berhasil dibuat",
 		"data":    single,
 	})
 }
@@ -162,27 +169,27 @@ func (sc *SubcategoryController) UpdateSubcategory(c *fiber.Ctx) error {
 
 	var subcategory model.SubcategoryModel
 
-	// 🔍 Cari berdasarkan ID
-	if err := sc.DB.First(&subcategory, id).Error; err != nil {
+	// 🔍 Cari data lama berdasarkan subcategory_id
+	if err := sc.DB.Where("subcategory_id = ?", id).First(&subcategory).Error; err != nil {
 		log.Println("[ERROR] Subcategory not found:", err)
 		return c.Status(404).JSON(fiber.Map{"error": "Subcategory not found"})
 	}
 
-	// 🔄 Update isi
+	// 📝 Parse data baru dari request body
 	if err := c.BodyParser(&subcategory); err != nil {
-		log.Println("[ERROR] Invalid request body:", err)
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+		log.Println("[ERROR] Body request tidak valid:", err)
+		return c.Status(400).JSON(fiber.Map{"error": "Request body tidak valid"})
 	}
 
-	// 💾 Simpan update
+	// 💾 Simpan perubahan
 	if err := sc.DB.Save(&subcategory).Error; err != nil {
-		log.Println("[ERROR] Error updating subcategory:", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to update subcategory"})
+		log.Println("[ERROR] Gagal update subcategory:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal update subcategory"})
 	}
 
-	log.Printf("[SUCCESS] Subcategory updated: ID=%d, Name=%s\n", subcategory.ID, subcategory.Name)
+	log.Printf("[SUCCESS] Subcategory updated: ID=%d, Name=%s", subcategory.SubcategoryID, subcategory.SubcategoryName)
 	return c.JSON(fiber.Map{
-		"message": "Subcategory updated successfully",
+		"message": "Subcategory berhasil diperbarui",
 		"data":    subcategory,
 	})
 }
@@ -194,51 +201,53 @@ func (sc *SubcategoryController) DeleteSubcategory(c *fiber.Ctx) error {
 
 	var subcategory model.SubcategoryModel
 
-	// 🔍 Cek apakah subkategori ada
-	if err := sc.DB.First(&subcategory, id).Error; err != nil {
-		log.Println("[ERROR] Subcategory not found:", err)
+	// 🔍 Cari subkategori berdasarkan ID
+	if err := sc.DB.Where("subcategory_id = ?", id).First(&subcategory).Error; err != nil {
+		log.Println("[ERROR] Subcategory tidak ditemukan:", err)
 		return c.Status(404).JSON(fiber.Map{
-			"error": "Subcategory not found",
+			"error": "Subcategory tidak ditemukan",
 		})
 	}
 
-	// 🗑️ Hapus data
+	// 🗑️ Hapus (soft delete menggunakan DeletedAt)
 	if err := sc.DB.Delete(&subcategory).Error; err != nil {
-		log.Println("[ERROR] Error deleting subcategory:", err)
+		log.Println("[ERROR] Gagal hapus subcategory:", err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to delete subcategory",
+			"error": "Gagal menghapus subcategory",
 		})
 	}
 
-	// ✅ Kirim respon sukses
-	log.Printf("[SUCCESS] Subcategory with ID %s deleted\n", id)
+	log.Printf("[SUCCESS] Subcategory dengan ID %s berhasil dihapus", id)
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Subcategory with ID %s deleted successfully", id),
+		"message": fmt.Sprintf("Subcategory dengan ID %s berhasil dihapus", id),
 	})
 }
-
 // 🟢 GET CATEGORY WITH SUBCATEGORY AND THEMES: Ambil data lengkap kategori, subkategori, dan themes berdasarkan difficulty_id
 func (sc *SubcategoryController) GetCategoryWithSubcategoryAndThemes(c *fiber.Ctx) error {
 	difficultyID := c.Params("difficulty_id")
 	log.Printf("[INFO] Fetching category, subcategory, and themes for difficulty ID: %s\n", difficultyID)
 
-	// 🔍 Ambil semua kategori dengan relasi subkategori aktif & themes-nya
 	var categories []categoryModel.CategoryModel
+
+	// 🔍 Ambil semua kategori yang memiliki difficulty_id sesuai
+	// dan preload semua subcategory aktif + themes di dalamnya
 	if err := sc.DB.
-		Where("difficulty_id = ?", difficultyID).
+		Where("category_difficulty_id = ?", difficultyID).
 		Preload("Subcategories", func(db *gorm.DB) *gorm.DB {
 			return db.
-				Where("status = ?", "active").
-				Preload("ThemesOrLevels")
+				Where("subcategory_status = ?", "active").
+				Preload("ThemesOrLevels", func(db2 *gorm.DB) *gorm.DB {
+					return db2.Order("themes_or_level_id ASC")
+				})
 		}).
+		Order("category_id ASC").
 		Find(&categories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch categories: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Gagal mengambil data kategori",
+			"error": "Gagal mengambil data kategori lengkap",
 		})
 	}
 
-	// ✅ Kirim data lengkap
 	log.Printf("[SUCCESS] Retrieved %d categories with subcategories and themes for difficulty ID %s\n", len(categories), difficultyID)
 	return c.JSON(fiber.Map{
 		"message": "Berhasil mengambil data kategori lengkap",

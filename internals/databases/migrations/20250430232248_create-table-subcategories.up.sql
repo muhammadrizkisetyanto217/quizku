@@ -1,23 +1,29 @@
 -- ✅ TABLE: subcategories
 CREATE TABLE IF NOT EXISTS subcategories (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'archived')),
-    description_long TEXT,
-    total_themes_or_levels INTEGER[] NOT NULL DEFAULT '{}',
-    image_url TEXT,
+    subcategory_id SERIAL PRIMARY KEY,
+    subcategory_name VARCHAR(255) NOT NULL,
+    subcategory_status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (subcategory_status IN ('active', 'pending', 'archived')),
+    subcategory_description_long TEXT,
+    subcategory_total_themes_or_levels INTEGER[] NOT NULL DEFAULT '{}',
+    subcategory_image_url TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP,
-    categories_id INT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    subcategory_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    subcategory_deleted_at TIMESTAMP,
+    subcategory_category_id INT NOT NULL REFERENCES categories(category_id) ON DELETE CASCADE,
 
-    CONSTRAINT unique_subcat_name_per_cat UNIQUE (name, categories_id)
+    CONSTRAINT unique_subcategory_name_per_category UNIQUE (subcategory_name, subcategory_category_id)
 );
 
 -- ✅ Index untuk performa query
-CREATE INDEX IF NOT EXISTS idx_subcategories_status ON subcategories(status);
-CREATE INDEX IF NOT EXISTS idx_subcategories_category ON subcategories(categories_id);
-CREATE INDEX IF NOT EXISTS idx_subcat_cat_status ON subcategories(categories_id, status);
+CREATE INDEX IF NOT EXISTS idx_subcategory_status 
+    ON subcategories(subcategory_status);
+
+CREATE INDEX IF NOT EXISTS idx_subcategory_category 
+    ON subcategories(subcategory_category_id);
+
+CREATE INDEX IF NOT EXISTS idx_subcategory_cat_status 
+    ON subcategories(subcategory_category_id, subcategory_status);
+
 
 -- ✅ TABLE: subcategories_news
 CREATE TABLE IF NOT EXISTS subcategories_news (
@@ -36,19 +42,24 @@ CREATE INDEX IF NOT EXISTS idx_subnews_subcat ON subcategories_news(subcategory_
 CREATE INDEX IF NOT EXISTS idx_subnews_is_public ON subcategories_news(is_public);
 CREATE INDEX IF NOT EXISTS idx_subnews_public_per_subcat ON subcategories_news(subcategory_id, is_public);
 
-
--- ✅ TABLE: user_subcategory (revisi final)
+-- ✅ TABLE: user_subcategory (refactored + created_at/updated_at tetap)
 CREATE TABLE IF NOT EXISTS user_subcategory (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    subcategory_id INTEGER NOT NULL REFERENCES subcategories(id) ON DELETE CASCADE,
-    complete_themes_or_levels JSONB NOT NULL DEFAULT '{}'::jsonb,
-    grade_result INTEGER NOT NULL DEFAULT 0,
+    user_subcategory_id SERIAL PRIMARY KEY,
+    user_subcategory_user_id UUID NOT NULL,
+    user_subcategory_subcategory_id INTEGER NOT NULL REFERENCES subcategories(id) ON DELETE CASCADE,
+    user_subcategory_complete_themes_or_levels JSONB NOT NULL DEFAULT '{}'::jsonb,
+    user_subcategory_grade_result INTEGER NOT NULL DEFAULT 0,
+    user_subcategory_current_version INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ✅ Index untuk performa
-CREATE INDEX IF NOT EXISTS idx_user_subcategory_user_id ON user_subcategory (user_id);
-CREATE INDEX IF NOT EXISTS idx_user_subcategory_subcat_id ON user_subcategory (subcategory_id);
-CREATE INDEX IF NOT EXISTS idx_user_subcategory_user_subcat ON user_subcategory(user_id, subcategory_id);
+CREATE INDEX IF NOT EXISTS idx_user_subcategory_user_id 
+    ON user_subcategory (user_subcategory_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_subcategory_subcategory_id 
+    ON user_subcategory (user_subcategory_subcategory_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_subcategory_user_subcategory 
+    ON user_subcategory(user_subcategory_user_id, user_subcategory_subcategory_id);

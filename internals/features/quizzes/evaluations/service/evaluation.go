@@ -12,13 +12,13 @@ import (
 	userUnitModel "quizku/internals/features/lessons/units/model"
 )
 
-// ✅ Gaya semantik untuk isi JSON progress evaluasi
-type AttemptEvaluationData struct {
-	UserUnitEvaluationAttempt         int `json:"user_unit_evaluation_attempt"`
-	UserUnitEvaluationGradeEvaluation int `json:"user_unit_evaluation_grade_evaluation"`
+// ✅ Semantik JSON progress evaluasi
+type EvaluationAttemptSummary struct {
+	EvaluationAttemptCount int `json:"evaluation_attempt_count"` // Jumlah percobaan evaluasi
+	EvaluationFinalGrade   int `json:"evaluation_final_grade"`   // Nilai evaluasi tertinggi
 }
 
-// ✅ Update progress evaluasi pada tabel user_units (tanpa refactor kolom DB)
+// ✅ Update progress evaluasi user pada user_unit (tanpa refactor kolom DB)
 func UpdateUserUnitFromEvaluation(db *gorm.DB, userID uuid.UUID, evaluationUnitID uint, gradePercentage int) error {
 	var userUnit userUnitModel.UserUnitModel
 
@@ -30,18 +30,18 @@ func UpdateUserUnitFromEvaluation(db *gorm.DB, userID uuid.UUID, evaluationUnitI
 		return err
 	}
 
-	var evalData AttemptEvaluationData
-	if len(userUnit.AttemptEvaluation) > 0 {
-		if err := json.Unmarshal(userUnit.AttemptEvaluation, &evalData); err != nil {
+	var evalData EvaluationAttemptSummary
+	if len(userUnit.UserUnitAttemptEvaluation) > 0 {
+		if err := json.Unmarshal(userUnit.UserUnitAttemptEvaluation, &evalData); err != nil {
 			log.Printf("[ERROR] Gagal decode JSON attempt_evaluation: %v", err)
 			return err
 		}
 	}
 
-	// Update attempt dan nilai jika lebih baik
-	evalData.UserUnitEvaluationAttempt++
-	if gradePercentage > evalData.UserUnitEvaluationGradeEvaluation {
-		evalData.UserUnitEvaluationGradeEvaluation = gradePercentage
+	// ✅ Update jumlah attempt dan nilai tertinggi jika lebih baik
+	evalData.EvaluationAttemptCount++
+	if gradePercentage > evalData.EvaluationFinalGrade {
+		evalData.EvaluationFinalGrade = gradePercentage
 	}
 
 	encoded, err := json.Marshal(evalData)
@@ -60,7 +60,7 @@ func UpdateUserUnitFromEvaluation(db *gorm.DB, userID uuid.UUID, evaluationUnitI
 		Updates(updateData).Error
 }
 
-// ✅ Reset field jika tidak ada user_evaluations untuk unit ini
+// ✅ Reset attempt_evaluation jika user tidak punya evaluasi untuk unit tersebut
 func CheckAndUnsetEvaluationStatus(db *gorm.DB, userID uuid.UUID, evaluationUnitID uint) error {
 	var count int64
 	err := db.Table("user_evaluations").
@@ -71,9 +71,10 @@ func CheckAndUnsetEvaluationStatus(db *gorm.DB, userID uuid.UUID, evaluationUnit
 	}
 
 	if count == 0 {
+		log.Printf("[INFO] Reset attempt_evaluation karena tidak ada user_evaluations: user_id=%s unit_id=%d", userID, evaluationUnitID)
 		return db.Model(&userUnitModel.UserUnitModel{}).
 			Where("user_id = ? AND unit_id = ?", userID, evaluationUnitID).
-			Update("attempt_evaluation", 0).Error
+			Update("attempt_evaluation", datatypes.JSON([]byte("null"))).Error
 	}
 
 	return nil

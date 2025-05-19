@@ -44,32 +44,29 @@ func (tc *ThemesOrLevelsNewsController) GetAll(c *fiber.Ctx) error {
 // 🟢 GET /themes-or-levels-news/themes-or-levels/:themes_or_levels_id
 // Mengambil semua news yang terkait dengan satu themes_or_levels tertentu
 func (tc *ThemesOrLevelsNewsController) GetByThemesOrLevelsID(c *fiber.Ctx) error {
-	id := c.Params("themes_or_levels_id") // Ambil parameter ID dari URL
-	var news []model.ThemesOrLevelsNewsModel
+	themesOrLevelID := c.Params("themes_or_levels_id")
+	var newsList []model.ThemesOrLevelsNewsModel
 
-	// Query berdasarkan themes_or_levels_id dan pastikan belum terhapus (soft delete)
 	if err := tc.DB.
-		Where("themes_or_levels_id = ?", id).
+		Where("themes_news_themes_or_level_id = ?", themesOrLevelID).
 		Where("deleted_at IS NULL").
-		Find(&news).Error; err != nil {
+		Find(&newsList).Error; err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal mengambil news berdasarkan themes_or_levels_id: " + err.Error(),
 		})
 	}
 
-	// Jika tidak ditemukan data apapun, kembalikan 404
-	if len(news) == 0 {
+	if len(newsList) == 0 {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "No news found for this themes_or_levels_id",
+			"message": "News tidak ditemukan untuk themes_or_levels_id tersebut",
 		})
 	}
 
-	// Kirim data news berdasarkan themes_or_levels_id
 	return c.JSON(fiber.Map{
-		"message": "News for the selected themes/levels retrieved successfully",
-		"data":    news,
+		"message": "Daftar news untuk themes_or_levels berhasil diambil",
+		"data":    newsList,
 	})
 }
 
@@ -79,17 +76,15 @@ func (tc *ThemesOrLevelsNewsController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.ThemesOrLevelsNewsModel
 
-	// Ambil satu data berdasarkan primary key
-	if err := tc.DB.First(&news, id).Error; err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+	if err := tc.DB.First(&news, "themes_news_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Themes/Levels news not found",
+			"message": "News tidak ditemukan untuk ID tersebut",
 		})
 	}
 
-	// Kirim respons jika ditemukan
 	return c.JSON(fiber.Map{
-		"message": "Themes/Levels news found successfully",
+		"message": "News berhasil ditemukan",
 		"data":    news,
 	})
 }
@@ -98,30 +93,28 @@ func (tc *ThemesOrLevelsNewsController) GetByID(c *fiber.Ctx) error {
 // Menambahkan berita baru untuk themes_or_levels tertentu.
 // Setelah berhasil disimpan, akan memperbarui field JSON `update_news` di tabel themes_or_levels.
 func (tc *ThemesOrLevelsNewsController) Create(c *fiber.Ctx) error {
-	var news model.ThemesOrLevelsNewsModel
+	var input model.ThemesOrLevelsNewsModel
 
-	// Parse body dari request
-	if err := c.BodyParser(&news); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "Invalid request body",
+			"message": "Format body tidak valid",
 		})
 	}
 
-	// Simpan berita baru ke database
-	if err := tc.DB.Create(&news).Error; err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+	if err := tc.DB.Create(&input).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal menyimpan news: " + err.Error(),
 		})
 	}
 
-	// Perbarui field update_news di tabel themes_or_levels (cache JSON)
-	updateThemesOrLevelsNewsJSON(tc.DB, news.ThemesOrLevelsID)
+	// 🧠 Perbarui cache update_news pada tabel themes_or_levels
+	updateThemesOrLevelsNewsJSON(tc.DB, input.ThemesNewsThemesOrLevelID)
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{
-		"message": "Themes/Levels news created successfully",
-		"data":    news,
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "News berhasil ditambahkan",
+		"data":    input,
 	})
 }
 
@@ -129,38 +122,45 @@ func (tc *ThemesOrLevelsNewsController) Create(c *fiber.Ctx) error {
 // Mengupdate isi berita berdasarkan ID, lalu menyegarkan field `update_news` di themes_or_levels
 func (tc *ThemesOrLevelsNewsController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var news model.ThemesOrLevelsNewsModel
+	var existing model.ThemesOrLevelsNewsModel
 
-	// Cari data lama berdasarkan ID
-	if err := tc.DB.First(&news, id).Error; err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+	// 🔍 Cari data lama berdasarkan ID
+	if err := tc.DB.First(&existing, "themes_news_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Themes/Levels news not found",
+			"message": "News tidak ditemukan",
 		})
 	}
 
-	// Overwrite data lama dengan body baru dari request
-	if err := c.BodyParser(&news); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+	// 📥 Parsing body request untuk overwrite field (tanpa overwrite ID)
+	var input model.ThemesOrLevelsNewsModel
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "Invalid request body",
+			"message": "Format request body tidak valid",
 		})
 	}
 
-	// Simpan perubahan ke database
-	if err := tc.DB.Save(&news).Error; err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+	// 📝 Update field satu per satu untuk menghindari overwrite ID
+	existing.ThemesNewsTitle = input.ThemesNewsTitle
+	existing.ThemesNewsDescription = input.ThemesNewsDescription
+	existing.ThemesNewsIsPublic = input.ThemesNewsIsPublic
+	existing.ThemesNewsThemesOrLevelID = input.ThemesNewsThemesOrLevelID
+
+	// 💾 Simpan perubahan ke database
+	if err := tc.DB.Save(&existing).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal memperbarui news: " + err.Error(),
 		})
 	}
 
-	// Update field update_news (JSON array) di themes_or_levels
-	updateThemesOrLevelsNewsJSON(tc.DB, news.ThemesOrLevelsID)
+	// 🔄 Update cache update_news di themes_or_levels
+	updateThemesOrLevelsNewsJSON(tc.DB, existing.ThemesNewsThemesOrLevelID)
 
 	return c.JSON(fiber.Map{
-		"message": "Themes/Levels news updated successfully",
-		"data":    news,
+		"message": "News berhasil diperbarui",
+		"data":    existing,
 	})
 }
 
@@ -170,56 +170,60 @@ func (tc *ThemesOrLevelsNewsController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.ThemesOrLevelsNewsModel
 
-	// Cari data berdasarkan ID
-	if err := tc.DB.First(&news, id).Error; err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+	// 🔍 Cari data berdasarkan ID
+	if err := tc.DB.First(&news, "themes_news_id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Themes/Levels news not found",
+			"message": "News tidak ditemukan",
 		})
 	}
 
-	// Hapus data (soft delete jika pakai gorm.Model dengan DeletedAt)
+	// 🗑️ Hapus data (soft delete)
 	if err := tc.DB.Delete(&news).Error; err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal menghapus news: " + err.Error(),
 		})
 	}
 
-	// Perbarui cache JSON pada themes_or_levels
-	updateThemesOrLevelsNewsJSON(tc.DB, news.ThemesOrLevelsID)
+	// 🔄 Perbarui field JSON `update_news` di themes_or_levels
+	updateThemesOrLevelsNewsJSON(tc.DB, news.ThemesNewsThemesOrLevelID)
 
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Themes/Levels news with ID %v deleted successfully", news.ID),
+		"message": fmt.Sprintf("News dengan ID %v berhasil dihapus", news.ThemesNewsID),
 	})
 }
 
 // ⚙️ updateThemesOrLevelsNewsJSON
-// Helper internal untuk menyegarkan field `update_news` pada tabel themes_or_levels.
+// Helper internal untuk menyegarkan field `themes_or_level_update_news` pada tabel themes_or_levels.
 // Field ini menyimpan array JSON dari semua news aktif terkait theme tersebut.
 // Tujuannya adalah untuk efisiensi frontend yang hanya perlu membaca satu kolom.
 func updateThemesOrLevelsNewsJSON(db *gorm.DB, themeID uint) {
 	var newsList []model.ThemesOrLevelsNewsModel
 
-	// Ambil semua news untuk theme terkait, urutkan berdasarkan created_at terbaru
-	if err := db.Where("themes_or_level_id = ?", themeID).
-		Order("created_at desc").
+	// 🔍 Ambil semua news aktif (belum terhapus) untuk theme terkait, urutkan berdasarkan created_at terbaru
+	if err := db.
+		Where("themes_news_themes_or_level_id = ?", themeID).
+		Where("deleted_at IS NULL").
+		Order("created_at DESC").
 		Find(&newsList).Error; err != nil {
-		log.Println("[ERROR] Failed to fetch themes/levels news for update:", err)
+		log.Println("[ERROR] Gagal mengambil daftar news untuk update:", err)
 		return
 	}
 
-	// Ubah ke bentuk JSON array
+	// 🔄 Konversi menjadi JSON array
 	newsData, err := json.Marshal(newsList)
 	if err != nil {
-		log.Println("[ERROR] Failed to marshal themes/levels news:", err)
+		log.Println("[ERROR] Gagal mengubah news menjadi JSON:", err)
 		return
 	}
 
-	// Simpan ke field update_news (kolom JSON) di themes_or_levels
-	res := db.Table("themes_or_levels").
-		Where("id = ?", themeID).
-		Update("update_news", datatypes.JSON(newsData))
-
-	log.Println("[DEBUG] Rows affected (themes_or_levels):", res.RowsAffected)
+	// 💾 Simpan JSON ke kolom themes_or_level_update_news pada tabel themes_or_levels
+	if err := db.Table("themes_or_levels").
+		Where("themes_or_level_id = ?", themeID).
+		Update("themes_or_level_update_news", datatypes.JSON(newsData)).Error; err != nil {
+		log.Println("[ERROR] Gagal update kolom themes_or_level_update_news:", err)
+	} else {
+		log.Printf("[INFO] Kolom update_news berhasil disegarkan untuk theme_id: %d", themeID)
+	}
 }

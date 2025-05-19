@@ -10,32 +10,34 @@ import (
 )
 
 type UserExamModel struct {
-	ID              uint           `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID          uuid.UUID      `gorm:"not null;index:idx_user_exams_user_id_exam_id,priority:1;index:idx_user_exams_user_id_unit_id,priority:1" json:"user_id"`
-	ExamID          uint           `gorm:"not null;index:idx_user_exams_user_id_exam_id,priority:2" json:"exam_id"`
-	UnitID          uint           `gorm:"not null;index:idx_user_exams_user_id_unit_id,priority:2" json:"unit_id"`
-	Attempt         int            `gorm:"default:1;not null" json:"attempt"`
-	PercentageGrade int            `gorm:"default:0;not null" json:"percentage_grade"`
-	TimeDuration    int            `gorm:"default:0;not null" json:"time_duration"`
-	Point           int            `gorm:"default:0;not null" json:"point"`
-	CreatedAt       time.Time      `gorm:"default:current_timestamp" json:"created_at"`
-	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserExamID           uint           `gorm:"column:user_exam_id;primaryKey;autoIncrement" json:"user_exam_id"`
+	UserExamUserID       uuid.UUID      `gorm:"column:user_exam_user_id;not null;index:idx_user_exam_user_exam_id,priority:1;index:idx_user_exam_user_unit_id,priority:1" json:"user_exam_user_id"`
+	UserExamExamID       uint           `gorm:"column:user_exam_exam_id;not null;index:idx_user_exam_user_exam_id,priority:2" json:"user_exam_exam_id"`
+	UserExamUnitID       uint           `gorm:"column:user_exam_unit_id;not null;index:idx_user_exam_user_unit_id,priority:2" json:"user_exam_unit_id"`
+	UserExamAttempt      int            `gorm:"column:user_exam_attempt;not null;default:1" json:"user_exam_attempt"`
+	UserExamPercentageGrade int         `gorm:"column:user_exam_percentage_grade;not null;default:0" json:"user_exam_percentage_grade"`
+	UserExamTimeDuration int            `gorm:"column:user_exam_time_duration;not null;default:0" json:"user_exam_time_duration"`
+	UserExamPoint        int            `gorm:"column:user_exam_point;not null;default:0" json:"user_exam_point"`
+
+	CreatedAt            time.Time      `gorm:"column:created_at;default:current_timestamp" json:"created_at"`
+	UpdatedAt            time.Time      `gorm:"column:updated_at;default:current_timestamp" json:"updated_at"`
+	DeletedAt            gorm.DeletedAt `gorm:"column:deleted_at;index" json:"deleted_at,omitempty"`
 }
 
-
-
-
+// ✅ Table name override
 func (UserExamModel) TableName() string {
 	return "user_exams"
 }
+
+// ✅ Callback: Update progress after create/update/delete
 func (u *UserExamModel) AfterCreate(tx *gorm.DB) error {
-	return service.UpdateUserUnitFromExam(tx, u.UserID, u.ExamID, u.PercentageGrade)
+	return service.UpdateUserUnitFromExam(tx, u.UserExamUserID, u.UserExamExamID, u.UserExamPercentageGrade)
 }
 
 func (u *UserExamModel) AfterUpdate(tx *gorm.DB) error {
-	return service.UpdateUserUnitFromExam(tx, u.UserID, u.ExamID, u.PercentageGrade)
+	return service.UpdateUserUnitFromExam(tx, u.UserExamUserID, u.UserExamExamID, u.UserExamPercentageGrade)
 }
 
 func (u *UserExamModel) AfterDelete(tx *gorm.DB) error {
-	return service.CheckAndUnsetExamStatus(tx, u.UserID, u.ExamID)
+	return service.CheckAndUnsetExamStatus(tx, u.UserExamUserID, u.UserExamExamID)
 }

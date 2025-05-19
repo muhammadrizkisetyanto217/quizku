@@ -11,14 +11,14 @@ import (
 )
 
 type UnitSeed struct {
-	Name                string    `json:"name"`
-	Status              string    `json:"status"`
-	DescriptionShort    string    `json:"description_short"`
-	DescriptionOverview string    `json:"description_overview"`
-	ImageURL            string    `json:"image_url"`
-	TotalSectionQuizzes []int64   `json:"total_section_quizzes"`
-	ThemesOrLevelID     uint      `json:"themes_or_level_id"`
-	CreatedBy           uuid.UUID `json:"created_by"`
+	UnitName                string    `json:"unit_name"`
+	UnitStatus              string    `json:"unit_status"`
+	UnitDescriptionShort    string    `json:"unit_description_short"`
+	UnitDescriptionOverview string    `json:"unit_description_overview"`
+	UnitImageURL            string    `json:"unit_image_url"`
+	UnitTotalSectionQuizzes []int64   `json:"unit_total_section_quizzes"`
+	UnitThemesOrLevelID     uint      `json:"unit_themes_or_level_id"`
+	UnitCreatedBy           uuid.UUID `json:"unit_created_by"`
 }
 
 func SeedUnitsFromJSON(db *gorm.DB, filePath string) {
@@ -37,26 +37,26 @@ func SeedUnitsFromJSON(db *gorm.DB, filePath string) {
 	for _, data := range inputs {
 		// Cek apakah sudah ada berdasarkan nama
 		var existing model.UnitModel
-		if err := db.Where("name = ?", data.Name).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Data unit '%s' sudah ada, dilewati.", data.Name)
+		if err := db.Where("unit_name = ?", data.UnitName).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Data unit '%s' sudah ada, dilewati.", data.UnitName)
 			continue
 		}
 
 		newUnit := model.UnitModel{
-			Name:                data.Name,
-			Status:              data.Status,
-			DescriptionShort:    data.DescriptionShort,
-			DescriptionOverview: data.DescriptionOverview,
-			ImageURL:            data.ImageURL,
-			TotalSectionQuizzes: data.TotalSectionQuizzes,
-			ThemesOrLevelID:     data.ThemesOrLevelID,
-			CreatedBy:           data.CreatedBy,
+			UnitName:                data.UnitName,
+			UnitStatus:              data.UnitStatus,
+			UnitDescriptionShort:    data.UnitDescriptionShort,
+			UnitDescriptionOverview: data.UnitDescriptionOverview,
+			UnitImageURL:            data.UnitImageURL,
+			UnitTotalSectionQuizzes: data.UnitTotalSectionQuizzes,
+			UnitThemesOrLevelID:     data.UnitThemesOrLevelID,
+			UnitCreatedBy:           data.UnitCreatedBy,
 		}
 
 		if err := db.Create(&newUnit).Error; err != nil {
-			log.Printf("❌ Gagal insert unit '%s': %v", data.Name, err)
+			log.Printf("❌ Gagal insert unit '%s': %v", data.UnitName, err)
 		} else {
-			log.Printf("✅ Berhasil insert unit '%s'", data.Name)
+			log.Printf("✅ Berhasil insert unit '%s'", data.UnitName)
 		}
 	}
 }

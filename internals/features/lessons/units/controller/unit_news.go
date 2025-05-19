@@ -25,7 +25,6 @@ func NewUnitNewsController(db *gorm.DB) *UnitNewsController {
 func (uc *UnitNewsController) GetAll(c *fiber.Ctx) error {
 	var news []model.UnitNewsModel
 
-	// Ambil semua data dari tabel unit_news tanpa filter
 	if err := uc.DB.Find(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
@@ -34,7 +33,7 @@ func (uc *UnitNewsController) GetAll(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Unit news list retrieved successfully",
+		"message": "Daftar unit news berhasil diambil",
 		"data":    news,
 	})
 }
@@ -46,9 +45,8 @@ func (uc *UnitNewsController) GetByUnitID(c *fiber.Ctx) error {
 	unitID := c.Params("unit_id")
 	var news []model.UnitNewsModel
 
-	// Ambil semua news yang aktif (belum terhapus) berdasarkan unit_id
 	if err := uc.DB.
-		Where("unit_id = ?", unitID).
+		Where("unit_news_unit_id = ?", unitID).
 		Where("deleted_at IS NULL").
 		Find(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -57,16 +55,15 @@ func (uc *UnitNewsController) GetByUnitID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Jika tidak ada data ditemukan, balikan 404
 	if len(news) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "No news found for this unit_id",
+			"message": "Berita untuk unit ini tidak ditemukan",
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "News for the selected unit retrieved successfully",
+		"message": "Berita untuk unit berhasil diambil",
 		"data":    news,
 	})
 }
@@ -78,16 +75,15 @@ func (uc *UnitNewsController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.UnitNewsModel
 
-	// Cari data berdasarkan primary key
-	if err := uc.DB.First(&news, id).Error; err != nil {
+	if err := uc.DB.First(&news, "unit_news_id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Unit news not found",
+			"message": "Berita unit tidak ditemukan",
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Unit news found successfully",
+		"message": "Berita unit ditemukan",
 		"data":    news,
 	})
 }
@@ -98,15 +94,13 @@ func (uc *UnitNewsController) GetByID(c *fiber.Ctx) error {
 func (uc *UnitNewsController) Create(c *fiber.Ctx) error {
 	var news model.UnitNewsModel
 
-	// Parse isi request body menjadi model
 	if err := c.BodyParser(&news); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "Invalid request body",
+			"message": "Body request tidak valid",
 		})
 	}
 
-	// Simpan data ke database
 	if err := uc.DB.Create(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
@@ -114,11 +108,10 @@ func (uc *UnitNewsController) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update cache JSON news di tabel units
-	updateUnitNewsJSON(uc.DB, news.UnitID)
+	updateUnitNewsJSON(uc.DB, news.UnitNewsUnitID)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Unit news created successfully",
+		"message": "Berita unit berhasil ditambahkan",
 		"data":    news,
 	})
 }
@@ -128,48 +121,50 @@ func (uc *UnitNewsController) Create(c *fiber.Ctx) error {
 // Setelah berhasil diupdate, field JSON `update_news` di tabel units akan diperbarui.
 func (uc *UnitNewsController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var news model.UnitNewsModel
+	var existing model.UnitNewsModel
 
-	// Cek apakah data dengan ID tersebut ada
-	if err := uc.DB.First(&news, id).Error; err != nil {
+	// Cek keberadaan data
+	if err := uc.DB.First(&existing, "unit_news_id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Unit news not found",
+			"message": "Berita unit tidak ditemukan",
 		})
 	}
 
-	// Parse request body baru
-	if err := c.BodyParser(&news); err != nil {
+	// Parsing update
+	var updateData model.UnitNewsModel
+	if err := c.BodyParser(&updateData); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "Invalid request body",
+			"message": "Body request tidak valid",
 		})
 	}
 
-	// Simpan perubahan
-	if err := uc.DB.Save(&news).Error; err != nil {
+	updateData.UnitNewsID = existing.UnitNewsID // Jaga ID tetap
+
+	if err := uc.DB.Save(&updateData).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
 			"message": err.Error(),
 		})
 	}
 
-	// Refresh data JSON di tabel units
-	updateUnitNewsJSON(uc.DB, news.UnitID)
+	updateUnitNewsJSON(uc.DB, updateData.UnitNewsUnitID)
 
 	return c.JSON(fiber.Map{
-		"message": "Unit news updated successfully",
-		"data":    news,
+		"message": "Berita unit berhasil diperbarui",
+		"data":    updateData,
 	})
 }
 
 // 🔴 DELETE /api/unit-news/:id
 // Menghapus berita unit berdasarkan ID, kemudian memperbarui field `update_news` JSON di tabel units.
+// 🔴 DELETE /api/unit-news/:id
 func (uc *UnitNewsController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.UnitNewsModel
 
-	// Ambil data lama
+	// Cari data berdasarkan ID
 	if err := uc.DB.First(&news, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
@@ -177,7 +172,7 @@ func (uc *UnitNewsController) Delete(c *fiber.Ctx) error {
 		})
 	}
 
-	// Hapus dari database
+	// Soft delete data
 	if err := uc.DB.Delete(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
@@ -185,18 +180,18 @@ func (uc *UnitNewsController) Delete(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update cache JSON di tabel units
-	updateUnitNewsJSON(uc.DB, news.UnitID)
+	// Update JSON cache di tabel units
+	updateUnitNewsJSON(uc.DB, news.UnitNewsUnitID) // ❗️Hati-hati terhadap kehilangan data
 
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Unit news with ID %v deleted successfully", news.ID),
+		"message": fmt.Sprintf("Unit news with ID %v deleted successfully", news.UnitNewsID),
 	})
 }
 
 // ⚙️ updateUnitNewsJSON
 // Helper untuk memperbarui kolom `update_news` di tabel `units`.
 // Digunakan untuk menyimpan data berita dalam bentuk JSON agar bisa ditampilkan cepat oleh frontend.
-func updateUnitNewsJSON(db *gorm.DB, unitID int) {
+func updateUnitNewsJSON(db *gorm.DB, unitID uint) {
 	var newsList []model.UnitNewsModel
 
 	// Ambil semua berita berdasarkan unit_id, diurutkan dari terbaru

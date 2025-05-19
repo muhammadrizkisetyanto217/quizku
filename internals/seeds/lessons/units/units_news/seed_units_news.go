@@ -5,16 +5,17 @@ import (
 	"log"
 	"os"
 	unitModel "quizku/internals/features/lessons/units/model"
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 type UnitNewsSeedInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	IsPublic    bool   `json:"is_public"`
-	UnitID      int    `json:"unit_id"`
+	UnitNewsTitle       string `json:"title"`
+	UnitNewsDescription string `json:"description"`
+	UnitNewsIsPublic    bool   `json:"is_public"`
+	UnitNewsUnitID      uint   `json:"unit_id"`
 }
 
 func SeedUnitsNewsFromJSON(db *gorm.DB, filePath string) {
@@ -33,13 +34,13 @@ func SeedUnitsNewsFromJSON(db *gorm.DB, filePath string) {
 
 	// 2. Ambil semua yang sudah ada dari DB
 	var existingEntries []unitModel.UnitNewsModel
-	if err := db.Select("title", "unit_id").Find(&existingEntries).Error; err != nil {
+	if err := db.Select("unit_news_title", "unit_news_unit_id").Find(&existingEntries).Error; err != nil {
 		log.Fatalf("❌ Gagal query data existing: %v", err)
 	}
 
 	existingMap := make(map[string]bool)
 	for _, e := range existingEntries {
-		key := e.Title + "_" + string(rune(e.UnitID))
+		key := e.UnitNewsTitle + "_" + strconv.Itoa(int(e.UnitNewsUnitID))
 		existingMap[key] = true
 	}
 
@@ -47,18 +48,18 @@ func SeedUnitsNewsFromJSON(db *gorm.DB, filePath string) {
 	var toInsert []unitModel.UnitNewsModel
 	now := time.Now()
 	for _, news := range inputs {
-		key := news.Title + "_" + string(rune(news.UnitID))
+		key := news.UnitNewsTitle + "_" + strconv.Itoa(int(news.UnitNewsUnitID))
 		if existingMap[key] {
-			log.Printf("ℹ️ News '%s' untuk unit_id '%d' sudah ada, lewati...", news.Title, news.UnitID)
+			log.Printf("ℹ️ News '%s' untuk unit_id '%d' sudah ada, lewati...", news.UnitNewsTitle, news.UnitNewsUnitID)
 			continue
 		}
 
 		toInsert = append(toInsert, unitModel.UnitNewsModel{
-			Title:       news.Title,
-			Description: news.Description,
-			IsPublic:    news.IsPublic,
-			UnitID:      news.UnitID,
-			UpdatedAt:   now, // kalau pakai autoUpdateTime juga bisa dikosongkan
+			UnitNewsTitle:       news.UnitNewsTitle,
+			UnitNewsDescription: news.UnitNewsDescription,
+			UnitNewsIsPublic:    news.UnitNewsIsPublic,
+			UnitNewsUnitID:      news.UnitNewsUnitID,
+			UpdatedAt:           now,
 		})
 	}
 

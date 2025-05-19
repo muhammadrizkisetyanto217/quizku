@@ -12,12 +12,12 @@ import (
 )
 
 type ExamSeed struct {
-	NameExams     string  `json:"name_exams"`
-	Status        string  `json:"status"`
-	TotalQuestion []int64 `json:"total_question"`
-	IconURL       string  `json:"icon_url"`
-	UnitID        uint    `json:"unit_id"`
-	CreatedBy     string  `json:"created_by"`
+	ExamName             string  `json:"exam_name"`
+	ExamStatus           string  `json:"exam_status"`
+	ExamTotalQuestionIDs []int64 `json:"exam_total_question_ids"`
+	ExamIconURL          string  `json:"exam_icon_url"`
+	ExamUnitID           uint    `json:"exam_unit_id"`
+	ExamCreatedBy        string  `json:"exam_created_by"`
 }
 
 func SeedExamsFromJSON(db *gorm.DB, filePath string) {
@@ -35,24 +35,24 @@ func SeedExamsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, seed := range seeds {
 		var existing model.ExamModel
-		if err := db.Where("name_exams = ?", seed.NameExams).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Exam '%s' sudah ada, lewati...", seed.NameExams)
+		if err := db.Where("exam_name = ?", seed.ExamName).First(&existing).Error; err == nil {
+			log.Printf("ℹ️ Exam '%s' sudah ada, lewati...", seed.ExamName)
 			continue
 		}
 
 		exam := model.ExamModel{
-			NameExams:     seed.NameExams,
-			Status:        seed.Status,
-			TotalQuestion: seed.TotalQuestion,
-			IconURL:       &seed.IconURL,
-			UnitID:        seed.UnitID,
-			CreatedBy:     parseUUID(seed.CreatedBy),
+			ExamName:             seed.ExamName,
+			ExamStatus:           seed.ExamStatus,
+			ExamTotalQuestionIDs: seed.ExamTotalQuestionIDs,
+			ExamIconURL:          &seed.ExamIconURL,
+			ExamUnitID:           seed.ExamUnitID,
+			ExamCreatedBy:        parseUUID(seed.ExamCreatedBy),
 		}
 
 		if err := db.Create(&exam).Error; err != nil {
-			log.Printf("❌ Gagal insert '%s': %v", seed.NameExams, err)
+			log.Printf("❌ Gagal insert '%s': %v", seed.ExamName, err)
 		} else {
-			log.Printf("✅ Berhasil insert '%s'", seed.NameExams)
+			log.Printf("✅ Berhasil insert '%s'", seed.ExamName)
 		}
 	}
 }

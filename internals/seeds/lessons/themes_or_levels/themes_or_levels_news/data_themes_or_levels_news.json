@@ -1,14 +1,14 @@
 [
     {
-        "title": "Fiqh Wudhu",
-        "description": "Materi penting tentang tata cara dan hukum wudhu.",
-        "is_public": true,
-        "themes_or_levels_id": 1
+        "themes_news_title": "Fiqh Wudhu",
+        "themes_news_description": "Materi penting tentang tata cara dan hukum wudhu.",
+        "themes_news_is_public": true,
+        "themes_news_themes_or_level_id": 1
     },
     {
-        "title": "Sholat Fardhu",
-        "description": "Pengantar materi tentang sholat wajib dan rukunnya.",
-        "is_public": true,
-        "themes_or_levels_id": 2
+        "themes_news_title": "Sholat Fardhu",
+        "themes_news_description": "Pengantar materi tentang sholat wajib dan rukunnya.",
+        "themes_news_is_public": true,
+        "themes_news_themes_or_level_id": 2
     }
 ]
