@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+
 	subcategoryModel "quizku/internals/features/lessons/subcategories/model"
 
 	"gorm.io/gorm"
 )
 
 type SubcategoryNewsSeedInput struct {
-	Title          string `json:"title"`
-	Description    string `json:"description"`
-	IsPublic       bool   `json:"is_public"`
-	SubcategoriesID uint   `json:"subcategories_id"`
+	SubcategoryNewsTitle         string `json:"subcategory_news_title"`
+	SubcategoryNewsDescription   string `json:"subcategory_news_description"`
+	SubcategoryNewsIsPublic      bool   `json:"subcategory_news_is_public"`
+	SubcategoryNewsSubcategoryID uint   `json:"subcategory_news_subcategory_id"`
 }
 
-func SeedSubcategoriesNewsFromJSON(db *gorm.DB, filePath string) {
+func SeedSubcategoryNewsFromJSON(db *gorm.DB, filePath string) {
 	log.Println("📥 Membaca file:", filePath)
 
 	file, err := os.ReadFile(filePath)
@@ -31,23 +32,27 @@ func SeedSubcategoriesNewsFromJSON(db *gorm.DB, filePath string) {
 
 	for _, news := range inputs {
 		var existing subcategoryModel.SubcategoryNewsModel
-		err := db.Where("title = ? AND subcategory_id = ?", news.Title, news.SubcategoriesID).First(&existing).Error
+		err := db.
+			Where("subcategory_news_title = ? AND subcategory_news_subcategory_id = ?", news.SubcategoryNewsTitle, news.SubcategoryNewsSubcategoryID).
+			First(&existing).Error
+
 		if err == nil {
-			log.Printf("ℹ️ Data news '%s' untuk subcategory_id '%d' sudah ada, lewati...", news.Title, news.SubcategoriesID)
+			log.Printf("ℹ️ Data news '%s' untuk subcategory_id '%d' sudah ada, lewati...",
+				news.SubcategoryNewsTitle, news.SubcategoryNewsSubcategoryID)
 			continue
 		}
 
 		newsEntry := subcategoryModel.SubcategoryNewsModel{
-			Title:           news.Title,
-			Description:     news.Description,
-			IsPublic:        news.IsPublic,
-			SubcategoryID: news.SubcategoriesID,
+			SubcategoryNewsTitle:         news.SubcategoryNewsTitle,
+			SubcategoryNewsDescription:   news.SubcategoryNewsDescription,
+			SubcategoryNewsIsPublic:      news.SubcategoryNewsIsPublic,
+			SubcategoryNewsSubcategoryID: news.SubcategoryNewsSubcategoryID,
 		}
 
 		if err := db.Create(&newsEntry).Error; err != nil {
-			log.Printf("❌ Gagal insert news '%s': %v", news.Title, err)
+			log.Printf("❌ Gagal insert news '%s': %v", news.SubcategoryNewsTitle, err)
 		} else {
-			log.Printf("✅ Berhasil insert news '%s'", news.Title)
+			log.Printf("✅ Berhasil insert news '%s'", news.SubcategoryNewsTitle)
 		}
 	}
 }

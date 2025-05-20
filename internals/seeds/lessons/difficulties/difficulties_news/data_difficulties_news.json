@@ -1,20 +1,20 @@
 [
     {
-        "title": "Apa itu Level Pemula?",
-        "description": "Penjelasan dasar mengenai level pemula dalam pembelajaran.",
-        "is_public": true,
-        "difficulty_id": 1
+        "difficulty_news_title": "Apa itu Level Pemula?",
+        "difficulty_news_description": "Penjelasan dasar mengenai level pemula dalam pembelajaran.",
+        "difficulty_news_is_public": true,
+        "difficulty_news_difficulty_id": 1
     },
     {
-        "title": "Level Menengah Diperkenalkan",
-        "description": "Fitur baru dan tantangan di level menengah.",
-        "is_public": true,
-        "difficulty_id": 2
+        "difficulty_news_title": "Level Menengah Diperkenalkan",
+        "difficulty_news_description": "Fitur baru dan tantangan di level menengah.",
+        "difficulty_news_is_public": true,
+        "difficulty_news_difficulty_id": 2
     },
     {
-        "title": "Level Mahir dan Tantangannya",
-        "description": "Diskusi mendalam untuk peserta level mahir.",
-        "is_public": false,
-        "difficulty_id": 3
+        "difficulty_news_title": "Level Mahir dan Tantangannya",
+        "difficulty_news_description": "Diskusi mendalam untuk peserta level mahir.",
+        "difficulty_news_is_public": false,
+        "difficulty_news_difficulty_id": 3
     }
 ]

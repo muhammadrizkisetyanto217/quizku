@@ -25,19 +25,19 @@ func NewCategoryController(db *gorm.DB) *CategoryController {
 func (cc *CategoryController) GetCategories(c *fiber.Ctx) error {
 	log.Println("[INFO] Fetching all categories")
 
-	// 🔍 Ambil semua data kategori dari database
 	var categories []model.CategoryModel
-	if err := cc.DB.Find(&categories).Error; err != nil {
+
+	// 🔍 Ambil semua kategori beserta relasi subcategories
+	if err := cc.DB.Preload("Subcategories").Find(&categories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch categories: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to fetch categories",
+			"error": "Gagal mengambil data kategori",
 		})
 	}
 
-	// ✅ Log & kirim data jika berhasil
 	log.Printf("[SUCCESS] Retrieved %d categories\n", len(categories))
 	return c.JSON(fiber.Map{
-		"message": "All categories fetched successfully",
+		"message": "Data semua kategori berhasil diambil",
 		"total":   len(categories),
 		"data":    categories,
 	})
@@ -50,18 +50,19 @@ func (cc *CategoryController) GetCategory(c *fiber.Ctx) error {
 
 	var category model.CategoryModel
 
-	// 🔍 Cari data berdasarkan ID
-	if err := cc.DB.First(&category, id).Error; err != nil {
+	// 🔍 Cari berdasarkan ID dan preload relasi
+	if err := cc.DB.Preload("Subcategories").
+		Where("category_id = ?", id).
+		First(&category).Error; err != nil {
 		log.Printf("[ERROR] Category with ID %s not found\n", id)
 		return c.Status(404).JSON(fiber.Map{
-			"error": "Category not found",
+			"error": "Kategori tidak ditemukan",
 		})
 	}
 
-	// ✅ Berhasil ditemukan
-	log.Printf("[SUCCESS] Retrieved category: ID=%s, Name=%s\n", id, category.Name)
+	log.Printf("[SUCCESS] Retrieved category: ID=%s, Name=%s\n", id, category.CategoryName)
 	return c.JSON(fiber.Map{
-		"message": "Category fetched successfully",
+		"message": "Data kategori berhasil diambil",
 		"data":    category,
 	})
 }
@@ -73,30 +74,29 @@ func (cc *CategoryController) GetCategoriesByDifficulty(c *fiber.Ctx) error {
 
 	var categories []model.CategoryModel
 
-	// 🔍 Ambil hanya ID dan Name berdasarkan difficulty_id
+	// 🔍 Ambil hanya category_id dan category_name
 	if err := cc.DB.
-		Select("id", "name").
-		Where("difficulty_id = ?", difficultyID).
+		Select("category_id", "category_name").
+		Where("category_difficulty_id = ?", difficultyID).
 		Find(&categories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch categories for difficulty ID %s: %v\n", difficultyID, err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to fetch categories",
+			"error": "Gagal mengambil data kategori",
 		})
 	}
 
-	// 🔄 Format response ke dalam DTO (tooltip version)
+	// 🔄 Format response ke dalam DTO
 	var responses []dto.CategoryTooltipResponse
 	for _, c := range categories {
 		responses = append(responses, dto.CategoryTooltipResponse{
-			ID:   c.ID,
-			Name: c.Name,
+			CategoryID:   c.CategoryID,
+			CategoryName: c.CategoryName,
 		})
 	}
 
-	// ✅ Berhasil ambil data
 	log.Printf("[SUCCESS] Retrieved %d category tooltips for difficulty ID %s\n", len(responses), difficultyID)
 	return c.JSON(fiber.Map{
-		"message": "Category names fetched successfully",
+		"message": "Nama-nama kategori berhasil diambil",
 		"total":   len(responses),
 		"data":    responses,
 	})
@@ -106,45 +106,43 @@ func (cc *CategoryController) GetCategoriesByDifficulty(c *fiber.Ctx) error {
 func (cc *CategoryController) CreateCategory(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create category")
 
-	// 🔄 Coba parsing array kategori terlebih dahulu
-	var singleCategory model.CategoryModel
-	var multipleCategories []model.CategoryModel
+	var single model.CategoryModel
+	var multiple []model.CategoryModel
 
-	if err := c.BodyParser(&multipleCategories); err == nil && len(multipleCategories) > 0 {
-		// 💾 Simpan multiple kategori
-		if err := cc.DB.Create(&multipleCategories).Error; err != nil {
+	// 🌀 Parsing array jika dikirim banyak data
+	if err := c.BodyParser(&multiple); err == nil && len(multiple) > 0 {
+		if err := cc.DB.Create(&multiple).Error; err != nil {
 			log.Printf("[ERROR] Failed to create multiple categories: %v\n", err)
 			return c.Status(500).JSON(fiber.Map{
-				"error": "Failed to create multiple categories",
+				"error": "Gagal menyimpan banyak kategori",
 			})
 		}
-		log.Printf("[SUCCESS] %d categories created\n", len(multipleCategories))
+		log.Printf("[SUCCESS] %d categories created\n", len(multiple))
 		return c.Status(201).JSON(fiber.Map{
-			"message": "Multiple categories created successfully",
-			"data":    multipleCategories,
+			"message": "Kategori berhasil dibuat (multiple)",
+			"data":    multiple,
 		})
 	}
 
-	// 🔄 Jika bukan array, coba parsing objek tunggal
-	if err := c.BodyParser(&singleCategory); err != nil {
+	// 🌀 Jika bukan array, parsing objek tunggal
+	if err := c.BodyParser(&single); err != nil {
 		log.Printf("[ERROR] Invalid input for single category: %v\n", err)
 		return c.Status(400).JSON(fiber.Map{
-			"error": "Invalid input format",
+			"error": "Format input tidak valid",
 		})
 	}
 
-	// 💾 Simpan single kategori
-	if err := cc.DB.Create(&singleCategory).Error; err != nil {
+	if err := cc.DB.Create(&single).Error; err != nil {
 		log.Printf("[ERROR] Failed to create single category: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to create category",
+			"error": "Gagal menyimpan kategori",
 		})
 	}
 
-	log.Printf("[SUCCESS] Category created: ID=%d, Name=%s\n", singleCategory.ID, singleCategory.Name)
+	log.Printf("[SUCCESS] Category created: ID=%d, Name=%s\n", single.CategoryID, single.CategoryName)
 	return c.Status(201).JSON(fiber.Map{
-		"message": "Category created successfully",
-		"data":    singleCategory,
+		"message": "Kategori berhasil dibuat",
+		"data":    single,
 	})
 }
 
@@ -153,43 +151,45 @@ func (cc *CategoryController) UpdateCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Updating category with ID: %s\n", id)
 
-	// 🔍 Cari data berdasarkan ID
 	var category model.CategoryModel
-	if err := cc.DB.First(&category, id).Error; err != nil {
+
+	// 🔍 Cari kategori berdasarkan ID semantik
+	if err := cc.DB.
+		Where("category_id = ?", id).
+		First(&category).Error; err != nil {
 		log.Printf("[ERROR] Category with ID %s not found\n", id)
 		return c.Status(404).JSON(fiber.Map{
-			"error": "Category not found",
+			"error": "Kategori tidak ditemukan",
 		})
 	}
 
-	// 🔄 Parsing input ke dalam map
+	// 🔄 Parsing input ke map
 	var input map[string]interface{}
 	if err := c.BodyParser(&input); err != nil {
 		log.Printf("[ERROR] Invalid input: %v\n", err)
 		return c.Status(400).JSON(fiber.Map{
-			"error": "Invalid input",
+			"error": "Input tidak valid",
 		})
 	}
 
-	// 🧩 Khusus untuk field update_news (type JSON)
-	if un, ok := input["update_news"]; ok {
-		jsonData, err := json.Marshal(un)
-		if err == nil {
-			input["update_news"] = datatypes.JSON(jsonData)
+	// 🔧 Tangani khusus update_news (JSON)
+	if raw, ok := input["category_update_news"]; ok {
+		if jsonData, err := json.Marshal(raw); err == nil {
+			input["category_update_news"] = datatypes.JSON(jsonData)
 		}
 	}
 
-	// 💾 Lakukan update
+	// 💾 Simpan perubahan
 	if err := cc.DB.Model(&category).Updates(input).Error; err != nil {
 		log.Printf("[ERROR] Failed to update category: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to update category",
+			"error": "Gagal memperbarui kategori",
 		})
 	}
 
-	log.Printf("[SUCCESS] Category updated: ID=%s, Name=%s\n", id, category.Name)
+	log.Printf("[SUCCESS] Category updated: ID=%s, Name=%s\n", id, category.CategoryName)
 	return c.JSON(fiber.Map{
-		"message": "Category updated successfully",
+		"message": "Kategori berhasil diperbarui",
 		"data":    category,
 	})
 }
@@ -199,16 +199,17 @@ func (cc *CategoryController) DeleteCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
 	log.Printf("[INFO] Deleting category with ID: %s\n", id)
 
-	// 🗑️ Hapus langsung berdasarkan ID tanpa preload
-	if err := cc.DB.Delete(&model.CategoryModel{}, id).Error; err != nil {
+	if err := cc.DB.
+		Where("category_id = ?", id).
+		Delete(&model.CategoryModel{}).Error; err != nil {
 		log.Printf("[ERROR] Failed to delete category: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to delete category",
+			"error": "Gagal menghapus kategori",
 		})
 	}
 
 	log.Printf("[SUCCESS] Category with ID %s deleted successfully\n", id)
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Category with ID %s deleted successfully", id),
+		"message": fmt.Sprintf("Kategori dengan ID %s berhasil dihapus", id),
 	})
 }

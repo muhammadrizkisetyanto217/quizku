@@ -23,24 +23,24 @@ func NewDifficultyController(db *gorm.DB) *DifficultyController {
 
 // Get all difficulties
 func (dc *DifficultyController) GetDifficulties(c *fiber.Ctx) error {
-	var models []model.DifficultyModel
+	var difficulties []model.DifficultyModel
 	log.Println("[INFO] Received request to fetch all difficulties")
 
-	if err := dc.DB.Find(&models).Error; err != nil {
+	if err := dc.DB.Find(&difficulties).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch difficulties: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	var responses []dto.DifficultyResponse
-	for _, d := range models {
+	for _, d := range difficulties {
 		responses = append(responses, dto.DifficultyResponse{
-			ID:               d.ID,
-			Name:             d.Name,
-			Status:           d.Status,
-			DescriptionShort: d.DescriptionShort,
-			DescriptionLong:  d.DescriptionLong,
-			TotalCategories:  convertInt64ArrayToInt(d.TotalCategories),
-			ImageURL:         d.ImageURL,
+			DifficultyID:               d.DifficultyID,
+			DifficultyName:             d.DifficultyName,
+			DifficultyStatus:           d.DifficultyStatus,
+			DifficultyDescriptionShort: d.DifficultyDescriptionShort,
+			DifficultyDescriptionLong:  d.DifficultyDescriptionLong,
+			DifficultyTotalCategories:  convertInt64ArrayToInt(d.DifficultyTotalCategories),
+			DifficultyImageURL:         d.DifficultyImageURL,
 		})
 	}
 
@@ -63,7 +63,7 @@ func (dc *DifficultyController) GetDifficulty(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Difficulty not found"})
 	}
 
-	log.Printf("[SUCCESS] Retrieved difficulty: ID=%d, Name=%s\n", difficulty.ID, difficulty.Name)
+	log.Printf("[SUCCESS] Retrieved difficulty: ID=%d, Name=%s\n", difficulty.DifficultyID, difficulty.DifficultyName)
 	return c.JSON(fiber.Map{
 		"message": "Difficulty fetched successfully",
 		"data":    difficulty,
@@ -71,20 +71,21 @@ func (dc *DifficultyController) GetDifficulty(c *fiber.Ctx) error {
 }
 
 // CreateDifficulty menangani input satu atau banyak difficulty
+// CreateDifficulty menangani input satu atau banyak difficulty
 func (dc *DifficultyController) CreateDifficulty(c *fiber.Ctx) error {
 	log.Println("[INFO] Received request to create difficulty")
 
 	var single model.DifficultyModel
 	var multiple []model.DifficultyModel
 
-	// 🧠 Coba parse sebagai array terlebih dahulu
+	// 🧠 Coba parsing array terlebih dahulu
 	if err := c.BodyParser(&multiple); err == nil && len(multiple) > 0 {
 		log.Printf("[DEBUG] Parsed %d difficulties as array\n", len(multiple))
 
 		for i, d := range multiple {
-			if d.Name == "" {
+			if d.DifficultyName == "" {
 				return c.Status(400).JSON(fiber.Map{
-					"error": "Name is required in each difficulty",
+					"error": "difficulty_name is required in each difficulty",
 					"index": i,
 				})
 			}
@@ -110,8 +111,8 @@ func (dc *DifficultyController) CreateDifficulty(c *fiber.Ctx) error {
 
 	log.Printf("[DEBUG] Parsed single difficulty: %+v\n", single)
 
-	if single.Name == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "Name is required"})
+	if single.DifficultyName == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "difficulty_name is required"})
 	}
 
 	if err := dc.DB.Create(&single).Error; err != nil {
@@ -119,7 +120,7 @@ func (dc *DifficultyController) CreateDifficulty(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create difficulty"})
 	}
 
-	log.Printf("[SUCCESS] Difficulty created: ID=%d, Name=%s\n", single.ID, single.Name)
+	log.Printf("[SUCCESS] Difficulty created: ID=%d, Name=%s\n", single.DifficultyID, single.DifficultyName)
 	return c.Status(201).JSON(fiber.Map{
 		"message": "Difficulty created successfully",
 		"data":    single,
@@ -143,10 +144,11 @@ func (dc *DifficultyController) UpdateDifficulty(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	if un, ok := input["update_news"]; ok {
+	// 🔄 Khusus untuk JSONB: difficulty_update_news
+	if un, ok := input["difficulty_update_news"]; ok {
 		jsonData, err := json.Marshal(un)
 		if err == nil {
-			input["update_news"] = datatypes.JSON(jsonData)
+			input["difficulty_update_news"] = datatypes.JSON(jsonData)
 		}
 	}
 
@@ -163,18 +165,32 @@ func (dc *DifficultyController) UpdateDifficulty(c *fiber.Ctx) error {
 }
 
 // Delete difficulty
+// 🟢 DELETE DIFFICULTY: Hapus difficulty berdasarkan ID (soft delete)
 func (dc *DifficultyController) DeleteDifficulty(c *fiber.Ctx) error {
 	id := c.Params("id")
-	log.Printf("[INFO] Deleting difficulty with ID: %s\n", id)
+	log.Println("[INFO] Deleting difficulty with ID:", id)
 
-	if err := dc.DB.Delete(&model.DifficultyModel{}, id).Error; err != nil {
-		log.Printf("[ERROR] Failed to delete difficulty: %v\n", err)
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	var difficulty model.DifficultyModel
+
+	// 🔍 Cari difficulty berdasarkan ID
+	if err := dc.DB.Where("difficulty_id = ?", id).First(&difficulty).Error; err != nil {
+		log.Println("[ERROR] Difficulty tidak ditemukan:", err)
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Difficulty tidak ditemukan",
+		})
 	}
 
-	log.Printf("[SUCCESS] Difficulty with ID %s deleted successfully\n", id)
+	// 🗑️ Soft delete: menggunakan kolom deleted_at
+	if err := dc.DB.Delete(&difficulty).Error; err != nil {
+		log.Println("[ERROR] Gagal menghapus difficulty:", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Gagal menghapus difficulty",
+		})
+	}
+
+	log.Printf("[SUCCESS] Difficulty dengan ID %s berhasil dihapus", id)
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Difficulty with ID %s deleted successfully", id),
+		"message": fmt.Sprintf("Difficulty dengan ID %s berhasil dihapus", id),
 	})
 }
 

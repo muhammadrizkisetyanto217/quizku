@@ -214,7 +214,12 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 			themes := []ThemeWithProgress{}
 			for _, theme := range sub.ThemesOrLevels {
 				ut := userThemeMap[theme.ThemesOrLevelID]
-				rawJSON, _ := json.Marshal(ut.UserThemeCompleteUnit)
+
+				rawJSON, err := json.Marshal(ut.UserThemeCompleteUnit)
+				if err != nil {
+					log.Println("[WARNING] Marshal theme_complete_unit gagal:", err)
+					rawJSON = []byte("{}")
+				}
 
 				themes = append(themes, ThemeWithProgress{
 					ThemeID:              theme.ThemesOrLevelID,
@@ -260,17 +265,17 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 
 		if len(subcatList) > 0 {
 			result = append(result, CategoryWithSubcat{
-				CategoryID:         cat.ID,
-				CategoryName:       cat.Name,
-				CategoryStatus:     cat.Status,
-				CategoryShort:      cat.DescriptionShort,
-				CategoryLong:       cat.DescriptionLong,
-				CategorySubTotal:   cat.TotalSubcategories,
-				CategoryImage:      cat.ImageURL,
-				CategoryDifficulty: cat.DifficultyID,
+				CategoryID:         cat.CategoryID,
+				CategoryName:       cat.CategoryName,
+				CategoryStatus:     cat.CategoryStatus,
+				CategoryShort:      cat.CategoryDescriptionShort,
+				CategoryLong:       cat.CategoryDescriptionLong,
+				CategorySubTotal:   cat.CategoryTotalSubcategories,
+				CategoryImage:      cat.CategoryImageURL,
+				CategoryDifficulty: cat.CategoryDifficultyID,
 				CreatedAt:          cat.CreatedAt,
 				// UpdatedAt:          cat.UpdatedAt,
-				Subcategories: subcatList,
+				Subcategories:      subcatList,
 			})
 		}
 	}

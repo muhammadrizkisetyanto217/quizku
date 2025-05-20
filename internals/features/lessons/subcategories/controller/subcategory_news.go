@@ -21,58 +21,58 @@ func NewSubcategoryNewsController(db *gorm.DB) *SubcategoryNewsController {
 func (sc *SubcategoryNewsController) GetAll(c *fiber.Ctx) error {
 	var news []model.SubcategoryNewsModel
 
-	// 🔍 Query semua data dari database
 	if err := sc.DB.Find(&news).Error; err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
-		})
-	}
-
-	// ✅ Kirim data berita
-	return c.JSON(fiber.Map{
-		"message": "Subcategory news list retrieved successfully",
-		"data":    news,
-	})
-}
-
-// 🟢 GET SUBCATEGORY NEWS BY SUBCATEGORY_ID: Ambil berita berdasarkan subcategory_id
-func (sc *SubcategoryNewsController) GetBySubcategoryID(c *fiber.Ctx) error {
-	subcategoryID := c.Params("subcategory_id")
-	var news []model.SubcategoryNewsModel
-
-	// 🔍 Query berita berdasarkan subcategory_id
-	if err := sc.DB.Where("subcategory_id = ?", subcategoryID).Find(&news).Error; err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error":   true,
-			"message": "Failed to retrieve news by subcategory",
+			"message": "Gagal mengambil data subcategory news",
 			"detail":  err.Error(),
 		})
 	}
 
-	// ✅ Kirim data berita
 	return c.JSON(fiber.Map{
-		"message": "Subcategory news by subcategory retrieved successfully",
+		"message": "Berita subkategori berhasil diambil",
 		"data":    news,
 	})
 }
 
-// 🟢 GET SUBCATEGORY NEWS BY ID: Ambil berita berdasarkan ID
+// 🟢 GET SUBCATEGORY NEWS BY SUBCATEGORY_ID: Ambil berita berdasarkan subcategory
+func (sc *SubcategoryNewsController) GetBySubcategoryID(c *fiber.Ctx) error {
+	subcategoryID := c.Params("subcategory_id")
+	var news []model.SubcategoryNewsModel
+
+	if err := sc.DB.
+		Where("subcategory_news_subcategory_id = ?", subcategoryID).
+		Find(&news).Error; err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": "Gagal mengambil berita berdasarkan subcategory_id",
+			"detail":  err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Berita subkategori berdasarkan subcategory_id berhasil diambil",
+		"data":    news,
+	})
+}
+
+// 🟢 GET SUBCATEGORY NEWS BY ID: Ambil satu berita berdasarkan ID
 func (sc *SubcategoryNewsController) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.SubcategoryNewsModel
 
-	// 🔍 Cari berita berdasarkan ID
-	if err := sc.DB.First(&news, id).Error; err != nil {
+	if err := sc.DB.
+		Where("subcategory_news_id = ?", id).
+		First(&news).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Subcategory news not found",
+			"message": "Berita subkategori tidak ditemukan",
+			"detail":  err.Error(),
 		})
 	}
 
-	// ✅ Kirim hasil pencarian
 	return c.JSON(fiber.Map{
-		"message": "Subcategory news found successfully",
+		"message": "Berita subkategori berhasil ditemukan",
 		"data":    news,
 	})
 }
@@ -81,25 +81,23 @@ func (sc *SubcategoryNewsController) GetByID(c *fiber.Ctx) error {
 func (sc *SubcategoryNewsController) Create(c *fiber.Ctx) error {
 	var news model.SubcategoryNewsModel
 
-	// 🔄 Parsing body ke struct model
 	if err := c.BodyParser(&news); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "Invalid request body",
+			"message": "Permintaan tidak valid (body tidak terbaca)",
 		})
 	}
 
-	// 💾 Simpan ke database
 	if err := sc.DB.Create(&news).Error; err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal menyimpan berita",
+			"detail":  err.Error(),
 		})
 	}
 
-	// ✅ Kirim respons sukses
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
-		"message": "Subcategory news created successfully",
+		"message": "Berita subkategori berhasil dibuat",
 		"data":    news,
 	})
 }
@@ -107,36 +105,39 @@ func (sc *SubcategoryNewsController) Create(c *fiber.Ctx) error {
 // 🟢 UPDATE SUBCATEGORY NEWS: Perbarui data berita berdasarkan ID
 func (sc *SubcategoryNewsController) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var news model.SubcategoryNewsModel
+	var existing model.SubcategoryNewsModel
 
-	// 🔍 Pastikan data ada
-	if err := sc.DB.First(&news, id).Error; err != nil {
+	// 🔍 Cek apakah berita dengan ID tersebut ada
+	if err := sc.DB.Where("subcategory_news_id = ?", id).First(&existing).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Subcategory news not found",
+			"message": "Berita subkategori tidak ditemukan",
 		})
 	}
 
-	// 🔄 Update dengan data baru dari body
-	if err := c.BodyParser(&news); err != nil {
+	// 🔄 Update dengan body baru
+	var updateData model.SubcategoryNewsModel
+	if err := c.BodyParser(&updateData); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "Invalid request body",
+			"message": "Permintaan tidak valid (body tidak terbaca)",
 		})
 	}
 
-	// 💾 Simpan update ke database
-	if err := sc.DB.Save(&news).Error; err != nil {
+	// Tetap pakai ID yang lama
+	updateData.SubcategoryNewsID = existing.SubcategoryNewsID
+
+	if err := sc.DB.Save(&updateData).Error; err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal memperbarui berita",
+			"detail":  err.Error(),
 		})
 	}
 
-	// ✅ Kirim hasil update
 	return c.JSON(fiber.Map{
-		"message": "Subcategory news updated successfully",
-		"data":    news,
+		"message": "Berita subkategori berhasil diperbarui",
+		"data":    updateData,
 	})
 }
 
@@ -145,24 +146,22 @@ func (sc *SubcategoryNewsController) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.SubcategoryNewsModel
 
-	// 🔍 Cek apakah berita ditemukan
-	if err := sc.DB.First(&news, id).Error; err != nil {
+	if err := sc.DB.Where("subcategory_news_id = ?", id).First(&news).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
-			"message": "Subcategory news not found",
+			"message": "Berita subkategori tidak ditemukan",
 		})
 	}
 
-	// 🗑️ Hapus dari database
 	if err := sc.DB.Delete(&news).Error; err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": err.Error(),
+			"message": "Gagal menghapus berita",
+			"detail":  err.Error(),
 		})
 	}
 
-	// ✅ Konfirmasi penghapusan
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Subcategory news with ID %v deleted successfully", news.ID),
+		"message": fmt.Sprintf("Berita subkategori dengan ID %v berhasil dihapus", news.SubcategoryNewsID),
 	})
 }

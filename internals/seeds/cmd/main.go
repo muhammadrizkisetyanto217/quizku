@@ -58,7 +58,7 @@ func main() {
 		categories.SeedCategoriesFromJSON(db, "internals/seeds/lessons/categories/categories/data_categories.json")
 		categories_news.SeedCategoriesNewsFromJSON(db, "internals/seeds/lessons/categories/categories_news/data_categories_news.json")
 		subcategories.SeedSubcategoriesFromJSON(db, "internals/seeds/lessons/subcategories/subcategories/data_subcategories.json")
-		subcategories_news.SeedSubcategoriesNewsFromJSON(db, "internals/seeds/lessons/subcategories/subcategories_news/data_subcategories_news.json")
+		subcategories_news.SeedSubcategoryNewsFromJSON(db, "internals/seeds/lessons/subcategories/subcategories_news/data_subcategories_news.json")
 		themes_or_levels.SeedThemesOrLevelsFromJSON(db, "internals/seeds/lessons/themes_or_levels/themes_or_levels/data_themes_or_levels.json")
 		themes_or_levels_news.SeedThemesOrLevelsNewsFromJSON(db, "internals/seeds/lessons/themes_or_levels/themes_or_levels_news/data_themes_or_levels_news.json")
 		units.SeedUnitsFromJSON(db, "internals/seeds/lessons/units/units/data_units.json")

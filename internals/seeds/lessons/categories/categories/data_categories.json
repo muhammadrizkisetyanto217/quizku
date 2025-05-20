@@ -1,16 +1,16 @@
 [
     {
-        "name": "Aqidah",
-        "description_short": "Hukum-hukum ibadah dalam Islam",
-        "description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
-        "status": "active",
-        "difficulty_id": 1
+        "category_name": "Aqidah",
+        "category_description_short": "Hukum-hukum ibadah dalam Islam",
+        "category_description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
+        "category_status": "active",
+        "category_difficulty_id": 1
     },
     {
-        "name": "Fiqh",
-        "description_short": "Hukum-hukum ibadah dalam Islam",
-        "description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
-        "status": "active",
-        "difficulty_id": 1
+        "category_name": "Fiqh",
+        "category_description_short": "Hukum-hukum ibadah dalam Islam",
+        "category_description_long": "Kategori ini mencakup hukum-hukum ibadah seperti shalat, puasa, zakat, dan haji berdasarkan dalil-dalil yang kuat.",
+        "category_status": "active",
+        "category_difficulty_id": 1
     }
 ]

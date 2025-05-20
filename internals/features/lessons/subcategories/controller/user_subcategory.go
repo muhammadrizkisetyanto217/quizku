@@ -355,14 +355,14 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		}
 
 		result = append(result, CategoryWithUserProgress{
-			CategoryID:            cat.ID,
-			CategoryName:          cat.Name,
-			CategoryStatus:        cat.Status,
-			CategoryShortDesc:     cat.DescriptionShort,
-			CategoryLongDesc:      cat.DescriptionLong,
-			CategoryTotalSub:      cat.TotalSubcategories,
-			CategoryImageURL:      cat.ImageURL,
-			CategoryDifficultyID:  cat.DifficultyID,
+			CategoryID:            cat.CategoryID,
+			CategoryName:          cat.CategoryName,
+			CategoryStatus:        cat.CategoryStatus,
+			CategoryShortDesc:     cat.CategoryDescriptionShort,
+			CategoryLongDesc:      cat.CategoryDescriptionLong,
+			CategoryTotalSub:      cat.CategoryTotalSubcategories,
+			CategoryImageURL:      cat.CategoryImageURL,
+			CategoryDifficultyID:  cat.CategoryDifficultyID,
 			CreatedAt:             cat.CreatedAt,
 			UpdatedAt:             &cat.UpdatedAt,
 			SubcategoriesProgress: subcatProgressList,

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS user_daily_activity;
+DROP TABLE IF EXISTS user_daily_activities;

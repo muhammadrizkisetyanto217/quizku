@@ -1,26 +1,26 @@
 [
     {
-        "name": "Umum",
-        "description_short": "Tingkat Umum",
-        "description_long": "Mengenal islam lebih dekat",
-        "status": "active"
+        "difficulty_name": "Umum",
+        "difficulty_description_short": "Tingkat Umum",
+        "difficulty_description_long": "Mengenal islam lebih dekat",
+        "difficulty_status": "active"
     },
     {
-        "name": "Lanjutan",
-        "description_short": "Tingkat Lanjutan",
-        "description_long": "Mengenal islam lebih dekat",
-        "status": "active"
+        "difficulty_name": "Lanjutan",
+        "difficulty_description_short": "Tingkat Lanjutan",
+        "difficulty_description_long": "Mengenal islam lebih dekat",
+        "difficulty_status": "active"
     },
     {
-        "name": "Penuntut Ilmu",
-        "description_short": "Tingkat Penuntut Ilmu",
-        "description_long": "Mengenal islam lebih dekat",
-        "status": "active"
+        "difficulty_name": "Penuntut Ilmu",
+        "difficulty_description_short": "Tingkat Penuntut Ilmu",
+        "difficulty_description_long": "Mengenal islam lebih dekat",
+        "difficulty_status": "active"
     },
     {
-        "name": "Dasar Islam",
-        "description_short": "Tingkat Dasar Islam",
-        "description_long": "Mengenal islam lebih dekat",
-        "status": "active"
+        "difficulty_name": "Dasar Islam",
+        "difficulty_description_short": "Tingkat Dasar Islam",
+        "difficulty_description_long": "Mengenal islam lebih dekat",
+        "difficulty_status": "active"
     }
 ]

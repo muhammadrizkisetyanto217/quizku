@@ -1,11 +1,11 @@
 package model
 
 type DifficultyResponse struct {
-	ID               uint   `json:"id"`
-	Name             string `json:"name"`
-	Status           string `json:"status"`
-	DescriptionShort string `json:"description_short"`
-	DescriptionLong  string `json:"description_long"`
-	TotalCategories  []int  `json:"total_categories"`
-	ImageURL         string `json:"image_url"`
+	DifficultyID               uint   `json:"difficulty_id"`
+	DifficultyName             string `json:"difficulty_name"`
+	DifficultyStatus           string `json:"difficulty_status"`
+	DifficultyDescriptionShort string `json:"difficulty_description_short"`
+	DifficultyDescriptionLong  string `json:"difficulty_description_long"`
+	DifficultyTotalCategories  []int  `json:"difficulty_total_categories"`
+	DifficultyImageURL         string `json:"difficulty_image_url"`
 }

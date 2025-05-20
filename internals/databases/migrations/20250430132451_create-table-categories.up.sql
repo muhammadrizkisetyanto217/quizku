@@ -1,38 +1,37 @@
--- ✅ TABLE: categories (dengan INTEGER ARRAY dan tanpa trigger)
+-- ✅ TABLE: categories (refactor semantik)
 CREATE TABLE IF NOT EXISTS categories (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    status VARCHAR(10) CHECK (status IN ('active', 'pending', 'archived')) DEFAULT 'pending',
-    description_short VARCHAR(100),
-    description_long VARCHAR(2000),
-    total_subcategories INTEGER[] NOT NULL DEFAULT '{}',
-    image_url VARCHAR(100),
+    category_id SERIAL PRIMARY KEY,
+    category_name VARCHAR(255) NOT NULL,
+    category_status VARCHAR(10) CHECK (category_status IN ('active', 'pending', 'archived')) DEFAULT 'pending',
+    category_description_short VARCHAR(100),
+    category_description_long VARCHAR(2000),
+    category_total_subcategories INTEGER[] NOT NULL DEFAULT '{}',
+    category_image_url VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
-    difficulty_id INT REFERENCES difficulties(id),
+    category_difficulty_id INT REFERENCES difficulties(difficulty_id),
 
-    CONSTRAINT unique_category_name UNIQUE (name)
+    CONSTRAINT unique_category_name UNIQUE (category_name)
 );
 
--- ✅ Indexing untuk performa
-CREATE INDEX IF NOT EXISTS idx_categories_difficulty_id ON categories(difficulty_id);
-CREATE INDEX IF NOT EXISTS idx_categories_status ON categories(status);
+-- ✅ Indexing
+CREATE INDEX IF NOT EXISTS idx_category_difficulty_id ON categories(category_difficulty_id);
+CREATE INDEX IF NOT EXISTS idx_category_status ON categories(category_status);
 
--- ✅ TABLE: categories_news
-CREATE TABLE IF NOT EXISTS categories_news (
-    id SERIAL PRIMARY KEY,
-    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    is_public BOOLEAN DEFAULT TRUE,
+-- ✅ TABLE: category_news (refactor semantik)
+CREATE TABLE IF NOT EXISTS category_news (
+    category_news_id SERIAL PRIMARY KEY,
+    category_news_category_id INTEGER NOT NULL REFERENCES categories(category_id) ON DELETE CASCADE,
+    category_news_title VARCHAR(255) NOT NULL,
+    category_news_description TEXT NOT NULL,
+    category_news_is_public BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
-
--- ✅ Indexing untuk performa
-CREATE INDEX IF NOT EXISTS idx_categories_news_category_id ON categories_news(category_id);
-CREATE INDEX IF NOT EXISTS idx_categories_news_is_public ON categories_news(is_public);
-CREATE INDEX IF NOT EXISTS idx_news_public_per_category ON categories_news(category_id, is_public);
+-- ✅ Indexing
+CREATE INDEX IF NOT EXISTS idx_category_news_category_id ON category_news(category_news_category_id);
+CREATE INDEX IF NOT EXISTS idx_category_news_is_public ON category_news(category_news_is_public);
+CREATE INDEX IF NOT EXISTS idx_news_public_per_category ON category_news(category_news_category_id, category_news_is_public);

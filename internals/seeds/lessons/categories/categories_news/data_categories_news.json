@@ -1,14 +1,14 @@
 [
     {
-        "title": "Pengantar Aqidah",
-        "description": "Berita awal mengenai pentingnya pemahaman Aqidah Islam.",
-        "is_public": true,
-        "category_id": 1
+        "category_news_title": "Pengantar Aqidah",
+        "category_news_description": "Berita awal mengenai pentingnya pemahaman Aqidah Islam.",
+        "category_news_is_public": true,
+        "category_news_category_id": 1
     },
     {
-        "title": "Fiqh Ibadah Populer",
-        "description": "Penjelasan fiqh dalam ibadah harian yang harus diketahui.",
-        "is_public": true,
-        "category_id": 2
+        "category_news_title": "Fiqh Ibadah Populer",
+        "category_news_description": "Penjelasan fiqh dalam ibadah harian yang harus diketahui.",
+        "category_news_is_public": true,
+        "category_news_category_id": 2
     }
 ]

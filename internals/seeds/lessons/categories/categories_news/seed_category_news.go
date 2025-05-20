@@ -10,44 +10,46 @@ import (
 )
 
 type CategoryNewsSeedInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	IsPublic    bool   `json:"is_public"`
-	CategoryID  int    `json:"category_id"`
+	CategoryNewsTitle       string `json:"category_news_title"`
+	CategoryNewsDescription string `json:"category_news_description"`
+	CategoryNewsIsPublic    bool   `json:"category_news_is_public"`
+	CategoryNewsCategoryID  uint   `json:"category_news_category_id"`
 }
 
 func SeedCategoriesNewsFromJSON(db *gorm.DB, filePath string) {
-	log.Println("📥 Membaca file:", filePath)
+	log.Println("📥 Membaca file JSON:", filePath)
 
 	file, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatalf("❌ Gagal membaca file JSON: %v", err)
+		log.Fatalf("❌ Gagal membaca file: %v", err)
 	}
 
 	var inputs []CategoryNewsSeedInput
 	if err := json.Unmarshal(file, &inputs); err != nil {
-		log.Fatalf("❌ Gagal decode JSON: %v", err)
+		log.Fatalf("❌ Gagal parsing JSON: %v", err)
 	}
 
-	for _, news := range inputs {
+	for _, input := range inputs {
 		var existing categoryModel.CategoryNewsModel
-		err := db.Where("title = ? AND category_id = ?", news.Title, news.CategoryID).First(&existing).Error
+		err := db.Where("category_news_title = ? AND category_news_category_id = ?", input.CategoryNewsTitle, input.CategoryNewsCategoryID).
+			First(&existing).Error
+
 		if err == nil {
-			log.Printf("ℹ️ Data news '%s' untuk category_id '%d' sudah ada, lewati...", news.Title, news.CategoryID)
+			log.Printf("ℹ️ Data '%s' untuk category_id %d sudah ada, dilewati", input.CategoryNewsTitle, input.CategoryNewsCategoryID)
 			continue
 		}
 
-		newsEntry := categoryModel.CategoryNewsModel{
-			Title:       news.Title,
-			Description: news.Description,
-			IsPublic:    news.IsPublic,
-			CategoryID:  news.CategoryID,
+		news := categoryModel.CategoryNewsModel{
+			CategoryNewsTitle:       input.CategoryNewsTitle,
+			CategoryNewsDescription: input.CategoryNewsDescription,
+			CategoryNewsIsPublic:    input.CategoryNewsIsPublic,
+			CategoryNewsCategoryID:  int(input.CategoryNewsCategoryID),
 		}
 
-		if err := db.Create(&newsEntry).Error; err != nil {
-			log.Printf("❌ Gagal insert news '%s': %v", news.Title, err)
+		if err := db.Create(&news).Error; err != nil {
+			log.Printf("❌ Gagal insert news '%s': %v", input.CategoryNewsTitle, err)
 		} else {
-			log.Printf("✅ Berhasil insert news '%s'", news.Title)
+			log.Printf("✅ Berhasil insert news '%s'", input.CategoryNewsTitle)
 		}
 	}
 }

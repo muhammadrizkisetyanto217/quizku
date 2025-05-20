@@ -26,21 +26,28 @@ CREATE INDEX IF NOT EXISTS idx_subcategory_cat_status
 
 
 -- ✅ TABLE: subcategories_news
-CREATE TABLE IF NOT EXISTS subcategories_news (
-    id SERIAL PRIMARY KEY,
-    subcategory_id INTEGER NOT NULL REFERENCES subcategories(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    is_public BOOLEAN NOT NULL DEFAULT TRUE,
+-- ✅ TABLE: subcategory_news (refactored semantik)
+CREATE TABLE IF NOT EXISTS subcategory_news (
+    subcategory_news_id SERIAL PRIMARY KEY,
+    subcategory_news_subcategory_id INTEGER NOT NULL REFERENCES subcategories(subcategory_id) ON DELETE CASCADE,
+    subcategory_news_title VARCHAR(255) NOT NULL,
+    subcategory_news_description TEXT NOT NULL,
+    subcategory_news_is_public BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
 -- ✅ Index untuk performa pencarian
-CREATE INDEX IF NOT EXISTS idx_subnews_subcat ON subcategories_news(subcategory_id);
-CREATE INDEX IF NOT EXISTS idx_subnews_is_public ON subcategories_news(is_public);
-CREATE INDEX IF NOT EXISTS idx_subnews_public_per_subcat ON subcategories_news(subcategory_id, is_public);
+CREATE INDEX IF NOT EXISTS idx_subcategory_news_subcategory_id 
+    ON subcategory_news (subcategory_news_subcategory_id);
+
+CREATE INDEX IF NOT EXISTS idx_subcategory_news_is_public 
+    ON subcategory_news (subcategory_news_is_public);
+
+CREATE INDEX IF NOT EXISTS idx_subcategory_news_subcat_public 
+    ON subcategory_news (subcategory_news_subcategory_id, subcategory_news_is_public);
+
 
 -- ✅ TABLE: user_subcategory (refactored + created_at/updated_at tetap)
 CREATE TABLE IF NOT EXISTS user_subcategory (
