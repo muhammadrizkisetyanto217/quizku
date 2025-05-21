@@ -19,5 +19,5 @@ type DifficultyNewsModel struct {
 }
 
 func (DifficultyNewsModel) TableName() string {
-	return "difficulty_news"
+	return "difficulties_news"
 }

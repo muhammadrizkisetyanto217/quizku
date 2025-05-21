@@ -19,5 +19,5 @@ type UserSubcategoryModel struct {
 }
 
 func (UserSubcategoryModel) TableName() string {
-	return "user_subcategory"
+	return "user_subcategories"
 }

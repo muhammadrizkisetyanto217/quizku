@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS user_evaluations (
     user_evaluation_evaluation_id INTEGER NOT NULL 
         REFERENCES evaluations(evaluation_id) ON DELETE CASCADE,
     user_evaluation_unit_id INTEGER NOT NULL 
-        REFERENCES units(id) ON DELETE CASCADE,
+        REFERENCES units(unit_id) ON DELETE CASCADE,
     user_evaluation_attempt INTEGER NOT NULL DEFAULT 1,
     user_evaluation_percentage_grade INTEGER NOT NULL DEFAULT 0,
     user_evaluation_time_duration INTEGER NOT NULL DEFAULT 0,

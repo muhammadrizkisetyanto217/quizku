@@ -55,18 +55,19 @@ func SyncTotalThemesOrLevels(db *gorm.DB, subcategoryID int) error {
 
 	err := db.Exec(`
 		UPDATE subcategories
-		SET total_themes_or_levels = (
+		SET subcategory_total_themes_or_levels = (
 			SELECT ARRAY_AGG(themes_or_level_id ORDER BY themes_or_level_id)
 			FROM themes_or_levels
 			WHERE themes_or_level_subcategory_id = ? AND deleted_at IS NULL
 		)
-		WHERE id = ?
+		WHERE subcategory_id = ?
 	`, subcategoryID, subcategoryID).Error
 
 	if err != nil {
-		log.Println("[ERROR] Failed to sync total_themes_or_levels:", err)
+		log.Println("[ERROR] Failed to sync subcategory_total_themes_or_levels:", err)
 	} else {
-		log.Println("[SUCCESS] Synced total_themes_or_levels for subcategoryID:", subcategoryID)
+		log.Println("[SUCCESS] Sync berhasil untuk subcategoryID:", subcategoryID)
 	}
+
 	return err
 }

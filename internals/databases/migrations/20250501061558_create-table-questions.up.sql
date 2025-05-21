@@ -78,7 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_question_mistakes_question_id
 CREATE TABLE IF NOT EXISTS user_questions (
     user_question_id SERIAL PRIMARY KEY,
     user_question_user_id UUID NOT NULL,
-    user_question_question_id INT NOT NULL,
+    user_question_question_id INT NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
     user_question_selected_answer TEXT NOT NULL,
     user_question_is_correct BOOLEAN NOT NULL,
     user_question_source_type_id INT NOT NULL, -- 1 = Quiz, 2 = Evaluation, 3 = Exam

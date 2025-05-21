@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+
 	difficultyModel "quizku/internals/features/lessons/difficulty/model"
 
 	"github.com/lib/pq"
@@ -41,7 +42,7 @@ func SeedDifficultiesFromJSON(db *gorm.DB, filePath string) {
 		}
 
 		if err == nil {
-			log.Printf("ℹ️ Data '%s' sudah ada, lewati...", input.DifficultyName)
+			log.Printf("ℹ️ Data '%s' sudah ada, dilewati...", input.DifficultyName)
 			continue
 		}
 
@@ -55,7 +56,7 @@ func SeedDifficultiesFromJSON(db *gorm.DB, filePath string) {
 		}
 
 		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&newEntry).Error; err != nil {
-			log.Printf("❌ Gagal insert '%s': %v", input.DifficultyName, err)
+			log.Printf("❌ Gagal insert difficulty '%s': %v", input.DifficultyName, err)
 		} else {
 			log.Printf("✅ Berhasil insert difficulty '%s'", input.DifficultyName)
 		}

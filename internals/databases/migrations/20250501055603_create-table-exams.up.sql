@@ -7,10 +7,10 @@ CREATE TABLE IF NOT EXISTS exams (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
 
     exam_unit_id INT REFERENCES units(unit_id) ON DELETE CASCADE,
-    exam_created_by UUID REFERENCES users(user_id) ON DELETE CASCADE
+    exam_created_by UUID REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ✅ Index untuk performa pencarian
@@ -23,7 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_exam_created_by ON exams(exam_created_by);
 CREATE TABLE IF NOT EXISTS user_exams (
     user_exam_id SERIAL PRIMARY KEY,
 
-    user_exam_user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_exam_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     user_exam_exam_id INTEGER NOT NULL REFERENCES exams(exam_id) ON DELETE CASCADE,
     user_exam_unit_id INTEGER NOT NULL REFERENCES units(unit_id) ON DELETE CASCADE,
 

@@ -187,6 +187,7 @@ func (ctrl *UserSubcategoryController) GetByUserId(c *fiber.Ctx) error {
 	})
 }
 
+
 // 🟢 GET USER PROGRESS WITH CATEGORY STRUCTURE: Ambil data lengkap kategori, subkategori, themes, dan progress user
 // ✅ grade_result & is_passed hanya berasal dari service exam, bukan dihitung ulang di sini
 func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) error {
@@ -261,7 +262,7 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		SubcategoryImageURL        string              `json:"subcategory_image_url"`
 		CreatedAt                  time.Time           `json:"created_at"`
 		UpdatedAt                  *time.Time          `json:"updated_at"`
-		CategoryID                 uint                `json:"category_id"`
+		CategoriesID               uint                `json:"categories_id"`
 		UserSubcategoryGradeResult int                 `json:"user_subcategory_grade_result"`
 		UserSubcategoryCompleted   datatypes.JSONMap   `json:"user_subcategory_completed"`
 		CertificateVersionIssued   int                 `json:"certificate_version_issued"`
@@ -271,21 +272,21 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 		ThemesWithProgress         []UserThemeProgress `json:"themes_with_progress"`
 		UserHasSubcategoryProgress bool                `json:"user_has_subcategory_progress"`
 	}
-	type CategoryWithUserProgress struct {
-		CategoryID            uint                      `json:"category_id"`
-		CategoryName          string                    `json:"category_name"`
-		CategoryStatus        string                    `json:"category_status"`
-		CategoryShortDesc     string                    `json:"category_short_description"`
-		CategoryLongDesc      string                    `json:"category_long_description"`
-		CategoryTotalSub      pq.Int64Array             `json:"category_total_sub"`
-		CategoryImageURL      string                    `json:"category_image_url"`
-		CategoryDifficultyID  uint                      `json:"category_difficulty_id"`
-		CreatedAt             time.Time                 `json:"created_at"`
-		UpdatedAt             *time.Time                `json:"updated_at"`
-		SubcategoriesProgress []UserSubcategoryProgress `json:"subcategories_progress"`
+	type CategoriesWithUserProgress struct {
+		CategoriesID           uint                      `json:"categories_id"`
+		CategoriesName         string                    `json:"categories_name"`
+		CategoriesStatus       string                    `json:"categories_status"`
+		CategoriesShortDesc    string                    `json:"categories_short_description"`
+		CategoriesLongDesc     string                    `json:"categories_long_description"`
+		CategoriesTotalSub     pq.Int64Array             `json:"categories_total_subcategories"`
+		CategoriesImageURL     string                    `json:"categories_image_url"`
+		CategoriesDifficultyID uint                      `json:"categories_difficulty_id"`
+		CreatedAt              time.Time                 `json:"created_at"`
+		UpdatedAt              *time.Time                `json:"updated_at"`
+		SubcategoriesProgress  []UserSubcategoryProgress `json:"subcategories_progress"`
 	}
 
-	var result []CategoryWithUserProgress
+	var result []CategoriesWithUserProgress
 	totalThemeGrade := 0
 	totalThemeWithProgress := 0
 
@@ -342,7 +343,7 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 				SubcategoryImageURL:        sub.SubcategoryImageURL,
 				CreatedAt:                  sub.CreatedAt,
 				UpdatedAt:                  sub.UpdatedAt,
-				CategoryID:                 sub.SubcategoryCategoryID,
+				CategoriesID:               sub.SubcategoryCategoryID,
 				UserSubcategoryGradeResult: us.UserSubcategoryGradeResult,
 				UserSubcategoryCompleted:   us.UserSubcategoryCompleteThemesOrLevels,
 				CertificateVersionIssued:   issuedVersion,
@@ -354,18 +355,18 @@ func (ctrl *UserSubcategoryController) GetWithProgressByParam(c *fiber.Ctx) erro
 			})
 		}
 
-		result = append(result, CategoryWithUserProgress{
-			CategoryID:            cat.CategoryID,
-			CategoryName:          cat.CategoryName,
-			CategoryStatus:        cat.CategoryStatus,
-			CategoryShortDesc:     cat.CategoryDescriptionShort,
-			CategoryLongDesc:      cat.CategoryDescriptionLong,
-			CategoryTotalSub:      cat.CategoryTotalSubcategories,
-			CategoryImageURL:      cat.CategoryImageURL,
-			CategoryDifficultyID:  cat.CategoryDifficultyID,
-			CreatedAt:             cat.CreatedAt,
-			UpdatedAt:             &cat.UpdatedAt,
-			SubcategoriesProgress: subcatProgressList,
+		result = append(result, CategoriesWithUserProgress{
+			CategoriesID:           cat.CategoryID,
+			CategoriesName:         cat.CategoryName,
+			CategoriesStatus:       cat.CategoryStatus,
+			CategoriesShortDesc:    cat.CategoryDescriptionShort,
+			CategoriesLongDesc:     cat.CategoryDescriptionLong,
+			CategoriesTotalSub:     cat.CategoryTotalSubcategories,
+			CategoriesImageURL:     cat.CategoryImageURL,
+			CategoriesDifficultyID: cat.CategoryDifficultyID,
+			CreatedAt:              cat.CreatedAt,
+			UpdatedAt:              &cat.UpdatedAt,
+			SubcategoriesProgress:  subcatProgressList,
 		})
 	}
 

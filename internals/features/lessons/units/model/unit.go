@@ -27,7 +27,7 @@ type UnitModel struct {
 	UnitThemesOrLevelID uint      `gorm:"column:unit_themes_or_level_id;not null" json:"unit_themes_or_level_id"`
 	UnitCreatedBy       uuid.UUID `gorm:"column:unit_created_by;type:uuid;not null;constraint:OnDelete:CASCADE" json:"unit_created_by"`
 
-	SectionQuizzes []model.SectionQuizzesModel `gorm:"foreignKey:UnitID;references:UnitID" json:"section_quizzes"`
+	SectionQuizzes []model.SectionQuizzesModel `gorm:"foreignKey:SectionQuizzesUnitID;references:UnitID" json:"section_quizzes"`
 }
 
 func (UnitModel) TableName() string {
@@ -62,7 +62,7 @@ func SyncTotalUnits(db *gorm.DB, themesOrLevelID uint) error {
 
 	err := db.Exec(`
 		UPDATE themes_or_levels
-		SET total_unit = (
+		SET themes_or_level_total_unit = (
 			SELECT ARRAY_AGG(unit_id ORDER BY unit_id)
 			FROM units
 			WHERE unit_themes_or_level_id = ? AND deleted_at IS NULL

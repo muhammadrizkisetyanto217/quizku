@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS donation_questions (
     -- Relasi ke tabel 'donations'. Jika donasi dihapus, semua entri pertanyaannya ikut terhapus
     donation_question_question_id BIGINT NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
     -- Relasi ke tabel 'questions'. Menunjukkan pertanyaan mana yang dihubungkan ke donasi ini
-    donation_question_user_progress_id BIGINT REFERENCES user_progress(id) ON DELETE SET NULL,
+    donation_question_user_progress_id BIGINT REFERENCES user_progress(user_progress_id) ON DELETE SET NULL,
     -- Opsional: digunakan untuk melacak progress user pada pertanyaan ini, bisa NULL jika belum ada
     donation_question_user_message TEXT,
     -- Opsional: pesan personal dari user/donatur yang ingin dikaitkan ke pertanyaan

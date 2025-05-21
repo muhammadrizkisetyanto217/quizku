@@ -4,53 +4,71 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"quizku/internals/features/lessons/themes_or_levels/model"
 
+	themesModel "quizku/internals/features/lessons/themes_or_levels/model"
+
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
-type ThemesSeed struct {
-	ThemesOrLevelName             string `json:"name"`
-	ThemesOrLevelStatus           string `json:"status"`
-	ThemesOrLevelDescriptionShort string `json:"description_short"`
-	ThemesOrLevelDescriptionLong  string `json:"description_long"`
-	ThemesOrLevelImageURL         string `json:"image_url"`
-	ThemesOrLevelSubcategoryID    int    `json:"subcategories_id"`
+type ThemesOrLevelSeedInput struct {
+	ThemesOrLevelName             string        `json:"themes_or_level_name"`
+	ThemesOrLevelStatus           string        `json:"themes_or_level_status"`
+	ThemesOrLevelDescriptionShort string        `json:"themes_or_level_description_short"`
+	ThemesOrLevelDescriptionLong  string        `json:"themes_or_level_description_long"`
+	ThemesOrLevelTotalUnit        pq.Int64Array `json:"themes_or_level_total_unit"`
+	ThemesOrLevelImageURL         string        `json:"themes_or_level_image_url"`
+	ThemesOrLevelSubcategoryID    int           `json:"themes_or_level_subcategory_id"`
 }
 
 func SeedThemesOrLevelsFromJSON(db *gorm.DB, filePath string) {
 	log.Println("📥 Membaca file:", filePath)
 
+	// 1. Baca file
 	file, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("❌ Gagal membaca file JSON: %v", err)
 	}
 
-	var input []ThemesSeed
-	if err := json.Unmarshal(file, &input); err != nil {
-		log.Fatalf("❌ Gagal decode JSON: %v", err)
+	// 2. Decode JSON
+	var inputs []ThemesOrLevelSeedInput
+	if err := json.Unmarshal(file, &inputs); err != nil {
+		log.Fatalf("❌ Gagal decode isi JSON: %v", err)
 	}
+	log.Printf("📦 Total data themes: %d", len(inputs))
 
-	for _, t := range input {
-		var existing model.ThemesOrLevelsModel
-		if err := db.Where("themes_or_level_name = ? AND themes_or_level_subcategory_id = ?", t.ThemesOrLevelName, t.ThemesOrLevelSubcategoryID).First(&existing).Error; err == nil {
-			log.Printf("ℹ️ Data '%s' sudah ada untuk subcategory_id %d, dilewati.", t.ThemesOrLevelName, t.ThemesOrLevelSubcategoryID)
+	// 3. Proses setiap data
+	for _, input := range inputs {
+		if input.ThemesOrLevelName == "" || input.ThemesOrLevelSubcategoryID == 0 {
+			log.Printf("⚠️ Dilewati karena data tidak valid: %+v", input)
 			continue
 		}
 
-		newTheme := model.ThemesOrLevelsModel{
-			ThemesOrLevelName:             t.ThemesOrLevelName,
-			ThemesOrLevelStatus:           t.ThemesOrLevelStatus,
-			ThemesOrLevelDescriptionShort: t.ThemesOrLevelDescriptionShort,
-			ThemesOrLevelDescriptionLong:  t.ThemesOrLevelDescriptionLong,
-			ThemesOrLevelSubcategoryID:    t.ThemesOrLevelSubcategoryID,
-			ThemesOrLevelImageURL:         t.ThemesOrLevelImageURL,
+		log.Printf("🔍 Cek theme: %s - Subcategory ID: %d", input.ThemesOrLevelName, input.ThemesOrLevelSubcategoryID)
+
+		var existing themesModel.ThemesOrLevelsModel
+		err := db.Where("themes_or_level_name = ? AND themes_or_level_subcategory_id = ?", input.ThemesOrLevelName, input.ThemesOrLevelSubcategoryID).
+			First(&existing).Error
+
+		if err == nil {
+			log.Printf("ℹ️ Theme '%s' sudah ada di subcategory %d, dilewati.", input.ThemesOrLevelName, input.ThemesOrLevelSubcategoryID)
+			continue
+		}
+
+		newTheme := themesModel.ThemesOrLevelsModel{
+			ThemesOrLevelName:             input.ThemesOrLevelName,
+			ThemesOrLevelStatus:           input.ThemesOrLevelStatus,
+			ThemesOrLevelDescriptionShort: input.ThemesOrLevelDescriptionShort,
+			ThemesOrLevelDescriptionLong:  input.ThemesOrLevelDescriptionLong,
+			ThemesOrLevelTotalUnit:        input.ThemesOrLevelTotalUnit,
+			ThemesOrLevelImageURL:         input.ThemesOrLevelImageURL,
+			ThemesOrLevelSubcategoryID:    input.ThemesOrLevelSubcategoryID,
 		}
 
 		if err := db.Create(&newTheme).Error; err != nil {
-			log.Printf("❌ Gagal insert theme '%s': %v", t.ThemesOrLevelName, err)
+			log.Printf("❌ Gagal insert theme '%s': %v", input.ThemesOrLevelName, err)
 		} else {
-			log.Printf("✅ Berhasil insert theme '%s'", t.ThemesOrLevelName)
+			log.Printf("✅ Berhasil insert theme '%s'", input.ThemesOrLevelName)
 		}
 	}
 }

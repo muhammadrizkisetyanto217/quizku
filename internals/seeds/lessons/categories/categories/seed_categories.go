@@ -12,17 +12,16 @@ import (
 )
 
 type CategorySeedInput struct {
-	CategoryName            string `json:"category_name"`
-	CategoryStatus          string `json:"category_status"`
+	CategoryName             string `json:"category_name"`
+	CategoryStatus           string `json:"category_status"`
 	CategoryDescriptionShort string `json:"category_description_short"`
 	CategoryDescriptionLong  string `json:"category_description_long"`
-	CategoryDifficultyID     uint   `json:"category_difficulty_id"`
+	CategoryDifficultyID     uint   ` json:"category_difficulty_id"`
 }
 
 func SeedCategoriesFromJSON(db *gorm.DB, filePath string) {
 	log.Println("📥 Membaca file JSON:", filePath)
 
-	// 📂 Baca isi file JSON
 	file, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("❌ Gagal membaca file JSON: %v", err)
@@ -42,13 +41,13 @@ func SeedCategoriesFromJSON(db *gorm.DB, filePath string) {
 		}
 
 		newCategory := categoryModel.CategoryModel{
-			CategoryName:              c.CategoryName,
-			CategoryStatus:            c.CategoryStatus,
-			CategoryDescriptionShort:  c.CategoryDescriptionShort,
-			CategoryDescriptionLong:   c.CategoryDescriptionLong,
-			CategoryDifficultyID:      c.CategoryDifficultyID,
+			CategoryName:               c.CategoryName,
+			CategoryStatus:             c.CategoryStatus,
+			CategoryDescriptionShort:   c.CategoryDescriptionShort,
+			CategoryDescriptionLong:    c.CategoryDescriptionLong,
+			CategoryDifficultyID:       c.CategoryDifficultyID,
 			CategoryTotalSubcategories: pq.Int64Array{},
-			CategoryImageURL:          "",
+			CategoryImageURL:           "",
 		}
 
 		if err := db.Create(&newCategory).Error; err != nil {

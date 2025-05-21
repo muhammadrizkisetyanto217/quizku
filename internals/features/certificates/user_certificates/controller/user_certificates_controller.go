@@ -61,7 +61,6 @@ func (ctrl *IssuedCertificateController) GetByIDUser(c *fiber.Ctx) error {
 
 // ✅ Untuk User: Get all certificates miliknya sendiri
 // ✅ Untuk User: Get all certificates miliknya sendiri
-// ✅ Untuk User: Get all certificates miliknya sendiri
 func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
@@ -76,7 +75,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid UUID"})
 	}
 
-	// 🔍 Ambil semua sertifikat milik user
 	var issuedCerts []model.UserCertificate
 	if err := ctrl.DB.Where("user_cert_user_id = ?", userID).Find(&issuedCerts).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil sertifikat"})
@@ -86,7 +84,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		issuedMap[cert.UserCertSubcategoryID] = cert
 	}
 
-	// 🔍 Ambil semua kategori dan subkategori
 	var categories []categoryModel.CategoryModel
 	if err := ctrl.DB.Preload("Subcategories", func(db *gorm.DB) *gorm.DB {
 		return db.Where("subcategory_status = ?", "active").Preload("ThemesOrLevels")
@@ -94,7 +91,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil kategori"})
 	}
 
-	// 🔍 Ambil progress user_subcategory
 	var userSubcats []subcategoryModel.UserSubcategoryModel
 	if err := ctrl.DB.Where("user_subcategory_user_id = ?", userID).Find(&userSubcats).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil user_subcategory"})
@@ -107,7 +103,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		}
 	}
 
-	// 🔍 Ambil progress user_themes_or_levels
 	var userThemes []themesModel.UserThemesOrLevelsModel
 	if err := ctrl.DB.Where("user_theme_user_id = ?", userID).Find(&userThemes).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil user_themes_or_levels"})
@@ -117,7 +112,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		userThemeMap[ut.UserThemeThemesOrLevelID] = ut
 	}
 
-	// 🔍 Ambil semua unit dan kelompokkan berdasarkan theme
 	var units []unitModel.UnitModel
 	if err := ctrl.DB.Find(&units).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil units"})
@@ -127,17 +121,12 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		unitMap[u.UnitThemesOrLevelID] = append(unitMap[u.UnitThemesOrLevelID], u)
 	}
 
-	// 🔍 Ambil versi sertifikat tertinggi per subkategori
 	type VersionMap struct {
 		SubcategoryID uint
 		VersionNumber int
 	}
 	var versionList []VersionMap
-	if err := ctrl.DB.
-		Table("certificate_versions").
-		Select("cert_versions_subcategory_id, MAX(cert_versions_number) as version_number").
-		Group("cert_versions_subcategory_id").
-		Scan(&versionList).Error; err != nil {
+	if err := ctrl.DB.Table("certificate_versions").Select("cert_versions_subcategory_id, MAX(cert_versions_number) as version_number").Group("cert_versions_subcategory_id").Scan(&versionList).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal ambil versi sertifikat"})
 	}
 	versionMap := make(map[uint]int)
@@ -145,7 +134,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		versionMap[v.SubcategoryID] = v.VersionNumber
 	}
 
-	// ✅ Struct response (tidak diubah, tetap mengikuti key lama agar kompatibel frontend)
 	type ThemeWithProgress struct {
 		ThemeID              uint                  `json:"theme_id"`
 		ThemeName            string                `json:"theme_name"`
@@ -171,7 +159,7 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		SubcategoryImage   string              `json:"subcategory_image_url"`
 		SubcategoryCreated time.Time           `json:"subcategory_created_at"`
 		SubcategoryUpdated *time.Time          `json:"subcategory_updated_at"`
-		CategoryID         uint                `json:"category_id"`
+		CategoriesID       uint                `json:"category_id"`
 		SubcategoryGrade   int                 `json:"subcategory_grade_result"`
 		CompletedThemes    datatypes.JSONMap   `json:"completed_themes"`
 		IssuedVersion      int                 `json:"certificate_version_issued"`
@@ -184,21 +172,21 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 		SlugURL            string              `json:"certificate_slug_url"`
 		IsUpToDate         bool                `json:"user_cert_is_up_to_date"`
 	}
-	type CategoryWithSubcat struct {
-		CategoryID         uint                      `json:"category_id"`
-		CategoryName       string                    `json:"category_name"`
-		CategoryStatus     string                    `json:"category_status"`
-		CategoryShort      string                    `json:"category_short_description"`
-		CategoryLong       string                    `json:"category_long_description"`
-		CategorySubTotal   pq.Int64Array             `json:"category_total_subcategories"`
-		CategoryImage      string                    `json:"category_image_url"`
-		CategoryDifficulty uint                      `json:"category_difficulty_id"`
-		CreatedAt          time.Time                 `json:"category_created_at"`
-		UpdatedAt          *time.Time                `json:"category_updated_at"`
-		Subcategories      []SubcategoryWithProgress `json:"subcategories_progress"`
+	type CategoriesWithSubcat struct {
+		CategoriesID         uint                      `json:"category_id"`
+		CategoriesName       string                    `json:"category_name"`
+		CategoriesStatus     string                    `json:"category_status"`
+		CategoriesShort      string                    `json:"category_short_description"`
+		CategoriesLong       string                    `json:"category_long_description"`
+		CategoriesSubTotal   pq.Int64Array             `json:"category_total_subcategories"`
+		CategoriesImage      string                    `json:"category_image_url"`
+		CategoriesDifficulty uint                      `json:"category_difficulty_id"`
+		CreatedAt            time.Time                 `json:"category_created_at"`
+		UpdatedAt            *time.Time                `json:"category_updated_at"`
+		Subcategories        []SubcategoryWithProgress `json:"subcategories_progress"`
 	}
 
-	var result []CategoryWithSubcat
+	var result []CategoriesWithSubcat
 	for _, cat := range categories {
 		subcatList := []SubcategoryWithProgress{}
 		for _, sub := range cat.Subcategories {
@@ -214,7 +202,6 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 			themes := []ThemeWithProgress{}
 			for _, theme := range sub.ThemesOrLevels {
 				ut := userThemeMap[theme.ThemesOrLevelID]
-
 				rawJSON, err := json.Marshal(ut.UserThemeCompleteUnit)
 				if err != nil {
 					log.Println("[WARNING] Marshal theme_complete_unit gagal:", err)
@@ -248,7 +235,7 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 				SubcategoryImage:   sub.SubcategoryImageURL,
 				SubcategoryCreated: sub.CreatedAt,
 				SubcategoryUpdated: sub.UpdatedAt,
-				CategoryID:         sub.SubcategoryCategoryID,
+				CategoriesID:       sub.SubcategoryCategoryID,
 				SubcategoryGrade:   us.UserSubcategoryGradeResult,
 				CompletedThemes:    us.UserSubcategoryCompleteThemesOrLevels,
 				IssuedVersion:      versionMap[sub.SubcategoryID],
@@ -262,20 +249,19 @@ func (ctrl *IssuedCertificateController) GetByID(c *fiber.Ctx) error {
 				IsUpToDate:         issued.UserCertIsUpToDate,
 			})
 		}
-
 		if len(subcatList) > 0 {
-			result = append(result, CategoryWithSubcat{
-				CategoryID:         cat.CategoryID,
-				CategoryName:       cat.CategoryName,
-				CategoryStatus:     cat.CategoryStatus,
-				CategoryShort:      cat.CategoryDescriptionShort,
-				CategoryLong:       cat.CategoryDescriptionLong,
-				CategorySubTotal:   cat.CategoryTotalSubcategories,
-				CategoryImage:      cat.CategoryImageURL,
-				CategoryDifficulty: cat.CategoryDifficultyID,
-				CreatedAt:          cat.CreatedAt,
-				// UpdatedAt:          cat.UpdatedAt,
-				Subcategories:      subcatList,
+			result = append(result, CategoriesWithSubcat{
+				CategoriesID:         cat.CategoryID,
+				CategoriesName:       cat.CategoryName,
+				CategoriesStatus:     cat.CategoryName,
+				CategoriesShort:      cat.CategoryDescriptionShort,
+				CategoriesLong:       cat.CategoryDescriptionLong,
+				CategoriesSubTotal:   cat.CategoryTotalSubcategories,
+				CategoriesImage:      cat.CategoryImageURL,
+				CategoriesDifficulty: cat.CategoryDifficultyID,
+				CreatedAt:            cat.CreatedAt,
+				UpdatedAt:            &cat.UpdatedAt,
+				Subcategories:        subcatList,
 			})
 		}
 	}

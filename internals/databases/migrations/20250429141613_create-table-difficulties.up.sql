@@ -1,3 +1,4 @@
+-- ✅ TABLE: difficulties
 CREATE TABLE IF NOT EXISTS difficulties (
     difficulty_id SERIAL PRIMARY KEY,
     difficulty_name VARCHAR(255) NOT NULL,
@@ -12,11 +13,11 @@ CREATE TABLE IF NOT EXISTS difficulties (
     deleted_at TIMESTAMP
 );
 
--- ✅ Indexing untuk performa
+-- ✅ Indexing
 CREATE INDEX IF NOT EXISTS idx_difficulty_status ON difficulties(difficulty_status);
 
-
-CREATE TABLE IF NOT EXISTS difficulty_news (
+-- ✅ TABLE: difficulties_news
+CREATE TABLE IF NOT EXISTS difficulties_news (
     difficulty_news_id SERIAL PRIMARY KEY,
     difficulty_news_difficulty_id INTEGER NOT NULL REFERENCES difficulties(difficulty_id) ON DELETE CASCADE,
     difficulty_news_title VARCHAR(255) NOT NULL,
@@ -27,8 +28,7 @@ CREATE TABLE IF NOT EXISTS difficulty_news (
     deleted_at TIMESTAMP
 );
 
--- ✅ Index untuk pencarian dan filter
-CREATE INDEX IF NOT EXISTS idx_difficulty_news_difficulty_id ON difficulty_news(difficulty_news_difficulty_id);
-CREATE INDEX IF NOT EXISTS idx_difficulty_news_is_public ON difficulty_news(difficulty_news_is_public);
-CREATE INDEX IF NOT EXISTS idx_news_public_per_difficulty ON difficulty_news(difficulty_news_difficulty_id, difficulty_news_is_public);
-
+-- ✅ Indexes
+CREATE INDEX IF NOT EXISTS idx_difficulty_news_difficulty_id ON difficulties_news(difficulty_news_difficulty_id);
+CREATE INDEX IF NOT EXISTS idx_difficulty_news_is_public ON difficulties_news(difficulty_news_is_public);
+CREATE INDEX IF NOT EXISTS idx_difficulty_news_combined ON difficulties_news(difficulty_news_difficulty_id, difficulty_news_is_public);

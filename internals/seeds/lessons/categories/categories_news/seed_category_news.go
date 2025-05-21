@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+
 	categoryModel "quizku/internals/features/lessons/categories/model"
 
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func SeedCategoriesNewsFromJSON(db *gorm.DB, filePath string) {
 			CategoryNewsTitle:       input.CategoryNewsTitle,
 			CategoryNewsDescription: input.CategoryNewsDescription,
 			CategoryNewsIsPublic:    input.CategoryNewsIsPublic,
-			CategoryNewsCategoryID:  int(input.CategoryNewsCategoryID),
+			CategoryNewsCategoryID:  input.CategoryNewsCategoryID,
 		}
 
 		if err := db.Create(&news).Error; err != nil {

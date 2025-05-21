@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS section_quizzes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
-    section_quizzes_unit_id INT REFERENCES units(id) ON DELETE CASCADE,
+    section_quizzes_unit_id INT REFERENCES units(unit_id) ON DELETE CASCADE,
     section_quizzes_created_by UUID REFERENCES users(id) ON DELETE CASCADE
 );
 

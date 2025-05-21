@@ -18,12 +18,11 @@ func NewDifficultyNewsController(db *gorm.DB) *DifficultyNewsController {
 	return &DifficultyNewsController{DB: db}
 }
 
-// GET all news
 // 🟢 GET ALL DIFFICULTY NEWS: Ambil semua berita berdasarkan difficulty
 func (dc *DifficultyNewsController) GetAllNews(c *fiber.Ctx) error {
 	var newsList []model.DifficultyNewsModel
 
-	if err := dc.DB.Order("difficulty_news_created_at DESC").Find(&newsList).Error; err != nil {
+	if err := dc.DB.Order("created_at DESC").Find(&newsList).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
 			"message": "Gagal mengambil semua berita",
@@ -36,7 +35,6 @@ func (dc *DifficultyNewsController) GetAllNews(c *fiber.Ctx) error {
 	})
 }
 
-// GET all news by difficulty
 // 🟢 GET DIFFICULTY NEWS BY DIFFICULTY ID
 func (dc *DifficultyNewsController) GetNewsByDifficultyId(c *fiber.Ctx) error {
 	difficultyID := c.Params("difficulty_id")
@@ -45,7 +43,7 @@ func (dc *DifficultyNewsController) GetNewsByDifficultyId(c *fiber.Ctx) error {
 	var news []model.DifficultyNewsModel
 	if err := dc.DB.
 		Where("difficulty_news_difficulty_id = ?", difficultyID).
-		Order("difficulty_news_created_at DESC").
+		Order("created_at DESC").
 		Find(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
@@ -61,13 +59,11 @@ func (dc *DifficultyNewsController) GetNewsByDifficultyId(c *fiber.Ctx) error {
 	})
 }
 
-// GET news by ID
 // 🟢 GET DIFFICULTY NEWS BY ID
 func (dc *DifficultyNewsController) GetNewsByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.DifficultyNewsModel
 
-	// 🔍 Ambil berdasarkan primary key
 	if err := dc.DB.Where("difficulty_news_id = ?", id).First(&news).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
@@ -81,12 +77,10 @@ func (dc *DifficultyNewsController) GetNewsByID(c *fiber.Ctx) error {
 	})
 }
 
-// CREATE news
 // 🟢 CREATE DIFFICULTY NEWS
 func (dc *DifficultyNewsController) CreateNews(c *fiber.Ctx) error {
 	var news model.DifficultyNewsModel
 
-	// 🔄 Parse body
 	if err := c.BodyParser(&news); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
@@ -94,7 +88,6 @@ func (dc *DifficultyNewsController) CreateNews(c *fiber.Ctx) error {
 		})
 	}
 
-	// 💾 Simpan ke DB
 	if err := dc.DB.Create(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
@@ -109,14 +102,11 @@ func (dc *DifficultyNewsController) CreateNews(c *fiber.Ctx) error {
 	})
 }
 
-
-// UPDATE news
 // 🟢 UPDATE DIFFICULTY NEWS
 func (dc *DifficultyNewsController) UpdateNews(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.DifficultyNewsModel
 
-	// 🔍 Cari berita berdasarkan ID
 	if err := dc.DB.Where("difficulty_news_id = ?", id).First(&news).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
@@ -124,7 +114,6 @@ func (dc *DifficultyNewsController) UpdateNews(c *fiber.Ctx) error {
 		})
 	}
 
-	// 🔄 Parsing data baru dari body
 	if err := c.BodyParser(&news); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
@@ -132,7 +121,6 @@ func (dc *DifficultyNewsController) UpdateNews(c *fiber.Ctx) error {
 		})
 	}
 
-	// 💾 Simpan ke DB
 	if err := dc.DB.Save(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
@@ -152,7 +140,6 @@ func (dc *DifficultyNewsController) DeleteNews(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var news model.DifficultyNewsModel
 
-	// 🔍 Cari berita berdasarkan ID
 	if err := dc.DB.Where("difficulty_news_id = ?", id).First(&news).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error":   true,
@@ -160,7 +147,6 @@ func (dc *DifficultyNewsController) DeleteNews(c *fiber.Ctx) error {
 		})
 	}
 
-	// 🗑️ Soft delete
 	if err := dc.DB.Delete(&news).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,

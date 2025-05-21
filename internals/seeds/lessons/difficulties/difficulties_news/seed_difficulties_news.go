@@ -17,8 +17,8 @@ type DifficultyNewsSeedInput struct {
 	DifficultyNewsDifficultyID uint   `json:"difficulty_news_difficulty_id"`
 }
 
-func SeedDifficultiesNewsFromJSON(db *gorm.DB, filePath string) {
-	log.Println("📥 Membaca file:", filePath)
+func SeedDifficultyNewsFromJSON(db *gorm.DB, filePath string) {
+	log.Println("📥 Membaca file JSON:", filePath)
 
 	file, err := os.ReadFile(filePath)
 	if err != nil {
@@ -27,7 +27,7 @@ func SeedDifficultiesNewsFromJSON(db *gorm.DB, filePath string) {
 
 	var inputs []DifficultyNewsSeedInput
 	if err := json.Unmarshal(file, &inputs); err != nil {
-		log.Fatalf("❌ Gagal decode JSON: %v", err)
+		log.Fatalf("❌ Gagal decode isi JSON: %v", err)
 	}
 
 	for _, input := range inputs {
@@ -38,7 +38,7 @@ func SeedDifficultiesNewsFromJSON(db *gorm.DB, filePath string) {
 		).First(&existing).Error
 
 		if err == nil {
-			log.Printf("ℹ️ Data '%s' untuk difficulty_id %d sudah ada, lewati...", input.DifficultyNewsTitle, input.DifficultyNewsDifficultyID)
+			log.Printf("ℹ️ Data '%s' untuk difficulty_id %d sudah ada, dilewati...", input.DifficultyNewsTitle, input.DifficultyNewsDifficultyID)
 			continue
 		}
 

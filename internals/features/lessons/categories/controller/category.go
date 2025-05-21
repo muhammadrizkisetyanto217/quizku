@@ -52,7 +52,7 @@ func (cc *CategoryController) GetCategory(c *fiber.Ctx) error {
 
 	// 🔍 Cari berdasarkan ID dan preload relasi
 	if err := cc.DB.Preload("Subcategories").
-		Where("category_id = ?", id).
+		Where("categories_id = ?", id).
 		First(&category).Error; err != nil {
 		log.Printf("[ERROR] Category with ID %s not found\n", id)
 		return c.Status(404).JSON(fiber.Map{
@@ -74,9 +74,9 @@ func (cc *CategoryController) GetCategoriesByDifficulty(c *fiber.Ctx) error {
 
 	var categories []model.CategoryModel
 
-	// 🔍 Ambil hanya category_id dan category_name
+	// 🔍 Ambil hanya categories_id dan categories_name
 	if err := cc.DB.
-		Select("category_id", "category_name").
+		Select("categories_id", "categories_name").
 		Where("category_difficulty_id = ?", difficultyID).
 		Find(&categories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch categories for difficulty ID %s: %v\n", difficultyID, err)
@@ -89,8 +89,8 @@ func (cc *CategoryController) GetCategoriesByDifficulty(c *fiber.Ctx) error {
 	var responses []dto.CategoryTooltipResponse
 	for _, c := range categories {
 		responses = append(responses, dto.CategoryTooltipResponse{
-			CategoryID:   c.CategoryID,
-			CategoryName: c.CategoryName,
+			CategoriesID:   c.CategoryID,
+			CategoriesName: c.CategoryName,
 		})
 	}
 
@@ -152,18 +152,13 @@ func (cc *CategoryController) UpdateCategory(c *fiber.Ctx) error {
 	log.Printf("[INFO] Updating category with ID: %s\n", id)
 
 	var category model.CategoryModel
-
-	// 🔍 Cari kategori berdasarkan ID semantik
-	if err := cc.DB.
-		Where("category_id = ?", id).
-		First(&category).Error; err != nil {
+	if err := cc.DB.Where("categories_id = ?", id).First(&category).Error; err != nil {
 		log.Printf("[ERROR] Category with ID %s not found\n", id)
 		return c.Status(404).JSON(fiber.Map{
 			"error": "Kategori tidak ditemukan",
 		})
 	}
 
-	// 🔄 Parsing input ke map
 	var input map[string]interface{}
 	if err := c.BodyParser(&input); err != nil {
 		log.Printf("[ERROR] Invalid input: %v\n", err)
@@ -172,14 +167,12 @@ func (cc *CategoryController) UpdateCategory(c *fiber.Ctx) error {
 		})
 	}
 
-	// 🔧 Tangani khusus update_news (JSON)
-	if raw, ok := input["category_update_news"]; ok {
+	if raw, ok := input["categories_update_news"]; ok {
 		if jsonData, err := json.Marshal(raw); err == nil {
-			input["category_update_news"] = datatypes.JSON(jsonData)
+			input["categories_update_news"] = datatypes.JSON(jsonData)
 		}
 	}
 
-	// 💾 Simpan perubahan
 	if err := cc.DB.Model(&category).Updates(input).Error; err != nil {
 		log.Printf("[ERROR] Failed to update category: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{
@@ -200,7 +193,7 @@ func (cc *CategoryController) DeleteCategory(c *fiber.Ctx) error {
 	log.Printf("[INFO] Deleting category with ID: %s\n", id)
 
 	if err := cc.DB.
-		Where("category_id = ?", id).
+		Where("categories_id = ?", id).
 		Delete(&model.CategoryModel{}).Error; err != nil {
 		log.Printf("[ERROR] Failed to delete category: %v\n", err)
 		return c.Status(500).JSON(fiber.Map{

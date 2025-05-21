@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS themes_or_levels (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
 
-    themes_or_level_subcategory_id INT REFERENCES subcategories(id) ON DELETE SET NULL,
+    themes_or_level_subcategory_id INT REFERENCES subcategories(subcategory_id) ON DELETE SET NULL,
 
     CONSTRAINT unique_theme_name_per_subcategory UNIQUE (themes_or_level_name, themes_or_level_subcategory_id)
 );
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS themes_or_levels (
 CREATE INDEX IF NOT EXISTS idx_themes_or_level_status ON themes_or_levels(themes_or_level_status);
 CREATE INDEX IF NOT EXISTS idx_themes_or_level_subcategory_id ON themes_or_levels(themes_or_level_subcategory_id);
 CREATE INDEX IF NOT EXISTS idx_themes_or_level_name_subcat ON themes_or_levels(themes_or_level_name, themes_or_level_subcategory_id);
-
+2
 
 -- ✅ TABLE: themes_or_levels_news
 CREATE TABLE IF NOT EXISTS themes_or_levels_news (
