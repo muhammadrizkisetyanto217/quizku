@@ -20,8 +20,6 @@ CREATE INDEX IF NOT EXISTS idx_section_quizzes_created_by ON section_quizzes(sec
 CREATE INDEX IF NOT EXISTS idx_section_quizzes_unit_status ON section_quizzes(section_quizzes_unit_id, section_quizzes_status);
 
 
-
-
 -- ✅ REFACTORED: Struktur tabel user_section_quizzes dengan nama kolom deskriptif
 CREATE TABLE IF NOT EXISTS user_section_quizzes (
     user_section_quizzes_id SERIAL PRIMARY KEY,
@@ -49,9 +47,10 @@ CREATE TABLE IF NOT EXISTS quizzes (
     quiz_status VARCHAR(10) CHECK (quiz_status IN ('active', 'pending', 'archived')) DEFAULT 'pending',
     quiz_total_question INTEGER[] NOT NULL DEFAULT '{}',
     quiz_icon_url VARCHAR(100),
-    quiz_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    quiz_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    quiz_deleted_at TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
 
     quiz_section_quizzes_id INT REFERENCES section_quizzes(section_quizzes_id) ON DELETE CASCADE,
     quiz_created_by UUID REFERENCES users(id) ON DELETE CASCADE
@@ -61,7 +60,6 @@ CREATE TABLE IF NOT EXISTS quizzes (
 CREATE INDEX IF NOT EXISTS idx_quizzes_status ON quizzes(quiz_status);
 CREATE INDEX IF NOT EXISTS idx_quizzes_section_quizzes_id ON quizzes(quiz_section_quizzes_id);
 CREATE INDEX IF NOT EXISTS idx_quizzes_created_by ON quizzes(quiz_created_by);
-
 
 
 CREATE TABLE IF NOT EXISTS user_quizzes (

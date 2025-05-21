@@ -4,125 +4,125 @@
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section1-1.png",
         "quiz_section_quizzes_id": 1,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Langkah Wudhu 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section1-2.png",
         "quiz_section_quizzes_id": 1,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Doa dan Bacaan Wudhu 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section2-1.png",
         "quiz_section_quizzes_id": 2,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Doa dan Bacaan Wudhu 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section2-2.png",
         "quiz_section_quizzes_id": 2,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Membatalkan Wudhu 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section3-1.png",
         "quiz_section_quizzes_id": 3,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Membatalkan Wudhu 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section3-2.png",
         "quiz_section_quizzes_id": 3,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Tata Cara Tayamum 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section4-1.png",
         "quiz_section_quizzes_id": 4,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Tata Cara Tayamum 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section4-2.png",
         "quiz_section_quizzes_id": 4,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Doa dan Bacaan Tayamum 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section5-1.png",
         "quiz_section_quizzes_id": 5,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Doa dan Bacaan Tayamum 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section5-2.png",
         "quiz_section_quizzes_id": 5,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Pengantar Fiqh dan Thaharah 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section6-1.png",
         "quiz_section_quizzes_id": 6,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Pengantar Fiqh dan Thaharah 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section6-2.png",
         "quiz_section_quizzes_id": 6,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Jenis Najis 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section7-1.png",
         "quiz_section_quizzes_id": 7,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Cara Mensucikan Najis",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section7-2.png",
         "quiz_section_quizzes_id": 7,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Aqidah Sehari-hari 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section8-1.png",
         "quiz_section_quizzes_id": 8,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Aqidah Sehari-hari 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section8-2.png",
         "quiz_section_quizzes_id": 8,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Kesalahan Aqidah 1",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section9-1.png",
         "quiz_section_quizzes_id": 9,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "quiz_name": "Kesalahan Aqidah 2",
         "quiz_status": "active",
         "quiz_icon_url": "https://example.com/icons/section9-2.png",
         "quiz_section_quizzes_id": 9,
-        "quiz_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "quiz_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     }
 ]

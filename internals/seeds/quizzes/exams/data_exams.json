@@ -5,7 +5,7 @@
         "exam_total_question_ids": [],
         "exam_icon_url": "https://example.com/icons/exam.png",
         "exam_unit_id": 1,
-        "exam_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "exam_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "exam_name": "Ujian Pertama unit ke-2",
@@ -13,7 +13,7 @@
         "exam_total_question_ids": [],
         "exam_icon_url": "https://example.com/icons/exam.png",
         "exam_unit_id": 2,
-        "exam_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "exam_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "exam_name": "Ujian Pertama unit ke-3",
@@ -21,7 +21,7 @@
         "exam_total_question_ids": [],
         "exam_icon_url": "https://example.com/icons/exam.png",
         "exam_unit_id": 3,
-        "exam_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "exam_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     },
     {
         "exam_name": "Ujian Pertama unit ke-4",
@@ -29,6 +29,6 @@
         "exam_total_question_ids": [],
         "exam_icon_url": "https://example.com/icons/exam.png",
         "exam_unit_id": 4,
-        "exam_created_by": "78fdbc16-13f7-48dd-874b-12040f2e7fe3"
+        "exam_created_by": "7991dd47-6979-4d18-a438-be1641750e3f"
     }
 ]

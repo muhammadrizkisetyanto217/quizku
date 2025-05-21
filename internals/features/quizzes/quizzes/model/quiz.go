@@ -25,6 +25,7 @@ type QuizModel struct {
 func (QuizModel) TableName() string {
 	return "quizzes"
 }
+
 func (q *QuizModel) AfterSave(tx *gorm.DB) error {
 	return SyncTotalQuizzes(tx, q.QuizSectionQuizzesID)
 }

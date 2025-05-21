@@ -45,12 +45,12 @@ func SyncTotalSectionQuizzes(db *gorm.DB, unitID uint) error {
 
 	err := db.Exec(`
 		UPDATE units
-		SET total_section_quizzes = (
+		SET unit_total_section_quizzes = (
 			SELECT ARRAY_AGG(section_quizzes_id ORDER BY section_quizzes_id)
 			FROM section_quizzes
 			WHERE section_quizzes_unit_id = ? AND deleted_at IS NULL
 		)
-		WHERE id = ?
+		WHERE unit_id = ?
 	`, unitID, unitID).Error
 
 	if err != nil {
