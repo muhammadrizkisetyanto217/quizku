@@ -52,7 +52,7 @@ func (cc *CategoryController) GetCategory(c *fiber.Ctx) error {
 
 	// 🔍 Cari berdasarkan ID dan preload relasi
 	if err := cc.DB.Preload("Subcategories").
-		Where("categories_id = ?", id).
+		Where("category_id = ?", id).
 		First(&category).Error; err != nil {
 		log.Printf("[ERROR] Category with ID %s not found\n", id)
 		return c.Status(404).JSON(fiber.Map{
@@ -76,7 +76,7 @@ func (cc *CategoryController) GetCategoriesByDifficulty(c *fiber.Ctx) error {
 
 	// 🔍 Ambil hanya categories_id dan categories_name
 	if err := cc.DB.
-		Select("categories_id", "categories_name").
+		Select("category_id", "category_name").
 		Where("category_difficulty_id = ?", difficultyID).
 		Find(&categories).Error; err != nil {
 		log.Printf("[ERROR] Failed to fetch categories for difficulty ID %s: %v\n", difficultyID, err)

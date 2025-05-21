@@ -2,6 +2,6 @@
 package dto
 
 type CategoryTooltipResponse struct {
-	CategoriesID   uint   `json:"id"`
-	CategoriesName string `json:"name"`
+	CategoriesID   uint   `json:"category_id"`
+	CategoriesName string `json:"category_name"`
 }

@@ -62,11 +62,11 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Subcategory tidak ditemukan"})
 	}
 
-	var certVersion struct{ CertificateVersionNumber int }
+	var certVersion struct{ CertVersionsNumber int }
 	tx.Table("certificate_versions").
-		Select("certificate_version_number").
-		Where("subcategory_id = ?", body.SubcategoryID).
-		Order("certificate_version_number DESC").
+		Select("cert_versions_number").
+		Where("cert_versions_subcategory_id = ?", body.SubcategoryID).
+		Order("cert_versions_number DESC").
 		Limit(1).
 		Scan(&certVersion)
 
@@ -76,7 +76,7 @@ func (ctrl *UserSubcategoryController) Create(c *fiber.Ctx) error {
 		UserSubcategorySubcategoryID:  int(body.SubcategoryID),
 		CreatedAt:                     now,
 		UpdatedAt:                     now,
-		UserSubcategoryCurrentVersion: certVersion.CertificateVersionNumber,
+		UserSubcategoryCurrentVersion: certVersion.CertVersionsNumber,
 	}
 	if err := tx.Create(&userSubcat).Error; err != nil {
 		tx.Rollback()
@@ -186,7 +186,6 @@ func (ctrl *UserSubcategoryController) GetByUserId(c *fiber.Ctx) error {
 		"data": userSub,
 	})
 }
-
 
 // 🟢 GET USER PROGRESS WITH CATEGORY STRUCTURE: Ambil data lengkap kategori, subkategori, themes, dan progress user
 // ✅ grade_result & is_passed hanya berasal dari service exam, bukan dihitung ulang di sini
