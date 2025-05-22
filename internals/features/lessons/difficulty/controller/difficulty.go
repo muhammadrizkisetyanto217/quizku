@@ -35,7 +35,7 @@ func (dc *DifficultyController) GetDifficulties(c *fiber.Ctx) error {
 		responses = append(responses, dto.DifficultyResponse{
 			DifficultyID:               d.DifficultyID,
 			DifficultyName:             d.DifficultyName,
-			DifficultyStatus:           d.DifficultyStatus,
+			// DifficultyStatus:           d.DifficultyStatus,
 			DifficultyDescriptionShort: d.DifficultyDescriptionShort,
 			DifficultyDescriptionLong:  d.DifficultyDescriptionLong,
 			DifficultyTotalCategories:  convertInt64ArrayToInt(d.DifficultyTotalCategories),

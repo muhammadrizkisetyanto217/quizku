@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	dto "quizku/internals/features/lessons/difficulty/dto"
 	"quizku/internals/features/lessons/difficulty/model"
 
 	"github.com/gofiber/fiber/v2"
@@ -51,12 +52,22 @@ func (dc *DifficultyNewsController) GetNewsByDifficultyId(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("[SUCCESS] Berhasil mengambil %d news untuk difficulty_id %s\n", len(news), difficultyID)
+	// Mapping ke DTO
+	var newsDTO []dto.DifficultyNewsDTO
+	for _, n := range news {
+		newsDTO = append(newsDTO, dto.DifficultyNewsDTO{
+			DifficultyNewsID:          n.DifficultyNewsID,
+			DifficultyNewsTitle:       n.DifficultyNewsTitle,
+			DifficultyNewsDescription: n.DifficultyNewsDescription,
+			CreatedAt:                 n.CreatedAt,
+		})
+	}
 
 	return c.JSON(fiber.Map{
 		"message": "Berita berdasarkan difficulty berhasil diambil",
-		"data":    news,
+		"data":    newsDTO,
 	})
+
 }
 
 // 🟢 GET DIFFICULTY NEWS BY ID
